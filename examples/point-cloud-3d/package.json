@@ -1,0 +1,17 @@
+{
+  "name": "vizcrush-point-cloud-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless pointcloud vite"
+  },
+  "dependencies": {
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/spatial3d": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

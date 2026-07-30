@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Workflow Diagram</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0a0a12;
+        font-family: Inter, system-ui;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 20px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <svg
+      viewBox="0 0 1100 620"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style="width: 100%; height: 100%; max-height: 100vh"
+    >
+      <defs>
+        <marker
+          id="arr"
+          viewBox="0 0 10 7"
+          refX="9"
+          refY="3.5"
+          markerWidth="8"
+          markerHeight="6"
+          orient="auto"
+        >
+          <path
+            d="M0 0L10 3.5L0 7"
+            fill="none"
+            stroke="context-stroke"
+            stroke-width="1.2"
+            stroke-linejoin="round"
+          />
+        </marker>
+        <linearGradient id="crushGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#0c3a50" />
+          <stop offset="100%" stop-color="#0a4565" />
+        </linearGradient>
+        <linearGradient id="aiGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1f1535" />
+          <stop offset="100%" stop-color="#2a1d45" />
+        </linearGradient>
+        <filter id="glow1">
+          <feGaussianBlur stdDeviation="6" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="glow2">
+          <feGaussianBlur stdDeviation="4" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <!-- Animated dash -->
+        <style>
+          @keyframes dash {
+            to {
+              stroke-dashoffset: -16;
+            }
+          }
+          @keyframes pulse {
+            0%,
+            100% {
+              opacity: 0.4;
+            }
+            50% {
+              opacity: 1;
+            }
+          }
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(6px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          @keyframes countPulse {
+            0%,
+            100% {
+              transform: scale(1);
+            }
+            50% {
+              transform: scale(1.05);
+            }
+          }
+          .dash {
+            stroke-dasharray: 4 4;
+            animation: dash 0.8s linear infinite;
+          }
+          .pulse {
+            animation: pulse 2s ease-in-out infinite;
+          }
+          .count-pulse {
+            animation: countPulse 2s ease-in-out infinite;
+          }
+          text {
+            font-family: Inter, system-ui;
+          }
+          .mono {
+            font-family: "JetBrains Mono", monospace;
+          }
+        </style>
+      </defs>
+
+      <!-- ═══════ Title ═══════ -->
+      <text x="550" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#f1f5f9">
+        How vizcrush processes your data
+      </text>
+      <text x="550" y="50" text-anchor="middle" font-size="11" fill="#64748b">
+        From raw input to optimized output — the complete pipeline
+      </text>
+
+      <!-- ═══════ ROW 1: Input ═══════ -->
+
+      <!-- Data Source -->
+      <rect
+        x="30"
+        y="80"
+        width="200"
+        height="90"
+        rx="14"
+        fill="#1e1b2e"
+        stroke="#3b2e5e"
+        stroke-width="1"
+      />
+      <text
+        x="130"
+        y="105"
+        text-anchor="middle"
+        font-size="9"
+        font-weight="600"
+        fill="#a78bfa"
+        letter-spacing="1.5"
+      >
+        YOUR DATA
+      </text>
+      <text
+        x="130"
+        y="128"
+        text-anchor="middle"
+        font-size="16"
+        font-weight="700"
+        fill="#e0dbff"
+        class="count-pulse"
+      >
+        2,000,000
+      </text>
+      <text x="130" y="148" text-anchor="middle" font-size="10" fill="#8b7fc7">
+        Float64Array points
+      </text>
+      <text x="130" y="163" text-anchor="middle" font-size="9" fill="#64748b">
+        API · CSV · WebSocket
+      </text>
+
+      <!-- Arrow: Data → init -->
+      <line
+        x1="230"
+        y1="125"
+        x2="280"
+        y2="125"
+        stroke="#a78bfa"
+        stroke-width="1.5"
+        class="dash"
+        marker-end="url(#arr)"
+        opacity="0.6"
+      />
+
+      <!-- init() -->
+      <rect
+        x="280"
+        y="95"
+        width="120"
+        height="60"
+        rx="12"
+        fill="#111827"
+        stroke="#1e3a5f"
+        stroke-width="1"
+      />
+      <text
+        x="340"
+        y="118"
+        text-anchor="middle"
+        font-size="12"
+        font-weight="600"
+        fill="#60a5fa"
+        class="mono"
+      >
+        init()
+      </text>
+      <text x="340" y="138" text-anchor="middle" font-size="9" fill="#64748b">
+        Auto-detect backend
+      </text>
+      <!-- Spinning indicator -->
+      <circle
+        cx="385"
+        cy="110"
+        r="6"
+        fill="none"
+        stroke="#3b82f6"
+        stroke-width="1.5"
+        stroke-dasharray="4 3"
+        opacity="0.5"
+      >
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from="0 385 110"
+          to="360 385 110"
+          dur="3s"
+          repeatCount="indefinite"
+        />
+      </circle>
+
+      <!-- Arrow: init → Engine Selection -->
+      <line
+        x1="400"
+        y1="125"
+        x2="450"
+        y2="125"
+        stroke="#60a5fa"
+        stroke-width="1.5"
+        class="dash"
+        marker-end="url(#arr)"
+        opacity="0.6"
+      />
+
+      <!-- ═══════ Engine Selection (3 paths) ═══════ -->
+      <rect
+        x="450"
+        y="80"
+        width="280"
+        height="90"
+        rx="14"
+        fill="#111827"
+        stroke="#1e3a5f"
+        stroke-width="1"
+      />
+      <text
+        x="590"
+        y="100"
+        text-anchor="middle"
+        font-size="9"
+        font-weight="600"
+        fill="#60a5fa"
+        letter-spacing="1.5"
+      >
+        COMPUTE ENGINE
+      </text>
+
+      <!-- WASM box -->
+      <rect
+        x="475"
+        y="110"
+        width="105"
+        height="44"
+        rx="8"
+        fill="#0a2520"
+        stroke="#1a6b5a"
+        stroke-width="0.5"
+      />
+      <text x="528" y="128" text-anchor="middle" font-size="10" font-weight="600" fill="#5eead4">
+        WASM
+      </text>
+      <text x="528" y="143" text-anchor="middle" font-size="8" fill="#3daa90">Compiled Rust</text>
+      <circle cx="485" cy="150" r="3" fill="#5eead4" class="pulse" />
+
+      <!-- JS box -->
+      <rect
+        x="600"
+        y="110"
+        width="105"
+        height="44"
+        rx="8"
+        fill="#1a1a24"
+        stroke="#334155"
+        stroke-width="0.5"
+      />
+      <text x="652" y="128" text-anchor="middle" font-size="10" font-weight="600" fill="#94a3b8">
+        JS
+      </text>
+      <text x="652" y="143" text-anchor="middle" font-size="8" fill="#64748b">Fallback</text>
+
+      <!-- Arrow: Engine → Algorithm -->
+      <line
+        x1="590"
+        y1="170"
+        x2="590"
+        y2="210"
+        stroke="#3b82f6"
+        stroke-width="1.5"
+        class="dash"
+        marker-end="url(#arr)"
+        opacity="0.5"
+      />
+      <text x="610" y="195" font-size="9" fill="#475569">selected</text>
+
+      <!-- ═══════ ROW 2: Algorithm Selection ═══════ -->
+
+      <rect
+        x="180"
+        y="210"
+        width="820"
+        height="110"
+        rx="16"
+        fill="url(#crushGrad)"
+        stroke="#1a6b8a"
+        stroke-width="1"
+      />
+      <text
+        x="590"
+        y="235"
+        text-anchor="middle"
+        font-size="10"
+        font-weight="600"
+        fill="#38bdf8"
+        letter-spacing="2"
+      >
+        VIZCRUSH ALGORITHM LAYER
+      </text>
+
+      <!-- Algorithm boxes -->
+      <rect
+        x="200"
+        y="250"
+        width="95"
+        height="50"
+        rx="10"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="247" y="270" text-anchor="middle" font-size="11" font-weight="600" fill="#7dd3fc">
+        Downsample
+      </text>
+      <text x="247" y="288" text-anchor="middle" font-size="8" fill="#5aa8cc">
+        LTTB · MinMax · M4
+      </text>
+
+      <rect
+        x="310"
+        y="250"
+        width="80"
+        height="50"
+        rx="10"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="350" y="270" text-anchor="middle" font-size="11" font-weight="600" fill="#7dd3fc">
+        Binning
+      </text>
+      <text x="350" y="288" text-anchor="middle" font-size="8" fill="#5aa8cc">2D · 3D · Hex</text>
+
+      <rect
+        x="405"
+        y="250"
+        width="80"
+        height="50"
+        rx="10"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="445" y="270" text-anchor="middle" font-size="11" font-weight="600" fill="#7dd3fc">
+        Spatial
+      </text>
+      <text x="445" y="288" text-anchor="middle" font-size="8" fill="#5aa8cc">
+        Quad · Morton · Grid
+      </text>
+
+      <rect
+        x="500"
+        y="250"
+        width="85"
+        height="50"
+        rx="10"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="542" y="270" text-anchor="middle" font-size="11" font-weight="600" fill="#7dd3fc">
+        Streaming
+      </text>
+      <text x="542" y="288" text-anchor="middle" font-size="8" fill="#5aa8cc">
+        HLL · KLL · Sketch
+      </text>
+
+      <rect
+        x="600"
+        y="250"
+        width="80"
+        height="50"
+        rx="10"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="640" y="270" text-anchor="middle" font-size="11" font-weight="600" fill="#7dd3fc">
+        Transform
+      </text>
+      <text x="640" y="288" text-anchor="middle" font-size="8" fill="#5aa8cc">
+        Sort · Norm · Log
+      </text>
+
+      <rect
+        x="695"
+        y="250"
+        width="75"
+        height="50"
+        rx="10"
+        fill="rgba(167,139,250,0.08)"
+        stroke="rgba(167,139,250,0.2)"
+        stroke-width="0.5"
+      />
+      <text x="732" y="270" text-anchor="middle" font-size="11" font-weight="600" fill="#c4b5fd">
+        AI
+      </text>
+      <text x="732" y="288" text-anchor="middle" font-size="8" fill="#a78bfa">Anomaly · NLP</text>
+
+      <rect
+        x="785"
+        y="250"
+        width="95"
+        height="50"
+        rx="10"
+        fill="rgba(94,234,212,0.06)"
+        stroke="rgba(94,234,212,0.15)"
+        stroke-width="0.5"
+      />
+      <text x="832" y="270" text-anchor="middle" font-size="11" font-weight="600" fill="#5eead4">
+        MCP
+      </text>
+      <text x="832" y="288" text-anchor="middle" font-size="8" fill="#3daa90">26 tools</text>
+      <!-- MCP pulse -->
+      <circle cx="870" cy="258" r="4" fill="#5eead4" opacity="0.5">
+        <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+      </circle>
+
+      <!-- ═══════ ROW 3: Two output paths ═══════ -->
+
+      <!-- Arrow down to outputs -->
+      <line
+        x1="400"
+        y1="320"
+        x2="260"
+        y2="380"
+        stroke="#10b981"
+        stroke-width="1.5"
+        class="dash"
+        marker-end="url(#arr)"
+        opacity="0.5"
+      />
+      <line
+        x1="590"
+        y1="320"
+        x2="590"
+        y2="380"
+        stroke="#3b82f6"
+        stroke-width="1.5"
+        class="dash"
+        marker-end="url(#arr)"
+        opacity="0.5"
+      />
+      <line
+        x1="780"
+        y1="320"
+        x2="910"
+        y2="380"
+        stroke="#a78bfa"
+        stroke-width="1.5"
+        class="dash"
+        marker-end="url(#arr)"
+        opacity="0.5"
+      />
+
+      <!-- Output 1: Chart Rendering -->
+      <rect
+        x="100"
+        y="380"
+        width="320"
+        height="130"
+        rx="14"
+        fill="#0f2318"
+        stroke="#1a4d2e"
+        stroke-width="1"
+      />
+      <text
+        x="260"
+        y="405"
+        text-anchor="middle"
+        font-size="9"
+        font-weight="600"
+        fill="#4ade80"
+        letter-spacing="1.5"
+      >
+        CHART OUTPUT
+      </text>
+      <text
+        x="260"
+        y="430"
+        text-anchor="middle"
+        font-size="18"
+        font-weight="700"
+        fill="#d1fae5"
+        class="count-pulse"
+      >
+        1,920 points
+      </text>
+      <text x="260" y="450" text-anchor="middle" font-size="11" fill="#6ee7b7">
+        at 60fps — zero visual loss
+      </text>
+      <text x="260" y="475" text-anchor="middle" font-size="9" fill="#4d7c5f">
+        D3 · Three.js · Plotly · Canvas · ECharts
+      </text>
+      <!-- Mini chart -->
+      <polyline
+        fill="none"
+        stroke="#4ade80"
+        stroke-width="1.5"
+        opacity="0.4"
+        points="130,498 150,490 170,494 190,485 210,492 230,480 250,488 270,478 290,485 310,475 330,482 350,472 370,479 390,470"
+      >
+        <animate attributeName="opacity" values="0.2;0.6;0.2" dur="3s" repeatCount="indefinite" />
+      </polyline>
+
+      <!-- Output 2: Data Intelligence -->
+      <rect
+        x="450"
+        y="380"
+        width="240"
+        height="130"
+        rx="14"
+        fill="#111827"
+        stroke="#1e3a5f"
+        stroke-width="1"
+      />
+      <text
+        x="570"
+        y="405"
+        text-anchor="middle"
+        font-size="9"
+        font-weight="600"
+        fill="#60a5fa"
+        letter-spacing="1.5"
+      >
+        DATA INTELLIGENCE
+      </text>
+      <text x="570" y="430" text-anchor="middle" font-size="13" font-weight="600" fill="#bfdbfe">
+        Anomalies detected
+      </text>
+      <text x="570" y="450" text-anchor="middle" font-size="13" font-weight="600" fill="#bfdbfe">
+        Trend: increasing ↗
+      </text>
+      <text x="570" y="470" text-anchor="middle" font-size="13" font-weight="600" fill="#bfdbfe">
+        Auto-config: LTTB
+      </text>
+      <text x="570" y="498" text-anchor="middle" font-size="9" fill="#475569">
+        Stats · Percentiles · Summaries
+      </text>
+
+      <!-- Output 3: AI Agents -->
+      <rect
+        x="720"
+        y="380"
+        width="350"
+        height="130"
+        rx="14"
+        fill="url(#aiGrad)"
+        stroke="#3b2a5e"
+        stroke-width="1"
+      />
+      <text
+        x="895"
+        y="405"
+        text-anchor="middle"
+        font-size="9"
+        font-weight="600"
+        fill="#c4b5fd"
+        letter-spacing="1.5"
+      >
+        AI AGENT ACCESS (MCP)
+      </text>
+      <text
+        x="895"
+        y="433"
+        text-anchor="middle"
+        font-size="12"
+        font-weight="500"
+        fill="#e9d5ff"
+        class="mono"
+        opacity="0.8"
+      >
+        vizcrush_lttb(x, y, 1920)
+      </text>
+      <text
+        x="895"
+        y="455"
+        text-anchor="middle"
+        font-size="12"
+        font-weight="500"
+        fill="#e9d5ff"
+        class="mono"
+        opacity="0.6"
+      >
+        vizcrush_detect_anomalies(data)
+      </text>
+      <text
+        x="895"
+        y="477"
+        text-anchor="middle"
+        font-size="12"
+        font-weight="500"
+        fill="#e9d5ff"
+        class="mono"
+        opacity="0.4"
+      >
+        vizcrush_summarize(data)
+      </text>
+      <text x="895" y="500" text-anchor="middle" font-size="9" fill="#7c6daa">
+        Claude Code · Cursor · VS Code · stdio · HTTP
+      </text>
+
+      <!-- ═══════ ROW 4: Feedback loop ═══════ -->
+
+      <!-- Zoom/interact arrow back to top -->
+      <path
+        d="M 260 510 L 260 560 Q 260 580 240 580 L 60 580 Q 40 580 40 560 L 40 130 Q 40 110 60 110 L 90 110"
+        fill="none"
+        stroke="#f59e0b"
+        stroke-width="1"
+        class="dash"
+        marker-end="url(#arr)"
+        opacity="0.35"
+      />
+      <text
+        x="50"
+        y="400"
+        font-size="9"
+        fill="#f59e0b"
+        opacity="0.6"
+        transform="rotate(-90, 50, 400)"
+      >
+        Zoom/Pan → re-crush from full data
+      </text>
+
+      <!-- ═══════ Bottom stats ═══════ -->
+      <rect
+        x="180"
+        y="550"
+        width="740"
+        height="50"
+        rx="12"
+        fill="rgba(255,255,255,0.02)"
+        stroke="rgba(255,255,255,0.05)"
+        stroke-width="0.5"
+      />
+      <text x="260" y="572" text-anchor="middle" font-size="10" fill="#64748b">9 Rust crates</text>
+      <text x="380" y="572" text-anchor="middle" font-size="10" fill="#64748b">
+        11 npm packages
+      </text>
+      <text x="500" y="572" text-anchor="middle" font-size="10" fill="#64748b">23 MCP tools</text>
+      <text x="620" y="572" text-anchor="middle" font-size="10" fill="#64748b">435 tests</text>
+      <text x="740" y="572" text-anchor="middle" font-size="10" fill="#64748b">
+        8-27KB WASM gzipped
+      </text>
+      <text x="850" y="572" text-anchor="middle" font-size="10" fill="#64748b">MIT licensed</text>
+      <!-- Dots between -->
+      <circle cx="320" cy="570" r="1.5" fill="#334155" />
+      <circle cx="440" cy="570" r="1.5" fill="#334155" />
+      <circle cx="560" cy="570" r="1.5" fill="#334155" />
+      <circle cx="680" cy="570" r="1.5" fill="#334155" />
+      <circle cx="795" cy="570" r="1.5" fill="#334155" />
+
+      <!-- ═══════ Animated data particles on main flow ═══════ -->
+      <!-- Input → init -->
+      <circle r="3" fill="#a78bfa">
+        <animate attributeName="cx" values="230;280" dur="1s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="125;125" dur="1s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;1;0" dur="1s" repeatCount="indefinite" />
+      </circle>
+      <circle r="3" fill="#a78bfa">
+        <animate
+          attributeName="cx"
+          values="230;280"
+          dur="1s"
+          repeatCount="indefinite"
+          begin="0.5s"
+        />
+        <animate
+          attributeName="cy"
+          values="125;125"
+          dur="1s"
+          repeatCount="indefinite"
+          begin="0.5s"
+        />
+        <animate
+          attributeName="opacity"
+          values="0;1;1;0"
+          dur="1s"
+          repeatCount="indefinite"
+          begin="0.5s"
+        />
+      </circle>
+
+      <!-- Engine → Algo layer -->
+      <circle r="3" fill="#3b82f6">
+        <animate attributeName="cx" values="590;590" dur="1.2s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="170;210" dur="1.2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;1;0" dur="1.2s" repeatCount="indefinite" />
+      </circle>
+
+      <!-- Algo → Chart output -->
+      <circle r="3" fill="#10b981">
+        <animate attributeName="cx" values="400;260" dur="1.5s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="320;380" dur="1.5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;1;0" dur="1.5s" repeatCount="indefinite" />
+      </circle>
+
+      <!-- Algo → AI output -->
+      <circle r="3" fill="#a78bfa">
+        <animate
+          attributeName="cx"
+          values="780;910"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0.3s"
+        />
+        <animate
+          attributeName="cy"
+          values="320;380"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0.3s"
+        />
+        <animate
+          attributeName="opacity"
+          values="0;1;1;0"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0.3s"
+        />
+      </circle>
+    </svg>
+  </body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Million-Star Galaxy</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+      }
+      h1 {
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        cursor: grab;
+      }
+      canvas:active {
+        cursor: grabbing;
+      }
+      #stats {
+        position: fixed;
+        top: 12px;
+        left: 16px;
+        background: rgba(28, 27, 27, 0.85);
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 11px;
+        line-height: 1.6;
+        pointer-events: none;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(74, 127, 212, 0.15);
+      }
+      #stats span {
+        color: #4a7fd4;
+      }
+      #controls {
+        position: fixed;
+        top: 12px;
+        right: 16px;
+        background: rgba(28, 27, 27, 0.85);
+        padding: 14px 18px;
+        border-radius: 6px;
+        font-size: 11px;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(74, 127, 212, 0.15);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 180px;
+      }
+      #controls h1 {
+        margin-bottom: 4px;
+        color: #4a7fd4;
+      }
+      .ctrl-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+      .ctrl-row label {
+        opacity: 0.7;
+        white-space: nowrap;
+      }
+      .btn-group {
+        display: flex;
+        gap: 3px;
+      }
+      .btn-group button {
+        background: #252424;
+        border: 1px solid #333;
+        color: #e5e2e1;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-family: inherit;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .btn-group button:hover {
+        border-color: #4a7fd4;
+      }
+      .btn-group button.active {
+        background: #4a7fd4;
+        border-color: #4a7fd4;
+        color: #131313;
+      }
+      input[type="range"] {
+        width: 80px;
+        accent-color: #4a7fd4;
+        height: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="stats"></div>
+    <div id="controls">
+      <h1>Galaxy Controls</h1>
+      <div class="ctrl-row">
+        <label>Stars</label>
+        <div class="btn-group" id="countBtns">
+          <button data-v="100000">100K</button>
+          <button data-v="500000">500K</button>
+          <button data-v="1000000" class="active">1M</button>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <label>Arms</label>
+        <div class="btn-group" id="armBtns">
+          <button data-v="2">2</button>
+          <button data-v="3">3</button>
+          <button data-v="4" class="active">4</button>
+          <button data-v="6">6</button>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <label>Rotate</label>
+        <div class="btn-group" id="rotateBtns">
+          <button data-v="1" class="active">On</button>
+          <button data-v="0">Off</button>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <label>Brightness</label>
+        <input type="range" id="brightnessSlider" min="0.3" max="2.0" step="0.05" value="1.0" />
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

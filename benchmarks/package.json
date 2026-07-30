@@ -1,0 +1,33 @@
+{
+  "name": "vizcrush-benchmarks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "node --experimental-vm-modules dist/runner.js",
+    "compare": "node --experimental-vm-modules dist/comparison.js",
+    "compare3d": "node --experimental-vm-modules dist/comparison3d.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vizcrush/aggregate": "workspace:*",
+    "@vizcrush/bin": "workspace:*",
+    "@vizcrush/bin3d": "workspace:*",
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/downsample": "workspace:*",
+    "@vizcrush/spatial": "workspace:*",
+    "@vizcrush/spatial3d": "workspace:*",
+    "@vizcrush/transform": "workspace:*",
+    "d3-array": "catalog:",
+    "downsample": "catalog:",
+    "kdbush": "catalog:",
+    "rbush": "catalog:",
+    "simple-statistics": "catalog:",
+    "sparse-octree": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>vizcrush Benchmark Suite</title>
+    <style>
+      body {
+        background: #0a0a0a;
+        color: #e0e0e0;
+        font-family: monospace;
+        padding: 2rem;
+      }
+      h1 {
+        color: #3b9ecf;
+      }
+      pre {
+        background: #111;
+        padding: 1rem;
+        border-radius: 6px;
+        overflow-x: auto;
+      }
+      #benchmark-complete {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>vizcrush Benchmark Suite</h1>
+    <p>Running in browser with WASM...</p>
+    <pre id="output"></pre>
+    <div id="benchmark-complete"></div>
+    <script type="module">
+      const output = document.getElementById("output");
+      function log(msg) {
+        output.textContent += msg + "\n";
+        console.log(msg);
+      }
+
+      log("vizcrush browser benchmark suite");
+      log("==================================");
+      log("");
+
+      // Import vizcrush modules (when built)
+      try {
+        const { init } = await import("@vizcrush/core");
+        const gpu = await init();
+        log(`Backend: ${gpu.backend}`);
+        log("");
+
+        // Placeholder — full benchmarks run when WASM modules are built
+        log("Note: Full WASM benchmarks require built WASM modules.");
+        log("Run `bash scripts/build-wasm.sh` first.");
+      } catch (e) {
+        log("WASM modules not built — running JS fallback benchmarks only.");
+      }
+
+      log("");
+      log("Benchmark complete.");
+      document.getElementById("benchmark-complete").style.display = "block";
+    </script>
+  </body>
+</html>

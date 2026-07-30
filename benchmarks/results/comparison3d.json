@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-03-29T03:20:49.171Z",
+  "results": [
+    {
+      "operation": "Octree build",
+      "dataSize": 100000,
+      "vizcrush": {
+        "median": 32.67
+      },
+      "competitor": {
+        "name": "flat array collect",
+        "median": 0.37
+      }
+    },
+    {
+      "operation": "Octree build",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 202.18
+      },
+      "competitor": {
+        "name": "flat array collect",
+        "median": 2.3
+      }
+    },
+    {
+      "operation": "3D range query (5% volume)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 0.01,
+        "p95": 0.02
+      },
+      "competitor": {
+        "name": "brute-force scan",
+        "median": 2.32
+      }
+    },
+    {
+      "operation": "3D kNN (k=10)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 0.29,
+        "p95": 1.06
+      },
+      "competitor": {
+        "name": "brute-force scan",
+        "median": 2
+      }
+    },
+    {
+      "operation": "Voxel bin3d (32³)",
+      "dataSize": 100000,
+      "vizcrush": {
+        "median": 1.42
+      },
+      "competitor": {
+        "name": "manual loop (Array)",
+        "median": 0.87
+      }
+    },
+    {
+      "operation": "Voxel bin3d (32³)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 7.63
+      },
+      "competitor": {
+        "name": "manual loop (Array)",
+        "median": 5.4
+      }
+    },
+    {
+      "operation": "Frustum cull",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 4.5,
+        "p95": 4.69
+      },
+      "competitor": {
+        "name": "brute-force box test",
+        "median": 2.46
+      }
+    }
+  ]
+}

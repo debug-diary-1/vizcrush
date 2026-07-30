@@ -1,0 +1,23 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "description": "Compile TypeScript packages to dist/",
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "description": "Run tsc --noEmit to validate types across packages",
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
+      "outputs": []
+    },
+    "dev": {
+      "description": "Start local dev server with hot reload",
+      "cache": false,
+      "persistent": true
+    }
+  },
+  "globalPassThroughEnv": ["BENCH_THRESHOLD"]
+}

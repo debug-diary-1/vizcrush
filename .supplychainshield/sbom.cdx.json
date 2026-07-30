@@ -1,0 +1,1955 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "name": "@oxlint/binding-linux-arm64-gnu",
+      "purl": "pkg:npm/@oxlint/binding-linux-arm64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/darwin-x64",
+      "purl": "pkg:npm/@esbuild/darwin-x64",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-s390x",
+      "purl": "pkg:npm/@esbuild/linux-s390x",
+      "type": "library"
+    },
+    {
+      "name": "unpipe",
+      "purl": "pkg:npm/unpipe",
+      "type": "library"
+    },
+    {
+      "name": "@standard-schema/spec",
+      "purl": "pkg:npm/@standard-schema/spec",
+      "type": "library"
+    },
+    {
+      "name": "siginfo",
+      "purl": "pkg:npm/siginfo",
+      "type": "library"
+    },
+    {
+      "name": "delaunator",
+      "purl": "pkg:npm/delaunator",
+      "type": "library"
+    },
+    {
+      "name": "call-bound",
+      "purl": "pkg:npm/call-bound",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-interpolate",
+      "purl": "pkg:npm/@types/d3-interpolate",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-x64-musl",
+      "purl": "pkg:npm/@oxlint/binding-linux-x64-musl",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-android-arm64",
+      "purl": "pkg:npm/@rollup/rollup-android-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-selection",
+      "purl": "pkg:npm/@types/d3-selection",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/android-arm64",
+      "purl": "pkg:npm/@esbuild/android-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-freebsd-x64",
+      "purl": "pkg:npm/@oxfmt/binding-freebsd-x64",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-arm64-musl",
+      "purl": "pkg:npm/@oxlint/binding-linux-arm64-musl",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-x64-musl",
+      "purl": "pkg:npm/@rollup/rollup-linux-x64-musl",
+      "type": "library"
+    },
+    {
+      "name": "fast-uri",
+      "purl": "pkg:npm/fast-uri",
+      "type": "library"
+    },
+    {
+      "name": "negotiator",
+      "purl": "pkg:npm/negotiator",
+      "type": "library"
+    },
+    {
+      "name": "picomatch",
+      "purl": "pkg:npm/picomatch",
+      "type": "library"
+    },
+    {
+      "name": "zod-to-json-schema",
+      "purl": "pkg:npm/zod-to-json-schema",
+      "type": "library"
+    },
+    {
+      "name": "d3-dsv",
+      "purl": "pkg:npm/d3-dsv",
+      "type": "library"
+    },
+    {
+      "name": "cookie",
+      "purl": "pkg:npm/cookie",
+      "type": "library"
+    },
+    {
+      "name": "d3-drag",
+      "purl": "pkg:npm/d3-drag",
+      "type": "library"
+    },
+    {
+      "name": "d3-scale",
+      "purl": "pkg:npm/d3-scale",
+      "type": "library"
+    },
+    {
+      "name": "expect-type",
+      "purl": "pkg:npm/expect-type",
+      "type": "library"
+    },
+    {
+      "name": "kdbush",
+      "purl": "pkg:npm/kdbush",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-time-format",
+      "purl": "pkg:npm/@types/d3-time-format",
+      "type": "library"
+    },
+    {
+      "name": "turbo",
+      "purl": "pkg:npm/turbo",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-fetch",
+      "purl": "pkg:npm/@types/d3-fetch",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/sunos-x64",
+      "purl": "pkg:npm/@esbuild/sunos-x64",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-riscv64-musl",
+      "purl": "pkg:npm/@rollup/rollup-linux-riscv64-musl",
+      "type": "library"
+    },
+    {
+      "name": "@types/three",
+      "purl": "pkg:npm/@types/three",
+      "type": "library"
+    },
+    {
+      "name": "@types/prop-types",
+      "purl": "pkg:npm/@types/prop-types",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-dispatch",
+      "purl": "pkg:npm/@types/d3-dispatch",
+      "type": "library"
+    },
+    {
+      "name": "finalhandler",
+      "purl": "pkg:npm/finalhandler",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-hierarchy",
+      "purl": "pkg:npm/@types/d3-hierarchy",
+      "type": "library"
+    },
+    {
+      "name": "stackback",
+      "purl": "pkg:npm/stackback",
+      "type": "library"
+    },
+    {
+      "name": "@turbo/windows-64",
+      "purl": "pkg:npm/@turbo/windows-64",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-x64-gnu",
+      "purl": "pkg:npm/@oxfmt/binding-linux-x64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "rw",
+      "purl": "pkg:npm/rw",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-riscv64-gnu",
+      "purl": "pkg:npm/@rollup/rollup-linux-riscv64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "es-module-lexer",
+      "purl": "pkg:npm/es-module-lexer",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-loong64",
+      "purl": "pkg:npm/@esbuild/linux-loong64",
+      "type": "library"
+    },
+    {
+      "name": "@types/react",
+      "purl": "pkg:npm/@types/react",
+      "type": "library"
+    },
+    {
+      "name": "@types/deep-eql",
+      "purl": "pkg:npm/@types/deep-eql",
+      "type": "library"
+    },
+    {
+      "name": "merge-descriptors",
+      "purl": "pkg:npm/merge-descriptors",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-riscv64-gnu",
+      "purl": "pkg:npm/@oxfmt/binding-linux-riscv64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "d3-axis",
+      "purl": "pkg:npm/d3-axis",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-android-arm-eabi",
+      "purl": "pkg:npm/@oxfmt/binding-android-arm-eabi",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "purl": "pkg:npm/@rollup/rollup-linux-x64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/android-arm",
+      "purl": "pkg:npm/@esbuild/android-arm",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-ppc64-gnu",
+      "purl": "pkg:npm/@oxfmt/binding-linux-ppc64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "inherits",
+      "purl": "pkg:npm/inherits",
+      "type": "library"
+    },
+    {
+      "name": "@jridgewell/sourcemap-codec",
+      "purl": "pkg:npm/@jridgewell/sourcemap-codec",
+      "type": "library"
+    },
+    {
+      "name": "tinybench",
+      "purl": "pkg:npm/tinybench",
+      "type": "library"
+    },
+    {
+      "name": "typescript",
+      "purl": "pkg:npm/typescript",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/aix-ppc64",
+      "purl": "pkg:npm/@esbuild/aix-ppc64",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-openbsd-x64",
+      "purl": "pkg:npm/@rollup/rollup-openbsd-x64",
+      "type": "library"
+    },
+    {
+      "name": "d3-transition",
+      "purl": "pkg:npm/d3-transition",
+      "type": "library"
+    },
+    {
+      "name": "rbush",
+      "purl": "pkg:npm/rbush",
+      "type": "library"
+    },
+    {
+      "name": "router",
+      "purl": "pkg:npm/router",
+      "type": "library"
+    },
+    {
+      "name": "fresh",
+      "purl": "pkg:npm/fresh",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-arm64",
+      "purl": "pkg:npm/@esbuild/linux-arm64",
+      "type": "library"
+    },
+    {
+      "name": "sparse-octree",
+      "purl": "pkg:npm/sparse-octree",
+      "type": "library"
+    },
+    {
+      "name": "wrappy",
+      "purl": "pkg:npm/wrappy",
+      "type": "library"
+    },
+    {
+      "name": "@vitest/mocker",
+      "purl": "pkg:npm/@vitest/mocker",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-freebsd-x64",
+      "purl": "pkg:npm/@rollup/rollup-freebsd-x64",
+      "type": "library"
+    },
+    {
+      "name": "assertion-error",
+      "purl": "pkg:npm/assertion-error",
+      "type": "library"
+    },
+    {
+      "name": "parseurl",
+      "purl": "pkg:npm/parseurl",
+      "type": "library"
+    },
+    {
+      "name": "gopd",
+      "purl": "pkg:npm/gopd",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-time",
+      "purl": "pkg:npm/@types/d3-time",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-loong64-musl",
+      "purl": "pkg:npm/@rollup/rollup-linux-loong64-musl",
+      "type": "library"
+    },
+    {
+      "name": "std-env",
+      "purl": "pkg:npm/std-env",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/netbsd-x64",
+      "purl": "pkg:npm/@esbuild/netbsd-x64",
+      "type": "library"
+    },
+    {
+      "name": "magic-string",
+      "purl": "pkg:npm/magic-string",
+      "type": "library"
+    },
+    {
+      "name": "d3-chord",
+      "purl": "pkg:npm/d3-chord",
+      "type": "library"
+    },
+    {
+      "name": "object-assign",
+      "purl": "pkg:npm/object-assign",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/openbsd-arm64",
+      "purl": "pkg:npm/@esbuild/openbsd-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-darwin-x64",
+      "purl": "pkg:npm/@rollup/rollup-darwin-x64",
+      "type": "library"
+    },
+    {
+      "name": "d3-polygon",
+      "purl": "pkg:npm/d3-polygon",
+      "type": "library"
+    },
+    {
+      "name": "serve-static",
+      "purl": "pkg:npm/serve-static",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-scale-chromatic",
+      "purl": "pkg:npm/@types/d3-scale-chromatic",
+      "type": "library"
+    },
+    {
+      "name": "content-disposition",
+      "purl": "pkg:npm/content-disposition",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-win32-x64-msvc",
+      "purl": "pkg:npm/@rollup/rollup-win32-x64-msvc",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-brush",
+      "purl": "pkg:npm/@types/d3-brush",
+      "type": "library"
+    },
+    {
+      "name": "eventsource-parser",
+      "purl": "pkg:npm/eventsource-parser",
+      "type": "library"
+    },
+    {
+      "name": "downsample",
+      "purl": "pkg:npm/downsample",
+      "type": "library"
+    },
+    {
+      "name": "side-channel",
+      "purl": "pkg:npm/side-channel",
+      "type": "library"
+    },
+    {
+      "name": "type-is",
+      "purl": "pkg:npm/type-is",
+      "type": "library"
+    },
+    {
+      "name": "vary",
+      "purl": "pkg:npm/vary",
+      "type": "library"
+    },
+    {
+      "name": "d3-quadtree",
+      "purl": "pkg:npm/d3-quadtree",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-shape",
+      "purl": "pkg:npm/@types/d3-shape",
+      "type": "library"
+    },
+    {
+      "name": "etag",
+      "purl": "pkg:npm/etag",
+      "type": "library"
+    },
+    {
+      "name": "range-parser",
+      "purl": "pkg:npm/range-parser",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-path",
+      "purl": "pkg:npm/@types/d3-path",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-ppc64-gnu",
+      "purl": "pkg:npm/@oxlint/binding-linux-ppc64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-chord",
+      "purl": "pkg:npm/@types/d3-chord",
+      "type": "library"
+    },
+    {
+      "name": "get-intrinsic",
+      "purl": "pkg:npm/get-intrinsic",
+      "type": "library"
+    },
+    {
+      "name": "@modelcontextprotocol/sdk",
+      "purl": "pkg:npm/@modelcontextprotocol/sdk",
+      "type": "library"
+    },
+    {
+      "name": "d3-time-format",
+      "purl": "pkg:npm/d3-time-format",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-arm-gnueabihf",
+      "purl": "pkg:npm/@oxfmt/binding-linux-arm-gnueabihf",
+      "type": "library"
+    },
+    {
+      "name": "setprototypeof",
+      "purl": "pkg:npm/setprototypeof",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-ia32",
+      "purl": "pkg:npm/@esbuild/linux-ia32",
+      "type": "library"
+    },
+    {
+      "name": "side-channel-list",
+      "purl": "pkg:npm/side-channel-list",
+      "type": "library"
+    },
+    {
+      "name": "@turbo/windows-arm64",
+      "purl": "pkg:npm/@turbo/windows-arm64",
+      "type": "library"
+    },
+    {
+      "name": "proxy-addr",
+      "purl": "pkg:npm/proxy-addr",
+      "type": "library"
+    },
+    {
+      "name": "d3-brush",
+      "purl": "pkg:npm/d3-brush",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-timer",
+      "purl": "pkg:npm/@types/d3-timer",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-drag",
+      "purl": "pkg:npm/@types/d3-drag",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-freebsd-x64",
+      "purl": "pkg:npm/@oxlint/binding-freebsd-x64",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/netbsd-arm64",
+      "purl": "pkg:npm/@esbuild/netbsd-arm64",
+      "type": "library"
+    },
+    {
+      "name": "simple-statistics",
+      "purl": "pkg:npm/simple-statistics",
+      "type": "library"
+    },
+    {
+      "name": "meshoptimizer",
+      "purl": "pkg:npm/meshoptimizer",
+      "type": "library"
+    },
+    {
+      "name": "@vitest/spy",
+      "purl": "pkg:npm/@vitest/spy",
+      "type": "library"
+    },
+    {
+      "name": "@vitest/pretty-format",
+      "purl": "pkg:npm/@vitest/pretty-format",
+      "type": "library"
+    },
+    {
+      "name": "bytes",
+      "purl": "pkg:npm/bytes",
+      "type": "library"
+    },
+    {
+      "name": "d3-timer",
+      "purl": "pkg:npm/d3-timer",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-riscv64-musl",
+      "purl": "pkg:npm/@oxlint/binding-linux-riscv64-musl",
+      "type": "library"
+    },
+    {
+      "name": "express-rate-limit",
+      "purl": "pkg:npm/express-rate-limit",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-array",
+      "purl": "pkg:npm/@types/d3-array",
+      "type": "library"
+    },
+    {
+      "name": "@types/node",
+      "purl": "pkg:npm/@types/node",
+      "type": "library"
+    },
+    {
+      "name": "d3-path",
+      "purl": "pkg:npm/d3-path",
+      "type": "library"
+    },
+    {
+      "name": "estree-walker",
+      "purl": "pkg:npm/estree-walker",
+      "type": "library"
+    },
+    {
+      "name": "@turbo/darwin-arm64",
+      "purl": "pkg:npm/@turbo/darwin-arm64",
+      "type": "library"
+    },
+    {
+      "name": "iconv-lite",
+      "purl": "pkg:npm/iconv-lite",
+      "type": "library"
+    },
+    {
+      "name": "ms",
+      "purl": "pkg:npm/ms",
+      "type": "library"
+    },
+    {
+      "name": "mime-db",
+      "purl": "pkg:npm/mime-db",
+      "type": "library"
+    },
+    {
+      "name": "picocolors",
+      "purl": "pkg:npm/picocolors",
+      "type": "library"
+    },
+    {
+      "name": "d3-format",
+      "purl": "pkg:npm/d3-format",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-x64-musl",
+      "purl": "pkg:npm/@oxfmt/binding-linux-x64-musl",
+      "type": "library"
+    },
+    {
+      "name": "depd",
+      "purl": "pkg:npm/depd",
+      "type": "library"
+    },
+    {
+      "name": "csstype",
+      "purl": "pkg:npm/csstype",
+      "type": "library"
+    },
+    {
+      "name": "vitest",
+      "purl": "pkg:npm/vitest",
+      "type": "library"
+    },
+    {
+      "name": "internmap",
+      "purl": "pkg:npm/internmap",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-color",
+      "purl": "pkg:npm/@types/d3-color",
+      "type": "library"
+    },
+    {
+      "name": "forwarded",
+      "purl": "pkg:npm/forwarded",
+      "type": "library"
+    },
+    {
+      "name": "react",
+      "purl": "pkg:npm/react",
+      "type": "library"
+    },
+    {
+      "name": "@types/webxr",
+      "purl": "pkg:npm/@types/webxr",
+      "type": "library"
+    },
+    {
+      "name": "dunder-proto",
+      "purl": "pkg:npm/dunder-proto",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-arm",
+      "purl": "pkg:npm/@esbuild/linux-arm",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-darwin-x64",
+      "purl": "pkg:npm/@oxlint/binding-darwin-x64",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-arm-musleabihf",
+      "purl": "pkg:npm/@oxlint/binding-linux-arm-musleabihf",
+      "type": "library"
+    },
+    {
+      "name": "hono",
+      "purl": "pkg:npm/hono",
+      "type": "library"
+    },
+    {
+      "name": "tinyrainbow",
+      "purl": "pkg:npm/tinyrainbow",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-ppc64",
+      "purl": "pkg:npm/@esbuild/linux-ppc64",
+      "type": "library"
+    },
+    {
+      "name": "d3-selection",
+      "purl": "pkg:npm/d3-selection",
+      "type": "library"
+    },
+    {
+      "name": "three",
+      "purl": "pkg:npm/three",
+      "type": "library"
+    },
+    {
+      "name": "source-map-js",
+      "purl": "pkg:npm/source-map-js",
+      "type": "library"
+    },
+    {
+      "name": "@tweenjs/tween.js",
+      "purl": "pkg:npm/@tweenjs/tween.js",
+      "type": "library"
+    },
+    {
+      "name": "@webgpu/types",
+      "purl": "pkg:npm/@webgpu/types",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-android-arm64",
+      "purl": "pkg:npm/@oxlint/binding-android-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-darwin-arm64",
+      "purl": "pkg:npm/@oxlint/binding-darwin-arm64",
+      "type": "library"
+    },
+    {
+      "name": "rollup",
+      "purl": "pkg:npm/rollup",
+      "type": "library"
+    },
+    {
+      "name": "path-to-regexp",
+      "purl": "pkg:npm/path-to-regexp",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-win32-arm64-msvc",
+      "purl": "pkg:npm/@oxlint/binding-win32-arm64-msvc",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-contour",
+      "purl": "pkg:npm/@types/d3-contour",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-arm64-gnu",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "fast-check",
+      "purl": "pkg:npm/fast-check",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/openbsd-x64",
+      "purl": "pkg:npm/@esbuild/openbsd-x64",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-x64",
+      "purl": "pkg:npm/@esbuild/linux-x64",
+      "type": "library"
+    },
+    {
+      "name": "d3",
+      "purl": "pkg:npm/d3",
+      "type": "library"
+    },
+    {
+      "name": "which",
+      "purl": "pkg:npm/which",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-x64-gnu",
+      "purl": "pkg:npm/@oxlint/binding-linux-x64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-s390x-gnu",
+      "purl": "pkg:npm/@rollup/rollup-linux-s390x-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@turbo/linux-64",
+      "purl": "pkg:npm/@turbo/linux-64",
+      "type": "library"
+    },
+    {
+      "name": "d3-fetch",
+      "purl": "pkg:npm/d3-fetch",
+      "type": "library"
+    },
+    {
+      "name": "@turbo/darwin-64",
+      "purl": "pkg:npm/@turbo/darwin-64",
+      "type": "library"
+    },
+    {
+      "name": "@types/stats.js",
+      "purl": "pkg:npm/@types/stats.js",
+      "type": "library"
+    },
+    {
+      "name": "raw-body",
+      "purl": "pkg:npm/raw-body",
+      "type": "library"
+    },
+    {
+      "name": "cross-spawn",
+      "purl": "pkg:npm/cross-spawn",
+      "type": "library"
+    },
+    {
+      "name": "pathe",
+      "purl": "pkg:npm/pathe",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/freebsd-arm64",
+      "purl": "pkg:npm/@esbuild/freebsd-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/openharmony-arm64",
+      "purl": "pkg:npm/@esbuild/openharmony-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-openharmony-arm64",
+      "purl": "pkg:npm/@rollup/rollup-openharmony-arm64",
+      "type": "library"
+    },
+    {
+      "name": "d3-time",
+      "purl": "pkg:npm/d3-time",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-win32-ia32-msvc",
+      "purl": "pkg:npm/@oxfmt/binding-win32-ia32-msvc",
+      "type": "library"
+    },
+    {
+      "name": "d3-contour",
+      "purl": "pkg:npm/d3-contour",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-s390x-gnu",
+      "purl": "pkg:npm/@oxfmt/binding-linux-s390x-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-quadtree",
+      "purl": "pkg:npm/@types/d3-quadtree",
+      "type": "library"
+    },
+    {
+      "name": "@types/geojson",
+      "purl": "pkg:npm/@types/geojson",
+      "type": "library"
+    },
+    {
+      "name": "once",
+      "purl": "pkg:npm/once",
+      "type": "library"
+    },
+    {
+      "name": "pure-rand",
+      "purl": "pkg:npm/pure-rand",
+      "type": "library"
+    },
+    {
+      "name": "require-from-string",
+      "purl": "pkg:npm/require-from-string",
+      "type": "library"
+    },
+    {
+      "name": "qs",
+      "purl": "pkg:npm/qs",
+      "type": "library"
+    },
+    {
+      "name": "json-schema-traverse",
+      "purl": "pkg:npm/json-schema-traverse",
+      "type": "library"
+    },
+    {
+      "name": "obug",
+      "purl": "pkg:npm/obug",
+      "type": "library"
+    },
+    {
+      "name": "accepts",
+      "purl": "pkg:npm/accepts",
+      "type": "library"
+    },
+    {
+      "name": "d3-interpolate",
+      "purl": "pkg:npm/d3-interpolate",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-android-arm-eabi",
+      "purl": "pkg:npm/@rollup/rollup-android-arm-eabi",
+      "type": "library"
+    },
+    {
+      "name": "has-symbols",
+      "purl": "pkg:npm/has-symbols",
+      "type": "library"
+    },
+    {
+      "name": "media-typer",
+      "purl": "pkg:npm/media-typer",
+      "type": "library"
+    },
+    {
+      "name": "eventsource",
+      "purl": "pkg:npm/eventsource",
+      "type": "library"
+    },
+    {
+      "name": "fflate",
+      "purl": "pkg:npm/fflate",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-win32-x64-msvc",
+      "purl": "pkg:npm/@oxfmt/binding-win32-x64-msvc",
+      "type": "library"
+    },
+    {
+      "name": "http-errors",
+      "purl": "pkg:npm/http-errors",
+      "type": "library"
+    },
+    {
+      "name": "send",
+      "purl": "pkg:npm/send",
+      "type": "library"
+    },
+    {
+      "name": "zod",
+      "purl": "pkg:npm/zod",
+      "type": "library"
+    },
+    {
+      "name": "quickselect",
+      "purl": "pkg:npm/quickselect",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-arm-musleabihf",
+      "purl": "pkg:npm/@oxfmt/binding-linux-arm-musleabihf",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/freebsd-x64",
+      "purl": "pkg:npm/@esbuild/freebsd-x64",
+      "type": "library"
+    },
+    {
+      "name": "side-channel-map",
+      "purl": "pkg:npm/side-channel-map",
+      "type": "library"
+    },
+    {
+      "name": "tinypool",
+      "purl": "pkg:npm/tinypool",
+      "type": "library"
+    },
+    {
+      "name": "@hono/node-server",
+      "purl": "pkg:npm/@hono/node-server",
+      "type": "library"
+    },
+    {
+      "name": "body-parser",
+      "purl": "pkg:npm/body-parser",
+      "type": "library"
+    },
+    {
+      "name": "robust-predicates",
+      "purl": "pkg:npm/robust-predicates",
+      "type": "library"
+    },
+    {
+      "name": "shebang-command",
+      "purl": "pkg:npm/shebang-command",
+      "type": "library"
+    },
+    {
+      "name": "mime-types",
+      "purl": "pkg:npm/mime-types",
+      "type": "library"
+    },
+    {
+      "name": "oxfmt",
+      "purl": "pkg:npm/oxfmt",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-darwin-arm64",
+      "purl": "pkg:npm/@rollup/rollup-darwin-arm64",
+      "type": "library"
+    },
+    {
+      "name": "es-define-property",
+      "purl": "pkg:npm/es-define-property",
+      "type": "library"
+    },
+    {
+      "name": "ip-address",
+      "purl": "pkg:npm/ip-address",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/darwin-arm64",
+      "purl": "pkg:npm/@esbuild/darwin-arm64",
+      "type": "library"
+    },
+    {
+      "name": "safer-buffer",
+      "purl": "pkg:npm/safer-buffer",
+      "type": "library"
+    },
+    {
+      "name": "cors",
+      "purl": "pkg:npm/cors",
+      "type": "library"
+    },
+    {
+      "name": "d3-force",
+      "purl": "pkg:npm/d3-force",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/win32-x64",
+      "purl": "pkg:npm/@esbuild/win32-x64",
+      "type": "library"
+    },
+    {
+      "name": "d3-ease",
+      "purl": "pkg:npm/d3-ease",
+      "type": "library"
+    },
+    {
+      "name": "toidentifier",
+      "purl": "pkg:npm/toidentifier",
+      "type": "library"
+    },
+    {
+      "name": "express",
+      "purl": "pkg:npm/express",
+      "type": "library"
+    },
+    {
+      "name": "fdir",
+      "purl": "pkg:npm/fdir",
+      "type": "library"
+    },
+    {
+      "name": "is-promise",
+      "purl": "pkg:npm/is-promise",
+      "type": "library"
+    },
+    {
+      "name": "convert-source-map",
+      "purl": "pkg:npm/convert-source-map",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-darwin-x64",
+      "purl": "pkg:npm/@oxfmt/binding-darwin-x64",
+      "type": "library"
+    },
+    {
+      "name": "@types/chai",
+      "purl": "pkg:npm/@types/chai",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-riscv64",
+      "purl": "pkg:npm/@esbuild/linux-riscv64",
+      "type": "library"
+    },
+    {
+      "name": "ipaddr.js",
+      "purl": "pkg:npm/ipaddr.js",
+      "type": "library"
+    },
+    {
+      "name": "get-proto",
+      "purl": "pkg:npm/get-proto",
+      "type": "library"
+    },
+    {
+      "name": "chai",
+      "purl": "pkg:npm/chai",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-arm64-gnu",
+      "purl": "pkg:npm/@oxfmt/binding-linux-arm64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "json-schema-typed",
+      "purl": "pkg:npm/json-schema-typed",
+      "type": "library"
+    },
+    {
+      "name": "on-finished",
+      "purl": "pkg:npm/on-finished",
+      "type": "library"
+    },
+    {
+      "name": "vite",
+      "purl": "pkg:npm/vite",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-ppc64-gnu",
+      "purl": "pkg:npm/@rollup/rollup-linux-ppc64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "math-intrinsics",
+      "purl": "pkg:npm/math-intrinsics",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-s390x-gnu",
+      "purl": "pkg:npm/@oxlint/binding-linux-s390x-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@vitest/expect",
+      "purl": "pkg:npm/@vitest/expect",
+      "type": "library"
+    },
+    {
+      "name": "d3-zoom",
+      "purl": "pkg:npm/d3-zoom",
+      "type": "library"
+    },
+    {
+      "name": "d3-geo",
+      "purl": "pkg:npm/d3-geo",
+      "type": "library"
+    },
+    {
+      "name": "es-object-atoms",
+      "purl": "pkg:npm/es-object-atoms",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-arm64-musl",
+      "purl": "pkg:npm/@oxfmt/binding-linux-arm64-musl",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-arm-musleabihf",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm-musleabihf",
+      "type": "library"
+    },
+    {
+      "name": "@vitest/runner",
+      "purl": "pkg:npm/@vitest/runner",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-dsv",
+      "purl": "pkg:npm/@types/d3-dsv",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/linux-mips64el",
+      "purl": "pkg:npm/@esbuild/linux-mips64el",
+      "type": "library"
+    },
+    {
+      "name": "function-bind",
+      "purl": "pkg:npm/function-bind",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-win32-x64-msvc",
+      "purl": "pkg:npm/@oxlint/binding-win32-x64-msvc",
+      "type": "library"
+    },
+    {
+      "name": "why-is-node-running",
+      "purl": "pkg:npm/why-is-node-running",
+      "type": "library"
+    },
+    {
+      "name": "ajv-formats",
+      "purl": "pkg:npm/ajv-formats",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-ppc64-musl",
+      "purl": "pkg:npm/@rollup/rollup-linux-ppc64-musl",
+      "type": "library"
+    },
+    {
+      "name": "ajv",
+      "purl": "pkg:npm/ajv",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-random",
+      "purl": "pkg:npm/@types/d3-random",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/win32-ia32",
+      "purl": "pkg:npm/@esbuild/win32-ia32",
+      "type": "library"
+    },
+    {
+      "name": "d3-scale-chromatic",
+      "purl": "pkg:npm/d3-scale-chromatic",
+      "type": "library"
+    },
+    {
+      "name": "object-inspect",
+      "purl": "pkg:npm/object-inspect",
+      "type": "library"
+    },
+    {
+      "name": "statuses",
+      "purl": "pkg:npm/statuses",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-android-arm-eabi",
+      "purl": "pkg:npm/@oxlint/binding-android-arm-eabi",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3",
+      "purl": "pkg:npm/@types/d3",
+      "type": "library"
+    },
+    {
+      "name": "commander",
+      "purl": "pkg:npm/commander",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-transition",
+      "purl": "pkg:npm/@types/d3-transition",
+      "type": "library"
+    },
+    {
+      "name": "isexe",
+      "purl": "pkg:npm/isexe",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-openharmony-arm64",
+      "purl": "pkg:npm/@oxlint/binding-openharmony-arm64",
+      "type": "library"
+    },
+    {
+      "name": "ee-first",
+      "purl": "pkg:npm/ee-first",
+      "type": "library"
+    },
+    {
+      "name": "fast-deep-equal",
+      "purl": "pkg:npm/fast-deep-equal",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-win32-ia32-msvc",
+      "purl": "pkg:npm/@rollup/rollup-win32-ia32-msvc",
+      "type": "library"
+    },
+    {
+      "name": "d3-array",
+      "purl": "pkg:npm/d3-array",
+      "type": "library"
+    },
+    {
+      "name": "content-type",
+      "purl": "pkg:npm/content-type",
+      "type": "library"
+    },
+    {
+      "name": "undici-types",
+      "purl": "pkg:npm/undici-types",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-openharmony-arm64",
+      "purl": "pkg:npm/@oxfmt/binding-openharmony-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@vitest/utils",
+      "purl": "pkg:npm/@vitest/utils",
+      "type": "library"
+    },
+    {
+      "name": "es-errors",
+      "purl": "pkg:npm/es-errors",
+      "type": "library"
+    },
+    {
+      "name": "path-key",
+      "purl": "pkg:npm/path-key",
+      "type": "library"
+    },
+    {
+      "name": "d3-dispatch",
+      "purl": "pkg:npm/d3-dispatch",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-arm-gnueabihf",
+      "purl": "pkg:npm/@oxlint/binding-linux-arm-gnueabihf",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-win32-arm64-msvc",
+      "purl": "pkg:npm/@oxfmt/binding-win32-arm64-msvc",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-zoom",
+      "purl": "pkg:npm/@types/d3-zoom",
+      "type": "library"
+    },
+    {
+      "name": "d3-color",
+      "purl": "pkg:npm/d3-color",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-polygon",
+      "purl": "pkg:npm/@types/d3-polygon",
+      "type": "library"
+    },
+    {
+      "name": "fsevents",
+      "purl": "pkg:npm/fsevents",
+      "type": "library"
+    },
+    {
+      "name": "d3-delaunay",
+      "purl": "pkg:npm/d3-delaunay",
+      "type": "library"
+    },
+    {
+      "name": "d3-shape",
+      "purl": "pkg:npm/d3-shape",
+      "type": "library"
+    },
+    {
+      "name": "escape-html",
+      "purl": "pkg:npm/escape-html",
+      "type": "library"
+    },
+    {
+      "name": "nanoid",
+      "purl": "pkg:npm/nanoid",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-scale",
+      "purl": "pkg:npm/@types/d3-scale",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-android-arm64",
+      "purl": "pkg:npm/@oxfmt/binding-android-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-linux-riscv64-musl",
+      "purl": "pkg:npm/@oxfmt/binding-linux-riscv64-musl",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-delaunay",
+      "purl": "pkg:npm/@types/d3-delaunay",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-format",
+      "purl": "pkg:npm/@types/d3-format",
+      "type": "library"
+    },
+    {
+      "name": "debug",
+      "purl": "pkg:npm/debug",
+      "type": "library"
+    },
+    {
+      "name": "jose",
+      "purl": "pkg:npm/jose",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/win32-arm64",
+      "purl": "pkg:npm/@esbuild/win32-arm64",
+      "type": "library"
+    },
+    {
+      "name": "tinyexec",
+      "purl": "pkg:npm/tinyexec",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-win32-arm64-msvc",
+      "purl": "pkg:npm/@rollup/rollup-win32-arm64-msvc",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-loong64-gnu",
+      "purl": "pkg:npm/@rollup/rollup-linux-loong64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-linux-riscv64-gnu",
+      "purl": "pkg:npm/@oxlint/binding-linux-riscv64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "d3-random",
+      "purl": "pkg:npm/d3-random",
+      "type": "library"
+    },
+    {
+      "name": "encodeurl",
+      "purl": "pkg:npm/encodeurl",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-win32-x64-gnu",
+      "purl": "pkg:npm/@rollup/rollup-win32-x64-gnu",
+      "type": "library"
+    },
+    {
+      "name": "@types/estree",
+      "purl": "pkg:npm/@types/estree",
+      "type": "library"
+    },
+    {
+      "name": "shebang-regex",
+      "purl": "pkg:npm/shebang-regex",
+      "type": "library"
+    },
+    {
+      "name": "esbuild",
+      "purl": "pkg:npm/esbuild",
+      "type": "library"
+    },
+    {
+      "name": "@oxfmt/binding-darwin-arm64",
+      "purl": "pkg:npm/@oxfmt/binding-darwin-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@esbuild/android-x64",
+      "purl": "pkg:npm/@esbuild/android-x64",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-arm64-musl",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm64-musl",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-geo",
+      "purl": "pkg:npm/@types/d3-geo",
+      "type": "library"
+    },
+    {
+      "name": "@turbo/linux-arm64",
+      "purl": "pkg:npm/@turbo/linux-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@oxlint/binding-win32-ia32-msvc",
+      "purl": "pkg:npm/@oxlint/binding-win32-ia32-msvc",
+      "type": "library"
+    },
+    {
+      "name": "d3-hierarchy",
+      "purl": "pkg:npm/d3-hierarchy",
+      "type": "library"
+    },
+    {
+      "name": "postcss",
+      "purl": "pkg:npm/postcss",
+      "type": "library"
+    },
+    {
+      "name": "oxlint",
+      "purl": "pkg:npm/oxlint",
+      "type": "library"
+    },
+    {
+      "name": "cookie-signature",
+      "purl": "pkg:npm/cookie-signature",
+      "type": "library"
+    },
+    {
+      "name": "pkce-challenge",
+      "purl": "pkg:npm/pkce-challenge",
+      "type": "library"
+    },
+    {
+      "name": "call-bind-apply-helpers",
+      "purl": "pkg:npm/call-bind-apply-helpers",
+      "type": "library"
+    },
+    {
+      "name": "side-channel-weakmap",
+      "purl": "pkg:npm/side-channel-weakmap",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-ease",
+      "purl": "pkg:npm/@types/d3-ease",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-freebsd-arm64",
+      "purl": "pkg:npm/@rollup/rollup-freebsd-arm64",
+      "type": "library"
+    },
+    {
+      "name": "@rollup/rollup-linux-arm-gnueabihf",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm-gnueabihf",
+      "type": "library"
+    },
+    {
+      "name": "tinyglobby",
+      "purl": "pkg:npm/tinyglobby",
+      "type": "library"
+    },
+    {
+      "name": "@vitest/snapshot",
+      "purl": "pkg:npm/@vitest/snapshot",
+      "type": "library"
+    },
+    {
+      "name": "hasown",
+      "purl": "pkg:npm/hasown",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-force",
+      "purl": "pkg:npm/@types/d3-force",
+      "type": "library"
+    },
+    {
+      "name": "@types/d3-axis",
+      "purl": "pkg:npm/@types/d3-axis",
+      "type": "library"
+    },
+    {
+      "name": "async-trait",
+      "purl": "pkg:cargo/async-trait@0.1.89",
+      "type": "library",
+      "version": "0.1.89"
+    },
+    {
+      "name": "autocfg",
+      "purl": "pkg:cargo/autocfg@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "name": "bumpalo",
+      "purl": "pkg:cargo/bumpalo@3.20.2",
+      "type": "library",
+      "version": "3.20.2"
+    },
+    {
+      "name": "cast",
+      "purl": "pkg:cargo/cast@0.3.0",
+      "type": "library",
+      "version": "0.3.0"
+    },
+    {
+      "name": "cc",
+      "purl": "pkg:cargo/cc@1.2.58",
+      "type": "library",
+      "version": "1.2.58"
+    },
+    {
+      "name": "cfg-if",
+      "purl": "pkg:cargo/cfg-if@1.0.4",
+      "type": "library",
+      "version": "1.0.4"
+    },
+    {
+      "name": "find-msvc-tools",
+      "purl": "pkg:cargo/find-msvc-tools@0.1.9",
+      "type": "library",
+      "version": "0.1.9"
+    },
+    {
+      "name": "futures-core",
+      "purl": "pkg:cargo/futures-core@0.3.32",
+      "type": "library",
+      "version": "0.3.32"
+    },
+    {
+      "name": "futures-task",
+      "purl": "pkg:cargo/futures-task@0.3.32",
+      "type": "library",
+      "version": "0.3.32"
+    },
+    {
+      "name": "futures-util",
+      "purl": "pkg:cargo/futures-util@0.3.32",
+      "type": "library",
+      "version": "0.3.32"
+    },
+    {
+      "name": "itoa",
+      "purl": "pkg:cargo/itoa@1.0.18",
+      "type": "library",
+      "version": "1.0.18"
+    },
+    {
+      "name": "js-sys",
+      "purl": "pkg:cargo/js-sys@0.3.92",
+      "type": "library",
+      "version": "0.3.92"
+    },
+    {
+      "name": "libm",
+      "purl": "pkg:cargo/libm@0.2.16",
+      "type": "library",
+      "version": "0.2.16"
+    },
+    {
+      "name": "memchr",
+      "purl": "pkg:cargo/memchr@2.8.0",
+      "type": "library",
+      "version": "2.8.0"
+    },
+    {
+      "name": "minicov",
+      "purl": "pkg:cargo/minicov@0.3.8",
+      "type": "library",
+      "version": "0.3.8"
+    },
+    {
+      "name": "nu-ansi-term",
+      "purl": "pkg:cargo/nu-ansi-term@0.50.3",
+      "type": "library",
+      "version": "0.50.3"
+    },
+    {
+      "name": "num-traits",
+      "purl": "pkg:cargo/num-traits@0.2.19",
+      "type": "library",
+      "version": "0.2.19"
+    },
+    {
+      "name": "once_cell",
+      "purl": "pkg:cargo/once_cell@1.21.4",
+      "type": "library",
+      "version": "1.21.4"
+    },
+    {
+      "name": "oorandom",
+      "purl": "pkg:cargo/oorandom@11.1.5",
+      "type": "library",
+      "version": "11.1.5"
+    },
+    {
+      "name": "pin-project-lite",
+      "purl": "pkg:cargo/pin-project-lite@0.2.17",
+      "type": "library",
+      "version": "0.2.17"
+    },
+    {
+      "name": "proc-macro2",
+      "purl": "pkg:cargo/proc-macro2@1.0.106",
+      "type": "library",
+      "version": "1.0.106"
+    },
+    {
+      "name": "quote",
+      "purl": "pkg:cargo/quote@1.0.45",
+      "type": "library",
+      "version": "1.0.45"
+    },
+    {
+      "name": "rustversion",
+      "purl": "pkg:cargo/rustversion@1.0.22",
+      "type": "library",
+      "version": "1.0.22"
+    },
+    {
+      "name": "same-file",
+      "purl": "pkg:cargo/same-file@1.0.6",
+      "type": "library",
+      "version": "1.0.6"
+    },
+    {
+      "name": "serde",
+      "purl": "pkg:cargo/serde@1.0.228",
+      "type": "library",
+      "version": "1.0.228"
+    },
+    {
+      "name": "serde-wasm-bindgen",
+      "purl": "pkg:cargo/serde-wasm-bindgen@0.6.5",
+      "type": "library",
+      "version": "0.6.5"
+    },
+    {
+      "name": "serde_core",
+      "purl": "pkg:cargo/serde_core@1.0.228",
+      "type": "library",
+      "version": "1.0.228"
+    },
+    {
+      "name": "serde_derive",
+      "purl": "pkg:cargo/serde_derive@1.0.228",
+      "type": "library",
+      "version": "1.0.228"
+    },
+    {
+      "name": "serde_json",
+      "purl": "pkg:cargo/serde_json@1.0.149",
+      "type": "library",
+      "version": "1.0.149"
+    },
+    {
+      "name": "shlex",
+      "purl": "pkg:cargo/shlex@1.3.0",
+      "type": "library",
+      "version": "1.3.0"
+    },
+    {
+      "name": "slab",
+      "purl": "pkg:cargo/slab@0.4.12",
+      "type": "library",
+      "version": "0.4.12"
+    },
+    {
+      "name": "syn",
+      "purl": "pkg:cargo/syn@2.0.117",
+      "type": "library",
+      "version": "2.0.117"
+    },
+    {
+      "name": "unicode-ident",
+      "purl": "pkg:cargo/unicode-ident@1.0.24",
+      "type": "library",
+      "version": "1.0.24"
+    },
+    {
+      "name": "vizcrush-aggregate",
+      "purl": "pkg:cargo/vizcrush-aggregate@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "vizcrush-ai",
+      "purl": "pkg:cargo/vizcrush-ai@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "name": "vizcrush-bin",
+      "purl": "pkg:cargo/vizcrush-bin@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "vizcrush-bin3d",
+      "purl": "pkg:cargo/vizcrush-bin3d@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "vizcrush-core",
+      "purl": "pkg:cargo/vizcrush-core@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "vizcrush-downsample",
+      "purl": "pkg:cargo/vizcrush-downsample@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "vizcrush-spatial",
+      "purl": "pkg:cargo/vizcrush-spatial@0.2.0",
+      "type": "library",
+      "version": "0.2.0"
+    },
+    {
+      "name": "vizcrush-spatial3d",
+      "purl": "pkg:cargo/vizcrush-spatial3d@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "vizcrush-transform",
+      "purl": "pkg:cargo/vizcrush-transform@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "walkdir",
+      "purl": "pkg:cargo/walkdir@2.5.0",
+      "type": "library",
+      "version": "2.5.0"
+    },
+    {
+      "name": "wasm-bindgen",
+      "purl": "pkg:cargo/wasm-bindgen@0.2.115",
+      "type": "library",
+      "version": "0.2.115"
+    },
+    {
+      "name": "wasm-bindgen-futures",
+      "purl": "pkg:cargo/wasm-bindgen-futures@0.4.65",
+      "type": "library",
+      "version": "0.4.65"
+    },
+    {
+      "name": "wasm-bindgen-macro",
+      "purl": "pkg:cargo/wasm-bindgen-macro@0.2.115",
+      "type": "library",
+      "version": "0.2.115"
+    },
+    {
+      "name": "wasm-bindgen-macro-support",
+      "purl": "pkg:cargo/wasm-bindgen-macro-support@0.2.115",
+      "type": "library",
+      "version": "0.2.115"
+    },
+    {
+      "name": "wasm-bindgen-shared",
+      "purl": "pkg:cargo/wasm-bindgen-shared@0.2.115",
+      "type": "library",
+      "version": "0.2.115"
+    },
+    {
+      "name": "wasm-bindgen-test",
+      "purl": "pkg:cargo/wasm-bindgen-test@0.3.65",
+      "type": "library",
+      "version": "0.3.65"
+    },
+    {
+      "name": "wasm-bindgen-test-macro",
+      "purl": "pkg:cargo/wasm-bindgen-test-macro@0.3.65",
+      "type": "library",
+      "version": "0.3.65"
+    },
+    {
+      "name": "wasm-bindgen-test-shared",
+      "purl": "pkg:cargo/wasm-bindgen-test-shared@0.2.115",
+      "type": "library",
+      "version": "0.2.115"
+    },
+    {
+      "name": "winapi-util",
+      "purl": "pkg:cargo/winapi-util@0.1.11",
+      "type": "library",
+      "version": "0.1.11"
+    },
+    {
+      "name": "windows-link",
+      "purl": "pkg:cargo/windows-link@0.2.1",
+      "type": "library",
+      "version": "0.2.1"
+    },
+    {
+      "name": "windows-sys",
+      "purl": "pkg:cargo/windows-sys@0.61.2",
+      "type": "library",
+      "version": "0.61.2"
+    },
+    {
+      "name": "zmij",
+      "purl": "pkg:cargo/zmij@1.0.21",
+      "type": "library",
+      "version": "1.0.21"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "vizcrush-monorepo",
+      "type": "application"
+    },
+    "tools": [
+      {
+        "name": "supplychainshield",
+        "version": "0.1.0"
+      }
+    ]
+  },
+  "serialNumber": "urn:uuid:00000000-0000-0000-18a6-5a15123ffda0",
+  "specVersion": "1.5",
+  "version": 1
+}

@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — How It Works</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0a0a12;
+        color: #e0e0e8;
+        font-family: Inter, system-ui;
+        overflow-x: hidden;
+      }
+
+      .scene {
+        position: relative;
+        width: 100%;
+        max-width: 1000px;
+        margin: 60px auto;
+        padding: 0 20px;
+      }
+
+      /* ── Step indicators ── */
+      .step-nav {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 40px;
+      }
+      .step-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #1e293b;
+        border: 2px solid #334155;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .step-dot.active {
+        background: #3b82f6;
+        border-color: #60a5fa;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+      }
+
+      /* ── Title ── */
+      .title {
+        text-align: center;
+        margin-bottom: 50px;
+      }
+      .title h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: #f1f5f9;
+        letter-spacing: -0.02em;
+      }
+      .title p {
+        font-size: 14px;
+        color: #64748b;
+        margin-top: 8px;
+      }
+
+      /* ── Flow container ── */
+      .flow {
+        position: relative;
+        min-height: 500px;
+      }
+
+      /* ── Nodes ── */
+      .node {
+        position: absolute;
+        border-radius: 16px;
+        padding: 20px 24px;
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      .node.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .node.dim {
+        opacity: 0.15;
+        filter: blur(1px);
+      }
+
+      .node-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .node-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .node-sub {
+        font-size: 12px;
+        opacity: 0.7;
+        line-height: 1.5;
+      }
+      .node-mono {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        margin-top: 10px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        line-height: 1.6;
+      }
+
+      /* Node styles */
+      .node-data {
+        background: #1e1b2e;
+        border: 1px solid #312e45;
+        left: 5%;
+        top: 40px;
+        width: 280px;
+      }
+      .node-data .node-label {
+        color: #a78bfa;
+      }
+      .node-data .node-title {
+        color: #e0dbff;
+      }
+      .node-data .node-mono {
+        background: #13111f;
+        color: #c4b5fd;
+      }
+
+      .node-crush {
+        background: linear-gradient(135deg, #0c3547, #0a4060);
+        border: 1px solid #1a6b8a;
+        left: 50%;
+        top: 30px;
+        width: 420px;
+        transform: translateX(-50%) translateY(20px);
+      }
+      .node-crush.visible {
+        transform: translateX(-50%) translateY(0);
+      }
+      .node-crush.dim {
+        transform: translateX(-50%) translateY(0);
+      }
+      .node-crush .node-label {
+        color: #38bdf8;
+      }
+      .node-crush .node-title {
+        color: #e0f2fe;
+      }
+      .node-crush .node-mono {
+        background: #071e2b;
+        color: #7dd3fc;
+      }
+
+      .node-output {
+        background: #0f2318;
+        border: 1px solid #1a4d2e;
+        right: 5%;
+        top: 40px;
+        width: 280px;
+      }
+      .node-output .node-label {
+        color: #4ade80;
+      }
+      .node-output .node-title {
+        color: #d1fae5;
+      }
+      .node-output .node-mono {
+        background: #071510;
+        color: #86efac;
+      }
+
+      .node-algo {
+        background: #1a1a2e;
+        border: 1px solid #2a2a45;
+        left: 50%;
+        top: 200px;
+        width: 500px;
+        transform: translateX(-50%) translateY(20px);
+      }
+      .node-algo.visible {
+        transform: translateX(-50%) translateY(0);
+      }
+      .node-algo.dim {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .node-engine {
+        background: #1a1a2e;
+        border: 1px solid #2a2a45;
+        left: 50%;
+        top: 180px;
+        width: 460px;
+        transform: translateX(-50%) translateY(20px);
+      }
+      .node-engine.visible {
+        transform: translateX(-50%) translateY(0);
+      }
+      .node-engine.dim {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .node-result {
+        background: #1a1a2e;
+        border: 1px solid #2a2a45;
+        left: 50%;
+        top: 160px;
+        width: 500px;
+        transform: translateX(-50%) translateY(20px);
+      }
+      .node-result.visible {
+        transform: translateX(-50%) translateY(0);
+      }
+      .node-result.dim {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .node-ai {
+        background: #1f1535;
+        border: 1px solid #3b2a5e;
+        left: 50%;
+        top: 160px;
+        width: 500px;
+        transform: translateX(-50%) translateY(20px);
+      }
+      .node-ai.visible {
+        transform: translateX(-50%) translateY(0);
+      }
+      .node-ai.dim {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* ── Animated connection lines (SVG) ── */
+      .connections {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .connections svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      @keyframes dashFlow {
+        to {
+          stroke-dashoffset: -20;
+        }
+      }
+      .flow-line {
+        stroke-dasharray: 5 5;
+        animation: dashFlow 1s linear infinite;
+      }
+
+      /* ── Algo chips ── */
+      .chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .chip {
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
+        transition: all 0.2s;
+      }
+      .chip.active {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #93c5fd;
+      }
+      .chip.glow {
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(16, 185, 129, 0.3);
+        color: #6ee7b7;
+      }
+
+      /* ── Engine bars ── */
+      .engine-bars {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .engine-bar {
+        flex: 1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .engine-bar .bar-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.5;
+      }
+      .engine-bar .bar-value {
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+      .engine-bar.fastest {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.3);
+      }
+      .engine-bar.fastest .bar-value {
+        color: #a78bfa;
+      }
+      .engine-bar.fast {
+        background: rgba(20, 184, 166, 0.1);
+        border-color: rgba(20, 184, 166, 0.3);
+      }
+      .engine-bar.fast .bar-value {
+        color: #5eead4;
+      }
+      .engine-bar.fallback {
+        background: rgba(100, 116, 139, 0.1);
+      }
+      .engine-bar.fallback .bar-value {
+        color: #94a3b8;
+      }
+
+      /* ── Narration ── */
+      .narration {
+        text-align: center;
+        margin-top: 30px;
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .narration-text {
+        font-size: 15px;
+        color: #94a3b8;
+        max-width: 600px;
+        line-height: 1.7;
+        transition: opacity 0.4s;
+        opacity: 0;
+      }
+      .narration-text.visible {
+        opacity: 1;
+      }
+      .narration-step {
+        font-size: 11px;
+        font-weight: 600;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+      }
+
+      /* ── Controls ── */
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 30px;
+        margin-bottom: 60px;
+      }
+      .ctrl-btn {
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #cbd5e1;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+      .ctrl-btn:hover {
+        background: #334155;
+      }
+      .ctrl-btn.primary {
+        background: #3b82f6;
+        border-color: #60a5fa;
+        color: white;
+      }
+      .ctrl-btn.primary:hover {
+        background: #2563eb;
+      }
+
+      /* ── Animated numbers ── */
+      @keyframes countUp {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .big-number {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 36px;
+        font-weight: 700;
+        animation: countUp 0.5s ease-out;
+      }
+
+      /* ── Particle canvas ── */
+      #particles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene">
+      <div class="title">
+        <h1>How vizcrush works</h1>
+        <p>Step through the data processing pipeline</p>
+      </div>
+
+      <div class="step-nav" id="stepNav"></div>
+
+      <div class="flow" id="flow">
+        <canvas id="particles"></canvas>
+      </div>
+
+      <div class="narration">
+        <div class="narration-step" id="narStep"></div>
+        <div class="narration-text" id="narText"></div>
+      </div>
+
+      <div class="controls">
+        <button class="ctrl-btn" id="prevBtn">← Previous</button>
+        <button class="ctrl-btn primary" id="nextBtn">Next →</button>
+        <button class="ctrl-btn" id="autoBtn">▶ Auto-play</button>
+      </div>
+    </div>
+
+    <script>
+      const flow = document.getElementById("flow");
+      const narStep = document.getElementById("narStep");
+      const narText = document.getElementById("narText");
+      const stepNav = document.getElementById("stepNav");
+      const canvas = document.getElementById("particles");
+      const ctx = canvas.getContext("2d");
+
+      // ── Steps definition ──
+      const steps = [
+        {
+          id: "input",
+          label: "Step 1 — Your Data",
+          text: "Your application has a million data points from an API, CSV, or WebSocket. A chart library would choke trying to render them all.",
+          nodes: `
+      <div class="node node-data visible" style="left:10%;top:60px;width:80%">
+        <div class="node-label">Your Application</div>
+        <div class="node-title">1,000,000 data points</div>
+        <div class="node-sub">Financial candlesticks, IoT sensor readings, observability metrics, GPS coordinates — any numeric time-series or scatter data.</div>
+        <div class="node-mono">
+          const timestamps = new Float64Array(1_000_000);<br>
+          const values = new Float64Array(1_000_000);<br>
+          <span style="opacity:0.4">// Your chart library would freeze here</span>
+        </div>
+      </div>`,
+        },
+        {
+          id: "init",
+          label: "Step 2 — Auto-detect",
+          text: "vizcrush detects your environment: Rust-compiled WASM where it wins, a pure-JS core everywhere else. Same API, same results, either way.",
+          nodes: `
+      <div class="node node-engine visible" style="top:40px">
+        <div class="node-label" style="color:#60a5fa">vizcrush init()</div>
+        <div class="node-title" style="color:#e0f2fe">Auto-detect compute backend</div>
+        <div class="node-sub" style="color:#94a3b8">Validates a WASM test module, falls back silently. Zero config needed.</div>
+        <div class="engine-bars">
+          <div class="engine-bar fastest">
+            <div class="bar-label">Priority 1</div>
+            <div class="bar-value">WASM</div>
+            <div style="font-size:10px;opacity:0.5;margin-top:2px">~4x faster in Chromium</div>
+          </div>
+          <div class="engine-bar fallback">
+            <div class="bar-label">Priority 2</div>
+            <div class="bar-value">JS</div>
+            <div style="font-size:10px;opacity:0.5;margin-top:2px">Always works</div>
+          </div>
+        </div>
+      </div>`,
+        },
+        {
+          id: "algorithm",
+          label: "Step 3 — Pick Algorithm",
+          text: "Based on your data shape, vizcrush selects the optimal algorithm. Spiky financial data? MinMaxLTTB. Smooth telemetry? LTTB. Scatter plot? bin2d. Need a spatial index? Quadtree or Octree.",
+          nodes: `
+      <div class="node node-algo visible" style="top:40px">
+        <div class="node-label" style="color:#f59e0b">Algorithm Selection</div>
+        <div class="node-title" style="color:#fef3c7">autoOptimize(x, y, screenWidth)</div>
+        <div class="node-sub" style="color:#94a3b8">Analyzes data characteristics: monotonicity, spike ratio, size. Returns the best configuration with reasoning.</div>
+        <div class="chips">
+          <span class="chip active">LTTB</span>
+          <span class="chip">MinMaxLTTB</span>
+          <span class="chip">M4</span>
+          <span class="chip">bin2d</span>
+          <span class="chip">bin3d</span>
+          <span class="chip">Octree</span>
+          <span class="chip">Quadtree</span>
+          <span class="chip">Streaming</span>
+          <span class="chip">DDSketch</span>
+        </div>
+        <div class="node-mono" style="background:#111;color:#fde68a;margin-top:12px">
+          → algorithm: <span style="color:#4ade80">lttb</span><br>
+          → target: <span style="color:#4ade80">1,920</span> points<br>
+          → <span style="opacity:0.5">"Smooth monotonic time-series. Using LTTB."</span>
+        </div>
+      </div>`,
+        },
+        {
+          id: "crush",
+          label: "Step 4 — Crush",
+          text: "The Rust/WASM core processes your data in a single O(n) pass. For each bucket, it selects the point that forms the largest triangle with its neighbors — preserving the visual shape.",
+          nodes: `
+      <div class="node node-crush visible" style="top:30px;width:500px">
+        <div class="node-label">The Crush — LTTB in Rust/WASM</div>
+        <div class="node-title" style="font-size:22px">1,000,000 → 1,920 points</div>
+        <div class="node-sub">Single pass. O(n). Each bucket keeps the point with maximum triangle area. Visually lossless.</div>
+        <div style="display:flex;gap:20px;margin-top:16px;align-items:center">
+          <div style="text-align:center">
+            <div class="big-number" style="color:#ef4444">1M</div>
+            <div style="font-size:10px;color:#64748b">raw points</div>
+          </div>
+          <div style="font-size:24px;color:#334155">→</div>
+          <div style="text-align:center">
+            <div class="big-number" style="color:#3b82f6">~2ms</div>
+            <div style="font-size:10px;color:#64748b">processing</div>
+          </div>
+          <div style="font-size:24px;color:#334155">→</div>
+          <div style="text-align:center">
+            <div class="big-number" style="color:#10b981">1,920</div>
+            <div style="font-size:10px;color:#64748b">output points</div>
+          </div>
+        </div>
+      </div>`,
+        },
+        {
+          id: "output",
+          label: "Step 5 — Render",
+          text: "Your chart library receives 1,920 points instead of a million. Same visual result. 60fps smooth. Zoom in and vizcrush re-crushes from the full dataset — zero data loss.",
+          nodes: `
+      <div class="node node-output visible" style="left:10%;top:40px;width:80%">
+        <div class="node-label">Output → Your Chart Library</div>
+        <div class="node-title">1,920 pixel-perfect points at 60fps</div>
+        <div class="node-sub">Feed to D3, Three.js, Plotly, Canvas, Chart.js — any renderer. vizcrush draws nothing. Data in, optimized data out.</div>
+        <div class="node-mono" style="background:#071510;color:#86efac">
+          const { x, y } = await lttb(timestamps, values, 1920);<br>
+          <span style="opacity:0.4">// x: Float64Array[1920], y: Float64Array[1920]</span><br>
+          chart.bindata(x, y); <span style="opacity:0.4">// Any renderer works</span>
+        </div>
+        <div class="chips" style="margin-top:12px">
+          <span class="chip glow">D3</span>
+          <span class="chip glow">Three.js</span>
+          <span class="chip glow">Plotly</span>
+          <span class="chip glow">Chart.js</span>
+          <span class="chip glow">Canvas 2D</span>
+          <span class="chip glow">ECharts</span>
+        </div>
+      </div>`,
+        },
+        {
+          id: "beyond",
+          label: "Step 6 — Beyond Rendering",
+          text: "vizcrush doesn't stop at downsampling. AI features detect anomalies, generate LLM-ready summaries, and let AI agents query your data through 23 MCP tools.",
+          nodes: `
+      <div class="node node-ai visible" style="top:30px;width:540px">
+        <div class="node-label">AI-Native Features</div>
+        <div class="node-title" style="color:#e9d5ff">Your data talks. vizcrush listens.</div>
+        <div class="node-sub" style="color:#a78bfa">No tokens. No API calls. Pure statistical math running locally.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:11px;font-weight:600;color:#f87171;margin-bottom:4px">Anomaly Detection</div>
+            <div style="font-size:10px;color:#94a3b8">MAD Z-scores find spikes and dips in microseconds</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:11px;font-weight:600;color:#fbbf24;margin-bottom:4px">LLM Summaries</div>
+            <div style="font-size:10px;color:#94a3b8">One paragraph your AI agent can use as context</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:11px;font-weight:600;color:#34d399;margin-bottom:4px">Shape Embeddings</div>
+            <div style="font-size:10px;color:#94a3b8">"Find charts that look like this one"</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:11px;font-weight:600;color:#60a5fa;margin-bottom:4px">23 MCP Tools</div>
+            <div style="font-size:10px;color:#94a3b8">AI agents call vizcrush directly via MCP</div>
+          </div>
+        </div>
+      </div>`,
+        },
+      ];
+
+      // ── Render ──
+      let currentStep = 0;
+      let autoPlayInterval = null;
+
+      // Create step dots
+      steps.forEach((_, i) => {
+        const dot = document.createElement("div");
+        dot.className = "step-dot";
+        dot.onclick = () => goToStep(i);
+        stepNav.appendChild(dot);
+      });
+
+      function goToStep(i) {
+        currentStep = Math.max(0, Math.min(steps.length - 1, i));
+        const step = steps[currentStep];
+
+        // Update nodes
+        flow.querySelectorAll(".node").forEach((n) => n.remove());
+        flow.insertAdjacentHTML("beforeend", step.nodes);
+
+        // Animate in after a tick
+        requestAnimationFrame(() => {
+          flow.querySelectorAll(".node").forEach((n) => n.classList.add("visible"));
+        });
+
+        // Update narration
+        narStep.textContent = step.label;
+        narText.textContent = step.text;
+        narText.classList.remove("visible");
+        requestAnimationFrame(() => narText.classList.add("visible"));
+
+        // Update dots
+        stepNav.querySelectorAll(".step-dot").forEach((d, j) => {
+          d.classList.toggle("active", j === currentStep);
+        });
+
+        // Update buttons
+        document.getElementById("prevBtn").style.opacity = currentStep === 0 ? "0.3" : "1";
+        document.getElementById("nextBtn").textContent =
+          currentStep === steps.length - 1 ? "Restart ↺" : "Next →";
+      }
+
+      document.getElementById("prevBtn").onclick = () => goToStep(currentStep - 1);
+      document.getElementById("nextBtn").onclick = () => {
+        if (currentStep === steps.length - 1) goToStep(0);
+        else goToStep(currentStep + 1);
+      };
+      document.getElementById("autoBtn").onclick = () => {
+        if (autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+          document.getElementById("autoBtn").textContent = "▶ Auto-play";
+        } else {
+          autoPlayInterval = setInterval(() => {
+            if (currentStep >= steps.length - 1) goToStep(0);
+            else goToStep(currentStep + 1);
+          }, 4000);
+          document.getElementById("autoBtn").textContent = "⏸ Pause";
+        }
+      };
+
+      // Keyboard nav
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          goToStep(currentStep + 1);
+        }
+        if (e.key === "ArrowLeft") goToStep(currentStep - 1);
+      });
+
+      // ── Particles ──
+      function resizeCanvas() {
+        canvas.width = flow.clientWidth;
+        canvas.height = flow.clientHeight;
+      }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+
+      const particles = [];
+      function spawnParticle() {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: -5,
+          speed: 0.3 + Math.random() * 0.5,
+          size: 1 + Math.random() * 1.5,
+          opacity: 0.1 + Math.random() * 0.2,
+          color: Math.random() > 0.5 ? "#3b82f6" : "#10b981",
+        });
+      }
+
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.y += p.speed;
+          if (p.y > canvas.height) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.globalAlpha = p.opacity;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        if (Math.random() < 0.15) spawnParticle();
+        requestAnimationFrame(animateParticles);
+      }
+      animateParticles();
+
+      // Start
+      goToStep(0);
+    </script>
+  </body>
+</html>

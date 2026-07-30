@@ -1,0 +1,20 @@
+{
+  "name": "vizcrush-threejs-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless threejs vite"
+  },
+  "dependencies": {
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/downsample": "workspace:*",
+    "@vizcrush/spatial3d": "workspace:*",
+    "three": "catalog:"
+  },
+  "devDependencies": {
+    "@types/three": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}
