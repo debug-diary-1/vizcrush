@@ -74,7 +74,7 @@ catalogs:
       version: 3.25.76
 
 overrides:
-  '@hono/node-server@<2.0.5': 2.0.5
+  '@hono/node-server@<2.0.10': 2.0.12
   hono@<4.12.27: 4.12.27
   esbuild@<0.25.0: 0.25.12
   vite@<6.4.3: 6.4.3
@@ -1404,8 +1404,8 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@hono/node-server@2.0.5':
-    resolution: {integrity: sha512-yQFvDmyDo3y6rEOJZDUYPJ49DIKTPpIk4kGvm40xx4Ejne0Pu9a1+exxPN+C1UppWK/WGZX9F++/Xs231tE86g==}
+  '@hono/node-server@2.0.12':
+    resolution: {integrity: sha512-eWpQYr67tqJLeaSUl0Q+TquuYfUdTibpOJlUMV2FfUP7+KqCC5TufnwnlXL6mobZBJbGAYRd7ZvEBDCbLInjhg==}
     engines: {node: '>=20'}
     peerDependencies:
       hono: 4.12.27
@@ -3543,7 +3543,7 @@ snapshots:
 
   '@exodus/bytes@1.15.1': {}
 
-  '@hono/node-server@2.0.5(hono@4.12.27)':
+  '@hono/node-server@2.0.12(hono@4.12.27)':
     dependencies:
       hono: 4.12.27
 
@@ -3557,7 +3557,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.30.0(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 2.0.5(hono@4.12.27)
+      '@hono/node-server': 2.0.12(hono@4.12.27)
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
       content-type: 1.0.5
