@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — 3D Benchmark: Octree vs Brute Force</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0a0a0f;
+        color: #e0e0e8;
+        font-family: "SF Mono", "JetBrains Mono", monospace;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #60a5fa;
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+      }
+      .subtitle {
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+      }
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .controls label {
+        color: #6b7280;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      select,
+      button {
+        background: #1e1e2e;
+        border: 1px solid #2a2a3e;
+        color: #a5b4fc;
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        font-family: inherit;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      button:hover {
+        background: #2a2a3e;
+      }
+      button.run {
+        background: #3730a3;
+        border-color: #4f46e5;
+        color: #e0e7ff;
+      }
+      .results {
+        margin-top: 1.5rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      th {
+        text-align: left;
+        padding: 10px 12px;
+        color: #6b7280;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border-bottom: 1px solid #1a1a2e;
+      }
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #111;
+      }
+      .op {
+        color: #e0e0e8;
+        font-weight: 500;
+      }
+      .vc {
+        color: #60a5fa;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+      .comp {
+        color: #f97316;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+      .win {
+        color: #34d399;
+        font-weight: 700;
+      }
+      .lose {
+        color: #f87171;
+      }
+      .status {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #111;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        color: #9ca3af;
+        min-height: 2.5rem;
+      }
+      .summary {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: #111827;
+        border: 1px solid #1e3a5f;
+        border-radius: 8px;
+      }
+      .summary h3 {
+        color: #60a5fa;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+      }
+      .summary p {
+        color: #9ca3af;
+        font-size: 0.8rem;
+        line-height: 1.6;
+      }
+      .summary .big {
+        color: #34d399;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>vizcrush — 3D Benchmark</h1>
+      <p class="subtitle">Octree vs brute force. Live in-browser comparison.</p>
+
+      <div class="controls">
+        <label>Points:</label>
+        <select id="pointCount">
+          <option value="50000">50K</option>
+          <option value="100000" selected>100K</option>
+          <option value="250000">250K</option>
+          <option value="500000">500K</option>
+        </select>
+        <label style="margin-left: 1rem">Runs:</label>
+        <select id="runs">
+          <option value="10">10</option>
+          <option value="30" selected>30</option>
+          <option value="50">50</option>
+        </select>
+        <button class="run" id="runBtn" style="margin-left: 1rem">Run Benchmark</button>
+      </div>
+
+      <div class="status" id="status">Click "Run Benchmark" to start.</div>
+
+      <div class="results">
+        <table>
+          <thead>
+            <tr>
+              <th>Operation</th>
+              <th>vizcrush</th>
+              <th>Brute Force</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="summary" id="summary" style="display: none">
+        <h3>Amortized Analysis</h3>
+        <p id="summaryText"></p>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

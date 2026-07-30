@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPU vs Canvas 2D Benchmark</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap");
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+
+      h1 {
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: #e5e2e1;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        color: #888;
+        font-size: 11px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        padding: 10px 20px;
+        border-bottom: 1px solid #2a2a2a;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .control-group label {
+        color: #888;
+        font-size: 11px;
+      }
+
+      select,
+      button {
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        font-family: inherit;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        outline: none;
+      }
+
+      select:hover,
+      button:hover {
+        border-color: #4a7fd4;
+      }
+
+      select:focus,
+      button:focus {
+        border-color: #4a7fd4;
+        box-shadow: 0 0 0 1px #4a7fd433;
+      }
+
+      button {
+        background: #4a7fd4;
+        color: #fff;
+        border-color: #4a7fd4;
+        font-weight: 600;
+        padding: 4px 14px;
+      }
+
+      button:hover {
+        background: #5a8fe4;
+      }
+
+      button.toggle-off {
+        background: #1c1b1b;
+        color: #888;
+        border-color: #353534;
+      }
+
+      button.toggle-off:hover {
+        border-color: #4a7fd4;
+        color: #e5e2e1;
+      }
+
+      .panels {
+        flex: 1;
+        display: flex;
+        padding: 16px 20px;
+        gap: 16px;
+        min-height: 0;
+      }
+
+      .panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .panel-header {
+        padding: 8px 12px;
+        border-bottom: 1px solid #2a2a2a;
+        font-size: 11px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .panel-canvas-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        min-height: 300px;
+      }
+
+      .panel canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .panel-stats {
+        display: flex;
+        gap: 12px;
+        padding: 6px 12px;
+        border-top: 1px solid #2a2a2a;
+        flex-wrap: wrap;
+      }
+
+      .stat {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+
+      .stat-label {
+        color: #888;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .stat-value {
+        color: #4a7fd4;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .comparison {
+        padding: 12px 20px 16px;
+        border-top: 1px solid #2a2a2a;
+      }
+
+      .comparison-title {
+        font-size: 10px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+      }
+
+      .comparison-summary {
+        font-size: 13px;
+        margin-bottom: 10px;
+        color: #e5e2e1;
+      }
+
+      .speedup-value {
+        color: #4a7fd4;
+        font-weight: 600;
+        font-size: 18px;
+      }
+
+      .bar-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .bar-label {
+        width: 100px;
+        font-size: 11px;
+        color: #888;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .bar-track {
+        flex: 1;
+        height: 18px;
+        background: #131313;
+        border-radius: 2px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.3s ease;
+        min-width: 2px;
+      }
+
+      .bar-fill.gpu {
+        background: #4a7fd4;
+      }
+
+      .bar-fill.canvas {
+        background: #d4894a;
+      }
+
+      .bar-time {
+        width: 70px;
+        font-size: 11px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      .bar-time.gpu {
+        color: #4a7fd4;
+      }
+      .bar-time.canvas {
+        color: #d4894a;
+      }
+
+      .fallback-msg {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #1c1b1b;
+        border: 1px solid #353534;
+        padding: 12px 20px;
+        font-size: 12px;
+        color: #c9a03c;
+        border-radius: 4px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>GPU VS CANVAS 2D BENCHMARK</h1>
+      <div class="subtitle">
+        Same density plot, two rendering paths &mdash; measure the difference
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="point-count">points</label>
+        <select id="point-count">
+          <option value="100000">100K</option>
+          <option value="500000">500K</option>
+          <option value="1000000" selected>1M</option>
+          <option value="2000000">2M</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="grid-res">grid</label>
+        <select id="grid-res">
+          <option value="64">64</option>
+          <option value="128" selected>128</option>
+          <option value="256">256</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="anim-toggle">animation</label>
+        <button id="anim-toggle" class="toggle-off">STATIC</button>
+      </div>
+      <button id="run-btn">RUN</button>
+    </div>
+
+    <div class="panels">
+      <div class="panel" id="gpu-panel">
+        <div class="panel-header">WebGPU Compute + Render</div>
+        <div class="panel-canvas-wrap">
+          <canvas id="gpu-canvas" width="512" height="512"></canvas>
+        </div>
+        <div class="panel-stats">
+          <div class="stat">
+            <span class="stat-label">bin</span>
+            <span class="stat-value" id="gpu-bin-time">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">render</span>
+            <span class="stat-value" id="gpu-render-time">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">total</span>
+            <span class="stat-value" id="gpu-total-time">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">fps</span>
+            <span class="stat-value" id="gpu-fps">--</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="canvas-panel">
+        <div class="panel-header">Canvas 2D + vizcrush bin2d</div>
+        <div class="panel-canvas-wrap">
+          <canvas id="canvas-2d" width="512" height="512"></canvas>
+        </div>
+        <div class="panel-stats">
+          <div class="stat">
+            <span class="stat-label">bin</span>
+            <span class="stat-value" id="canvas-bin-time">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">render</span>
+            <span class="stat-value" id="canvas-render-time">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">total</span>
+            <span class="stat-value" id="canvas-total-time">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">fps</span>
+            <span class="stat-value" id="canvas-fps">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison">
+      <div class="comparison-title">Performance Comparison</div>
+      <div class="comparison-summary" id="comparison-text">
+        Press RUN to benchmark both rendering paths
+      </div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <span class="bar-label">WebGPU</span>
+          <div class="bar-track">
+            <div class="bar-fill gpu" id="bar-gpu" style="width: 0%"></div>
+          </div>
+          <span class="bar-time gpu" id="bar-gpu-time">--</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Canvas 2D</span>
+          <div class="bar-track">
+            <div class="bar-fill canvas" id="bar-canvas" style="width: 0%"></div>
+          </div>
+          <span class="bar-time canvas" id="bar-canvas-time">--</span>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "vizcrush-benchmark-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless bench3d vite"
+  },
+  "dependencies": {
+    "@vizcrush/bin3d": "workspace:*",
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/spatial3d": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

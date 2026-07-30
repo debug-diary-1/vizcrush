@@ -1,0 +1,95 @@
+{
+  "timestamp": "2026-04-08T04:30:51.591Z",
+  "platform": "linux x64",
+  "nodeVersion": "v24.14.1",
+  "results": [
+    {
+      "name": "lttb",
+      "dataSize": 100000,
+      "medianMs": 0.42,
+      "p95Ms": 1.04,
+      "minMs": 0.39,
+      "backend": "js"
+    },
+    {
+      "name": "lttb",
+      "dataSize": 500000,
+      "medianMs": 1.7,
+      "p95Ms": 1.74,
+      "minMs": 1.68,
+      "backend": "js"
+    },
+    {
+      "name": "lttb",
+      "dataSize": 1000000,
+      "medianMs": 3.21,
+      "p95Ms": 3.27,
+      "minMs": 3.18,
+      "backend": "js"
+    },
+    {
+      "name": "filterRange",
+      "dataSize": 100000,
+      "medianMs": 2.32,
+      "p95Ms": 3.72,
+      "minMs": 1.96,
+      "backend": "js"
+    },
+    {
+      "name": "filterRange",
+      "dataSize": 500000,
+      "medianMs": 12.75,
+      "p95Ms": 20.08,
+      "minMs": 10.73,
+      "backend": "js"
+    },
+    {
+      "name": "filterRange",
+      "dataSize": 1000000,
+      "medianMs": 21.09,
+      "p95Ms": 23.56,
+      "minMs": 17.05,
+      "backend": "js"
+    },
+    {
+      "name": "stats",
+      "dataSize": 100000,
+      "medianMs": 0.74,
+      "p95Ms": 0.75,
+      "minMs": 0.73,
+      "backend": "js"
+    },
+    {
+      "name": "stats",
+      "dataSize": 500000,
+      "medianMs": 3.7,
+      "p95Ms": 3.72,
+      "minMs": 3.53,
+      "backend": "js"
+    },
+    {
+      "name": "stats",
+      "dataSize": 1000000,
+      "medianMs": 7.13,
+      "p95Ms": 7.19,
+      "minMs": 7.09,
+      "backend": "js"
+    },
+    {
+      "name": "sort",
+      "dataSize": 100000,
+      "medianMs": 83.77,
+      "p95Ms": 92.98,
+      "minMs": 60.7,
+      "backend": "js"
+    },
+    {
+      "name": "sort",
+      "dataSize": 500000,
+      "medianMs": 283.34,
+      "p95Ms": 452.56,
+      "minMs": 275.08,
+      "backend": "js"
+    }
+  ]
+}

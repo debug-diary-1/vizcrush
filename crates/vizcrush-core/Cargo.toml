@@ -1,0 +1,9 @@
+[package]
+name = "vizcrush-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Shared bounds-finding used by the binning and spatial-indexing crates"
+
+[lib]
+crate-type = ["rlib"]

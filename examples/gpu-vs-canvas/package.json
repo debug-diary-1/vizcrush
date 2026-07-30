@@ -1,0 +1,19 @@
+{
+  "name": "vizcrush-gpu-vs-canvas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless gpuvscvs vite"
+  },
+  "dependencies": {
+    "@vizcrush/aggregate": "workspace:*",
+    "@vizcrush/bin": "workspace:*",
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/spatial": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

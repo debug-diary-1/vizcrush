@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Real-Time Latency Percentiles</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .gauge {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+      }
+      .gauge .label {
+        color: #888;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+      }
+      .gauge .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .gauge .unit {
+        color: #666;
+        font-size: 0.9rem;
+      }
+      .gauge.p50 .value {
+        color: #4ade80;
+      }
+      .gauge.p90 .value {
+        color: #facc15;
+      }
+      .gauge.p95 .value {
+        color: #fb923c;
+      }
+      .gauge.p99 .value {
+        color: #f87171;
+      }
+      .chart-area {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .chart-area h2 {
+        color: #ccc;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+      }
+      canvas {
+        width: 100%;
+        height: 300px;
+        display: block;
+      }
+      .controls {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+      }
+      .controls button {
+        padding: 0.5rem 1rem;
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-family: inherit;
+      }
+      .controls button:hover {
+        background: #252525;
+      }
+      .controls button.active {
+        background: #4a7fd4;
+        color: #000;
+        border-color: #4a7fd4;
+      }
+      .stats-row {
+        display: flex;
+        gap: 2rem;
+        color: #888;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+      }
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .comparison h3 {
+        color: #aaa;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Real-Time Latency Percentiles</h1>
+      <p class="subtitle">
+        DDSketch vs KLL vs t-digest — live comparison on simulated API response times
+      </p>
+
+      <div class="controls">
+        <button class="active" data-rate="100">100 req/s</button>
+        <button data-rate="500">500 req/s</button>
+        <button data-rate="1000">1K req/s</button>
+        <button data-rate="5000">5K req/s</button>
+        <button id="btn-pause">Pause</button>
+        <button id="btn-reset">Reset</button>
+      </div>
+
+      <div class="dashboard">
+        <div class="gauge p50">
+          <div class="label">P50 (Median)</div>
+          <div class="value" id="p50">—</div>
+          <div class="unit">ms</div>
+        </div>
+        <div class="gauge p90">
+          <div class="label">P90</div>
+          <div class="value" id="p90">—</div>
+          <div class="unit">ms</div>
+        </div>
+        <div class="gauge p95">
+          <div class="label">P95</div>
+          <div class="value" id="p95">—</div>
+          <div class="unit">ms</div>
+        </div>
+        <div class="gauge p99">
+          <div class="label">P99</div>
+          <div class="value" id="p99">—</div>
+          <div class="unit">ms</div>
+        </div>
+        <div class="gauge">
+          <div class="label">Total Requests</div>
+          <div class="value" id="total-count" style="color: #4a7fd4">0</div>
+          <div class="unit">ingested</div>
+        </div>
+        <div class="gauge">
+          <div class="label">Memory</div>
+          <div class="value" id="memory" style="color: #a78bfa; font-size: 1.8rem">—</div>
+          <div class="unit">sketch size</div>
+        </div>
+      </div>
+
+      <div class="chart-area">
+        <h2>Latency Distribution (live histogram)</h2>
+        <canvas id="histogram"></canvas>
+      </div>
+
+      <div class="comparison">
+        <div class="chart-area">
+          <h2>DDSketch Percentiles</h2>
+          <canvas id="ddsketch-chart"></canvas>
+          <div class="stats-row">
+            <span>Accuracy: <span id="dd-accuracy">—</span></span>
+            <span>Buckets: <span id="dd-buckets">—</span></span>
+          </div>
+        </div>
+        <div class="chart-area">
+          <h2>KLL Sketch Percentiles</h2>
+          <canvas id="kll-chart"></canvas>
+          <div class="stats-row">
+            <span>Accuracy: <span id="kll-accuracy">—</span></span>
+            <span>Retained: <span id="kll-retained">—</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

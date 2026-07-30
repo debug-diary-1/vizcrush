@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Globe Visualization</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #0a0a0f;
+        color: #e0e0e8;
+        font-family: "SF Mono", "Fira Code", "JetBrains Mono", monospace;
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 16px 24px 12px;
+        border-bottom: 1px solid #1a1a2e;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #60a5fa;
+        letter-spacing: -0.02em;
+      }
+
+      h1 span {
+        color: #4b5563;
+        font-weight: 400;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+      }
+
+      .stats-row {
+        display: flex;
+        gap: 24px;
+        padding: 10px 24px;
+        border-bottom: 1px solid #1a1a2e;
+        font-size: 12px;
+        flex-wrap: wrap;
+      }
+
+      .stat {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .stat-label {
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 10px;
+      }
+
+      .stat-value {
+        color: #a5b4fc;
+        font-weight: 600;
+      }
+
+      .controls {
+        display: flex;
+        gap: 8px;
+        padding: 10px 24px;
+        border-bottom: 1px solid #1a1a2e;
+        align-items: center;
+      }
+
+      .controls label {
+        font-size: 11px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .controls button {
+        background: #1e1e2e;
+        border: 1px solid #2a2a3e;
+        color: #a5b4fc;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-family: inherit;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.15s;
+      }
+
+      .controls button:hover {
+        background: #2a2a3e;
+      }
+
+      .controls button.active {
+        background: #3730a3;
+        border-color: #4f46e5;
+        color: #e0e7ff;
+      }
+
+      #canvas {
+        flex: 1;
+        display: block;
+        cursor: grab;
+      }
+
+      #canvas:active {
+        cursor: grabbing;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>vizcrush <span>— Globe Visualization</span></h1>
+      <div class="subtitle">100K flight paths rendered on a 3D globe with spatial indexing</div>
+    </header>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-label">Backend</span>
+        <span class="stat-value" id="stat-backend">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Points</span>
+        <span class="stat-value" id="stat-total">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Visible</span>
+        <span class="stat-value" id="stat-visible">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Query Time</span>
+        <span class="stat-value" id="stat-query">—</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label>Data:</label>
+      <button data-type="flights" class="active">Flight Paths</button>
+      <button data-type="earthquakes">Earthquakes</button>
+      <button data-type="shipping">Shipping Routes</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "vizcrush-threejs-nature",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless nature vite"
+  },
+  "dependencies": {
+    "@vizcrush/aggregate": "workspace:*",
+    "@vizcrush/bin": "workspace:*",
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/spatial": "workspace:*",
+    "@vizcrush/spatial3d": "workspace:*",
+    "three": "catalog:"
+  },
+  "devDependencies": {
+    "@types/three": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

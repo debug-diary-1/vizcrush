@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js + vizcrush Nature Scene</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        overflow: hidden;
+        height: 100vh;
+      }
+      canvas#canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+
+      /* HUD overlay — top-left */
+      #hud {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        background: rgba(28, 27, 27, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(74, 127, 212, 0.2);
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-size: 11px;
+        z-index: 10;
+        min-width: 220px;
+        line-height: 1.7;
+      }
+      #hud .hud-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #4a7fd4;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      #hud .hud-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      #hud .hud-label {
+        color: #777;
+      }
+      #hud .hud-val {
+        color: #e5e2e1;
+        font-weight: 600;
+      }
+      #hud .hud-val.accent {
+        color: #4a7fd4;
+      }
+      #hud .hud-section {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      #hud .hud-compute {
+        font-size: 10px;
+        color: #666;
+        margin-top: 4px;
+      }
+
+      /* Controls — top-right */
+      #controls {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        background: rgba(28, 27, 27, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(74, 127, 212, 0.2);
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-size: 11px;
+        z-index: 10;
+        min-width: 200px;
+      }
+      #controls .ctrl-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #4a7fd4;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .ctrl-group {
+        margin-bottom: 8px;
+      }
+      .ctrl-group label {
+        font-size: 10px;
+        color: #777;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .ctrl-group .btn-row {
+        display: flex;
+        gap: 4px;
+      }
+      .ctrl-group button {
+        background: #1e1d1d;
+        border: 1px solid #333;
+        color: #aaa;
+        padding: 3px 8px;
+        font-size: 10px;
+        font-family: inherit;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: all 0.15s;
+      }
+      .ctrl-group button:hover {
+        background: #2a2929;
+        color: #e5e2e1;
+      }
+      .ctrl-group button.active {
+        background: #2a3a55;
+        border-color: #4a7fd4;
+        color: #e5e2e1;
+      }
+      .ctrl-group input[type="range"] {
+        width: 100%;
+        accent-color: #4a7fd4;
+        margin-top: 2px;
+      }
+      .ctrl-group .range-val {
+        font-size: 10px;
+        color: #4a7fd4;
+        float: right;
+      }
+
+      /* Title bar — bottom-center */
+      #title-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(28, 27, 27, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(74, 127, 212, 0.15);
+        border-radius: 4px;
+        padding: 8px 24px;
+        z-index: 10;
+      }
+      #title-bar h1 {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #e5e2e1;
+      }
+      #title-bar h1 span {
+        color: #4a7fd4;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <div id="hud">
+      <div class="hud-title">Performance</div>
+      <div class="hud-row">
+        <span class="hud-label">FPS</span>
+        <span class="hud-val accent" id="hud-fps">&mdash;</span>
+      </div>
+      <div class="hud-row">
+        <span class="hud-label">Frame</span>
+        <span class="hud-val" id="hud-frame">&mdash;</span>
+      </div>
+      <div class="hud-section">
+        <div class="hud-row">
+          <span class="hud-label">Particles</span>
+          <span class="hud-val" id="hud-particles">&mdash;</span>
+        </div>
+        <div class="hud-row">
+          <span class="hud-label">Birds</span>
+          <span class="hud-val" id="hud-birds">&mdash;</span>
+        </div>
+      </div>
+      <div class="hud-section">
+        <div class="hud-title">vizcrush / frame</div>
+        <div class="hud-compute" id="hud-compute">bin2d: 1 | hashGrid: 0 | stats: 0</div>
+      </div>
+      <div class="hud-section">
+        <div class="hud-row">
+          <span class="hud-label">Backend</span>
+          <span class="hud-val accent" id="hud-backend">JS</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="controls">
+      <div class="ctrl-title">Scene Controls</div>
+      <div class="ctrl-group">
+        <label>Birds</label>
+        <div class="btn-row">
+          <button data-birds="30">30</button>
+          <button data-birds="50" class="active">50</button>
+          <button data-birds="100">100</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <label>Water Particles</label>
+        <div class="btn-row">
+          <button data-water="200">200</button>
+          <button data-water="500" class="active">500</button>
+          <button data-water="1000">1000</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <label>Terrain Detail</label>
+        <div class="btn-row">
+          <button data-terrain="64">64</button>
+          <button data-terrain="128" class="active">128</button>
+          <button data-terrain="256">256</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <label>Time of Day <span class="range-val" id="tod-val">12:00</span></label>
+        <input type="range" id="tod-slider" min="0" max="24" step="0.5" value="12" />
+      </div>
+    </div>
+
+    <div id="title-bar">
+      <h1>THREE.JS <span>+ VIZCRUSH</span></h1>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

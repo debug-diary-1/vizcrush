@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "vizcrush": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@vizcrush/mcp-server"]
+    }
+  }
+}

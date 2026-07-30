@@ -1,0 +1,21 @@
+{
+  "name": "vizcrush-flow-field",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless flowfield vite"
+  },
+  "dependencies": {
+    "@vizcrush/aggregate": "workspace:*",
+    "@vizcrush/bin": "workspace:*",
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/downsample": "workspace:*",
+    "@vizcrush/spatial": "workspace:*",
+    "@vizcrush/spatial3d": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

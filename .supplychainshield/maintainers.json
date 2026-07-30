@@ -1,0 +1,112 @@
+{
+  "d3-array": [
+    {
+      "email": "mike@ocks.org",
+      "name": "mbostock"
+    },
+    {
+      "email": "fil@rezo.net",
+      "name": "recifs"
+    }
+  ],
+  "oxlint": [
+    {
+      "email": "boshenc@gmail.com",
+      "name": "boshen"
+    }
+  ],
+  "simple-statistics": [
+    {
+      "email": "tom@macwright.com",
+      "name": "tmcw"
+    }
+  ],
+  "oxfmt": [
+    {
+      "email": "boshenc@gmail.com",
+      "name": "boshen"
+    }
+  ],
+  "turbo": [
+    {
+      "email": "infra+release@vercel.com",
+      "name": "vercel-release-bot"
+    },
+    {
+      "email": "turbobot@vercel.com",
+      "name": "turbobot"
+    }
+  ],
+  "downsample": [
+    {
+      "email": "jan.jakub.nanista@gmail.com",
+      "name": "jannanista"
+    }
+  ],
+  "typescript": [
+    {
+      "email": "npmjs@microsoft.com",
+      "name": "microsoft1es"
+    },
+    {
+      "email": "typescript@microsoft.com",
+      "name": "typescript-bot"
+    },
+    {
+      "email": "wwigham@gmail.com",
+      "name": "weswigham"
+    },
+    {
+      "email": "andrew@wheream.io",
+      "name": "andrewbranch"
+    },
+    {
+      "email": "typescript-design@microsoft.com",
+      "name": "typescript-deploys"
+    },
+    {
+      "email": "jacob.b.bailey@gmail.com",
+      "name": "jakebailey"
+    }
+  ],
+  "vitest": [
+    {
+      "email": "anthonyfu117@hotmail.com",
+      "name": "antfu"
+    },
+    {
+      "email": "hey.patak@gmail.com",
+      "name": "patak"
+    },
+    {
+      "email": "foxzdavinci@gmail.com",
+      "name": "oreanno"
+    },
+    {
+      "email": "yyx990803@gmail.com",
+      "name": "yyx990803"
+    },
+    {
+      "email": "vitest.dev@gmail.com",
+      "name": "vitestbot"
+    }
+  ],
+  "fast-check": [
+    {
+      "email": "npm@dubien.org",
+      "name": "ndubien"
+    }
+  ],
+  "rbush": [
+    {
+      "email": "agafonkin@gmail.com",
+      "name": "mourner"
+    }
+  ],
+  "kdbush": [
+    {
+      "email": "agafonkin@gmail.com",
+      "name": "mourner"
+    }
+  ]
+}

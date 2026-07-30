@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FLOW FIELD</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+      }
+      h1 {
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      #stats-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 6px 16px;
+        background: rgba(28, 27, 27, 0.85);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid #2a2a2a;
+        border-radius: 0 0 4px 0;
+      }
+      #stats-bar h1 {
+        margin-right: 8px;
+      }
+      .stat-label {
+        color: #777;
+        font-size: 11px;
+      }
+      .stat-value {
+        color: #4a7fd4;
+        font-weight: 600;
+        font-size: 11px;
+      }
+      #controls {
+        position: fixed;
+        top: 0;
+        right: 0;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 14px;
+        background: rgba(28, 27, 27, 0.85);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid #2a2a2a;
+        border-left: 1px solid #2a2a2a;
+        border-radius: 0 0 0 4px;
+      }
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .control-row label {
+        color: #777;
+        font-size: 10px;
+        text-transform: uppercase;
+        min-width: 72px;
+      }
+      select,
+      button {
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 11px;
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        outline: none;
+      }
+      select:hover,
+      button:hover {
+        border-color: #4a7fd4;
+      }
+      input[type="range"] {
+        width: 90px;
+        accent-color: #4a7fd4;
+        height: 4px;
+      }
+      button#reset {
+        background: #4a7fd4;
+        color: #131313;
+        border-color: #4a7fd4;
+        font-weight: 600;
+        width: 100%;
+        margin-top: 2px;
+      }
+      button.toggle {
+        min-width: 70px;
+      }
+      button.toggle.active {
+        background: #4a7fd4;
+        color: #131313;
+        border-color: #4a7fd4;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="stats-bar">
+      <h1>Flow Field</h1>
+      <span><span class="stat-label">FPS </span><span class="stat-value" id="fps">0</span></span>
+      <span
+        ><span class="stat-label">Particles </span
+        ><span class="stat-value" id="particleCount">50,000</span></span
+      >
+      <span
+        ><span class="stat-label">Field </span
+        ><span class="stat-value" id="fieldSize">64&times;64</span></span
+      >
+      <span
+        ><span class="stat-label">Mode </span
+        ><span class="stat-value" id="modeDisplay">Attract</span></span
+      >
+    </div>
+    <div id="controls">
+      <div class="control-row">
+        <label>Particles</label>
+        <select id="countSelect">
+          <option value="10000">10K</option>
+          <option value="25000">25K</option>
+          <option value="50000" selected>50K</option>
+          <option value="100000">100K</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>Flow Speed</label>
+        <input type="range" id="flowSpeed" min="0.5" max="3" step="0.1" value="1" />
+        <span class="stat-value" id="flowSpeedVal">1.0x</span>
+      </div>
+      <div class="control-row">
+        <label>Complexity</label>
+        <input type="range" id="complexity" min="1" max="5" step="0.25" value="2" />
+        <span class="stat-value" id="complexityVal">2.0</span>
+      </div>
+      <div class="control-row">
+        <label>Mouse Mode</label>
+        <button class="toggle active" id="modeToggle">Attract</button>
+      </div>
+      <button id="reset">RESET</button>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

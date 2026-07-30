@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VIZCRUSH EXAMPLES</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ── Light mode ── */
+      body.light {
+        background: #f5f5f5;
+        color: #1a1a1a;
+      }
+      body.light .header {
+        border-bottom-color: #ddd;
+      }
+      body.light .search-input {
+        background: #fff;
+        border-color: #ddd;
+        color: #1a1a1a;
+      }
+      body.light .search-input::placeholder {
+        color: #999;
+      }
+      body.light .tabs-bar {
+        border-bottom-color: #ddd;
+      }
+      body.light .tab {
+        color: #999;
+      }
+      body.light .tab:hover {
+        color: #1a1a1a;
+      }
+      body.light .tab.active {
+        color: #4a7fd4;
+      }
+      body.light .count-text {
+        color: #999;
+      }
+      body.light .card {
+        background: #fff;
+        border-color: #e0e0e0;
+      }
+      body.light .card:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      body.light .card-title {
+        color: #2a5fa8;
+      }
+      body.light .card-desc {
+        color: #666;
+      }
+      body.light .tag {
+        background: #f8f8f8;
+        border-color: #ddd;
+        color: #666;
+      }
+      body.light .tag:hover {
+        color: #2a5fa8;
+        border-color: #2a5fa8;
+      }
+      body.light .tag.active-tag {
+        color: #2a5fa8;
+        border-color: #2a5fa8;
+        background: rgba(42, 95, 168, 0.06);
+      }
+      body.light .link-run {
+        color: #2a5fa8;
+      }
+      body.light .link-run:hover {
+        color: #4a7fd4;
+      }
+      body.light .link-source {
+        color: #999;
+      }
+      body.light .link-source:hover {
+        color: #666;
+      }
+      body.light .filter-chip {
+        background: rgba(42, 95, 168, 0.06);
+        border-color: #2a5fa8;
+        color: #2a5fa8;
+      }
+      body.light .header h1 {
+        color: #1a1a1a;
+      }
+
+      .theme-toggle {
+        background: none;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        color: #888;
+        font-family: inherit;
+        font-size: 11px;
+        padding: 4px 10px;
+        cursor: pointer;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+        margin-left: 12px;
+      }
+      .theme-toggle:hover {
+        color: #e5e2e1;
+        border-color: #555;
+      }
+      body.light .theme-toggle {
+        border-color: #ddd;
+        color: #999;
+      }
+      body.light .theme-toggle:hover {
+        color: #1a1a1a;
+        border-color: #999;
+      }
+
+      /* ── Header ── */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 24px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .header h1 {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #e5e2e1;
+        white-space: nowrap;
+      }
+      .search-input {
+        width: 260px;
+        padding: 6px 12px;
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        color: #e5e2e1;
+        font-family: inherit;
+        font-size: 12px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .search-input:focus {
+        border-color: #4a7fd4;
+      }
+      .search-input::placeholder {
+        color: #555;
+      }
+
+      /* ── Tabs ── */
+      .tabs-bar {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 0 24px;
+        border-bottom: 1px solid #2a2a2a;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .tabs-bar::-webkit-scrollbar {
+        display: none;
+      }
+      .tab {
+        padding: 10px 16px;
+        color: #555;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        background: none;
+        border-bottom: 2px solid transparent;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+        white-space: nowrap;
+        user-select: none;
+      }
+      .tab:hover {
+        color: #e5e2e1;
+      }
+      .tab.active {
+        color: #4a7fd4;
+        border-bottom-color: #4a7fd4;
+      }
+
+      /* ── Info bar (count + active filter) ── */
+      .info-bar {
+        padding: 10px 24px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .count-text {
+        color: #555;
+        font-size: 11px;
+      }
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        background: rgba(74, 127, 212, 0.08);
+        border: 1px solid #4a7fd4;
+        border-radius: 3px;
+        color: #4a7fd4;
+        font-size: 11px;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .filter-chip:hover {
+        background: rgba(74, 127, 212, 0.18);
+      }
+      .filter-chip .x {
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      /* ── Grid ── */
+      .grid-wrap {
+        padding: 12px 24px 40px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      @media (max-width: 1280px) {
+        .grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 560px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── Card ── */
+      .card {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-top: none;
+        border-radius: 3px;
+        padding: 12px 14px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--cat-color) 0%, transparent 100%);
+        transition: opacity 0.2s;
+        opacity: 0.6;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+      .card:hover::before {
+        opacity: 1;
+      }
+      .card.hidden {
+        display: none;
+      }
+
+      .card-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: #4a7fd4;
+        line-height: 1.3;
+      }
+      .card-desc {
+        color: #888;
+        font-size: 11px;
+        line-height: 1.45;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 2px;
+      }
+      .tag {
+        padding: 1px 6px;
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 2px;
+        color: #666;
+        font-size: 9px;
+        cursor: pointer;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      .tag:hover {
+        color: #4a7fd4;
+        border-color: #4a7fd4;
+      }
+      .tag.active-tag {
+        color: #4a7fd4;
+        border-color: #4a7fd4;
+        background: rgba(74, 127, 212, 0.08);
+      }
+
+      .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: auto;
+        padding-top: 4px;
+      }
+      .link-run {
+        color: #4a7fd4;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        transition: color 0.15s;
+      }
+      .link-run:hover {
+        color: #6b9be8;
+      }
+      .link-source {
+        color: #555;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        transition: color 0.15s;
+      }
+      .link-source:hover {
+        color: #888;
+      }
+
+      @media (max-width: 560px) {
+        .header {
+          flex-direction: column;
+          gap: 10px;
+          align-items: flex-start;
+        }
+        .search-input {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>VIZCRUSH EXAMPLES</h1>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <input type="text" class="search-input" placeholder="Search examples..." id="searchInput" />
+        <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">LIGHT</button>
+      </div>
+    </div>
+
+    <div class="tabs-bar" id="categoryTabs"></div>
+
+    <div class="info-bar">
+      <span class="count-text" id="countBar"></span>
+      <span id="activeFilters"></span>
+    </div>
+
+    <div class="grid-wrap">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <script>
+      const examples = [
+        {
+          name: "financial-timeseries",
+          portless: "financial",
+          title: "Financial Time-Series",
+          desc: "Million-candle stock chart with MinMax-LTTB spike preservation",
+          category: "Time-Series",
+          algorithms: ["lttb", "minMaxLttb"],
+          complexity: 2,
+        },
+        {
+          name: "streaming-dashboard",
+          portless: "streaming",
+          title: "Streaming Dashboard",
+          desc: "WebSocket live dashboard with rolling stats and append-downsample",
+          category: "Time-Series",
+          algorithms: ["StreamingStats", "appendAndDownsample"],
+          complexity: 2,
+        },
+        {
+          name: "neon-timeseries",
+          portless: "neonts",
+          title: "Neon Time-Series",
+          desc: "Glowing neon tube charts with 4-pass bloom effect and LTTB streaming",
+          category: "Showcase",
+          algorithms: ["lttbSync", "StreamingStats"],
+          complexity: 2,
+        },
+        {
+          name: "d3-large-scatter",
+          portless: "d3scatter",
+          title: "D3 Large Scatter",
+          desc: "D3 + vizcrush for 1M-point scatter with quadtree hover detection",
+          category: "Scatter",
+          algorithms: ["buildQuadtree", "queryRange", "bin2d"],
+          complexity: 2,
+        },
+        {
+          name: "iot-heatmap",
+          portless: "heatmap",
+          title: "IoT Sensor Heatmap",
+          desc: "GPS coordinate density heatmap with viridis colormap",
+          category: "Scatter",
+          algorithms: ["bin2d", "percentile"],
+          complexity: 1,
+        },
+        {
+          name: "chartgpu-integration",
+          portless: "chartgpu",
+          title: "ChartGPU Integration",
+          desc: "vizcrush preprocessing layer for ChartGPU rendering",
+          category: "Scatter",
+          algorithms: ["lttb", "bin2d"],
+          complexity: 1,
+        },
+        {
+          name: "point-cloud-3d",
+          portless: "pointcloud",
+          title: "3D Point Cloud",
+          desc: "Million-point cloud with octree frustum culling and k-NN hover",
+          category: "3D",
+          algorithms: ["buildOctree", "frustumCull", "queryNearest3d"],
+          complexity: 3,
+        },
+        {
+          name: "threejs-integration",
+          portless: "threejs",
+          title: "Three.js Integration",
+          desc: "Three.js + vizcrush frustum culling render pipeline",
+          category: "3D",
+          algorithms: ["buildOctree", "frustumCull"],
+          complexity: 2,
+        },
+        {
+          name: "globe-3d",
+          portless: "globe",
+          title: "3D Globe",
+          desc: "Spherical coordinates on rotating globe with octree queries",
+          category: "3D",
+          algorithms: ["buildOctree", "queryRange3d"],
+          complexity: 2,
+        },
+        {
+          name: "lidar-terrain",
+          portless: "lidar",
+          title: "LiDAR Terrain",
+          desc: "LiDAR point cloud voxelized for terrain rendering",
+          category: "3D",
+          algorithms: ["bin3d"],
+          complexity: 2,
+        },
+        {
+          name: "medical-volume",
+          portless: "medical",
+          title: "Medical Volume",
+          desc: "Volumetric CT data with 2D slice extraction and colormaps",
+          category: "3D",
+          algorithms: ["bin3d"],
+          complexity: 2,
+        },
+        {
+          name: "voxel-heatmap-3d",
+          portless: "voxel",
+          title: "Voxel Heatmap 3D",
+          desc: "3D density voxels rendered as colored cubes",
+          category: "3D",
+          algorithms: ["bin3d"],
+          complexity: 2,
+        },
+        {
+          name: "benchmark-3d",
+          portless: "bench3d",
+          title: "3D Benchmark",
+          desc: "Performance comparison of 3D operations vs pure JS",
+          category: "3D",
+          algorithms: ["buildOctree", "frustumCull", "bin3d"],
+          complexity: 1,
+        },
+        {
+          name: "reservoir-sampling",
+          portless: "reservoir",
+          title: "Reservoir Sampling",
+          desc: "Sample size k vs representativeness with chi-squared goodness test",
+          category: "Sketches",
+          algorithms: ["ReservoirSampler"],
+          complexity: 1,
+        },
+        {
+          name: "ddsketch",
+          portless: "ddsketch",
+          title: "DDSketch",
+          desc: "CDF overlay exact vs sketch, relative accuracy alpha tradeoff",
+          category: "Sketches",
+          algorithms: ["DDSketch"],
+          complexity: 1,
+        },
+        {
+          name: "kll-sketch",
+          portless: "kll",
+          title: "KLL Sketch",
+          desc: "CDF comparison, k vs compression ratio and rank error",
+          category: "Sketches",
+          algorithms: ["KllSketch"],
+          complexity: 1,
+        },
+        {
+          name: "hyperloglog",
+          portless: "hll",
+          title: "HyperLogLog++",
+          desc: "Animated streaming cardinality counter with register heatmap",
+          category: "Sketches",
+          algorithms: ["HyperLogLog"],
+          complexity: 1,
+        },
+        {
+          name: "countmin-sketch",
+          portless: "countmin",
+          title: "Count-Min Sketch",
+          desc: "Top-20 frequency bars with over-estimation highlighting",
+          category: "Sketches",
+          algorithms: ["CountMinSketch"],
+          complexity: 1,
+        },
+        {
+          name: "latency-percentiles",
+          portless: "latency",
+          title: "Latency Percentiles",
+          desc: "Real-time p50/p90/p95/p99 gauges \u2014 DDSketch vs KLL live comparison",
+          category: "Sketches",
+          algorithms: ["DDSketch", "KllSketch"],
+          complexity: 2,
+        },
+        {
+          name: "stream-analytics",
+          portless: "streamana",
+          title: "Stream Analytics",
+          desc: "HLL unique counting + Count-Min heavy hitters + reservoir scatter overlay",
+          category: "Sketches",
+          algorithms: ["HyperLogLog", "CountMinSketch", "ReservoirSampler"],
+          complexity: 2,
+        },
+        {
+          name: "sketch-comparison",
+          portless: "sketchcmp",
+          title: "Sketch Comparison",
+          desc: "DDSketch vs KLL vs exact \u2014 triple CDF overlay with memory comparison",
+          category: "Sketches",
+          algorithms: ["DDSketch", "KllSketch", "percentile"],
+          complexity: 2,
+        },
+        {
+          name: "data-transforms",
+          portless: "datatx",
+          title: "Data Transforms",
+          desc: "Log/power transform + quantile normalization before/after histograms",
+          category: "Transforms",
+          algorithms: ["logTransform", "powerTransform", "quantileNormalize"],
+          complexity: 1,
+        },
+        {
+          name: "log-transform",
+          portless: "logtx",
+          title: "Log Transform",
+          desc: "Interactive base selector with 4 distributions, skewness/kurtosis stats",
+          category: "Transforms",
+          algorithms: ["logTransform", "lnTransform", "log10Transform"],
+          complexity: 1,
+        },
+        {
+          name: "quantile-normalization",
+          portless: "qnorm",
+          title: "Quantile Normalization",
+          desc: "2-4 series distribution alignment with overlaid histograms",
+          category: "Transforms",
+          algorithms: ["quantileNormalize"],
+          complexity: 1,
+        },
+        {
+          name: "spatial-hashgrid",
+          portless: "hashgrid",
+          title: "Spatial Hash Grid",
+          desc: "Interactive hover neighbor search \u2014 hash grid vs quadtree timing",
+          category: "Spatial",
+          algorithms: ["buildHashGrid", "hashGridQueryRadius", "buildQuadtree", "mortonOrder2d"],
+          complexity: 2,
+        },
+        {
+          name: "morton-renderer",
+          portless: "morton",
+          title: "Morton Z-Order",
+          desc: "Animated Z-curve vs random rendering order with cache locality scoring",
+          category: "Spatial",
+          algorithms: ["mortonOrder2d"],
+          complexity: 1,
+        },
+        {
+          name: "reservoir-scatter",
+          portless: "rsscatter",
+          title: "Reservoir Scatter",
+          desc: "Full vs sample scatter overlay with KS test and quadrant density",
+          category: "Spatial",
+          algorithms: ["ReservoirSampler"],
+          complexity: 2,
+        },
+        {
+          name: "webgpu-heatmap",
+          portless: "gpuheat",
+          title: "WebGPU Heatmap",
+          desc: "Compute shader bins 1M points \u2192 viridis fragment shader on GPU",
+          category: "GPU",
+          algorithms: ["bin2d"],
+          complexity: 3,
+        },
+        {
+          name: "gpu-particles",
+          portless: "gpupart",
+          title: "GPU Particles",
+          desc: "WebGPU compute physics + render pipeline particle system",
+          category: "GPU",
+          algorithms: ["prefixSum", "streamCompact"],
+          complexity: 3,
+        },
+        {
+          name: "gpu-vs-canvas",
+          portless: "gpuvscvs",
+          title: "GPU vs Canvas 2D",
+          desc: "Side-by-side density plot benchmark \u2014 WebGPU vs Canvas speedup",
+          category: "GPU",
+          algorithms: ["bin2d"],
+          complexity: 2,
+        },
+        {
+          name: "flow-field",
+          portless: "flowfield",
+          title: "Flow Field",
+          desc: "50K particles streaming through velocity field with fading trails",
+          category: "Showcase",
+          algorithms: ["particlePhysics"],
+          complexity: 2,
+        },
+        {
+          name: "gpu-voronoi",
+          portless: "voronoi",
+          title: "GPU Voronoi",
+          desc: "Live Voronoi diagram with glowing cyan edges and draggable seeds",
+          category: "Showcase",
+          algorithms: ["voronoi"],
+          complexity: 2,
+        },
+        {
+          name: "volume-raymarcher",
+          portless: "volray",
+          title: "Volume Raymarcher",
+          desc: "3D volumetric nebula raymarched per-pixel with diffuse lighting",
+          category: "Showcase",
+          algorithms: ["raymarching"],
+          complexity: 3,
+        },
+        {
+          name: "million-galaxy",
+          portless: "galaxy",
+          title: "Million-Star Galaxy",
+          desc: "1M-star spiral galaxy with ImageData additive rendering",
+          category: "Showcase",
+          algorithms: ["projection"],
+          complexity: 2,
+        },
+        {
+          name: "threejs-nature",
+          portless: "nature",
+          title: "Three.js + vizcrush",
+          desc: "Nature scene: terrain (bin2d), bird flock (hashGrid Boids), waterfall",
+          category: "3D",
+          algorithms: ["bin2d", "buildHashGrid", "hashGridQueryRadius", "StreamingStats"],
+          complexity: 3,
+        },
+        {
+          name: "ai-playground",
+          portless: "aiplay",
+          title: "AI Playground",
+          desc: "Interactive anomaly detection, auto-optimization, shape similarity",
+          category: "AI",
+          algorithms: ["detectAnomalies", "autoOptimize", "summarize", "shapeSimilarity"],
+          complexity: 1,
+        },
+        {
+          name: "mcp-demo",
+          portless: "mcpdemo",
+          title: "MCP Demo",
+          desc: "MCP server configuration walkthrough with example agent prompts",
+          category: "AI",
+          algorithms: ["mcpTools"],
+          complexity: 1,
+        },
+      ];
+
+      const categories = [
+        "All",
+        "Time-Series",
+        "Scatter",
+        "3D",
+        "Sketches",
+        "Transforms",
+        "Spatial",
+        "GPU",
+        "Showcase",
+        "AI",
+      ];
+
+      const catColors = {
+        "Time-Series": "#4a7fd4",
+        Scatter: "#a78bfa",
+        "3D": "#fb923c",
+        Sketches: "#4ade80",
+        Transforms: "#f472b6",
+        Spatial: "#facc15",
+        GPU: "#f87171",
+        Showcase: "#22d3ee",
+        AI: "#c084fc",
+      };
+
+      let activeCategory = "All";
+      let activeAlgorithm = null;
+      let searchQuery = "";
+
+      function renderTabs() {
+        const container = document.getElementById("categoryTabs");
+        container.innerHTML = categories
+          .map(
+            (c) =>
+              '<button class="tab' +
+              (activeCategory === c ? " active" : "") +
+              '" data-category="' +
+              c +
+              '">' +
+              c +
+              "</button>",
+          )
+          .join("");
+
+        container.querySelectorAll(".tab").forEach((tab) => {
+          tab.addEventListener("click", () => {
+            activeCategory = tab.dataset.category;
+            renderTabs();
+            filterCards();
+          });
+        });
+      }
+
+      function renderCards() {
+        const grid = document.getElementById("grid");
+        grid.innerHTML = examples
+          .map((ex) => {
+            const color = catColors[ex.category] || "#4a7fd4";
+            const tags = ex.algorithms
+              .map((a) => '<span class="tag" data-algo="' + a + '">' + a + "</span>")
+              .join("");
+
+            return (
+              '<div class="card" style="--cat-color:' +
+              color +
+              '" ' +
+              'data-category="' +
+              ex.category +
+              '" ' +
+              'data-algorithms="' +
+              ex.algorithms.join(",") +
+              '" ' +
+              'data-name="' +
+              ex.name +
+              '">' +
+              '<div class="card-title">' +
+              ex.title +
+              "</div>" +
+              '<div class="card-desc">' +
+              ex.desc +
+              "</div>" +
+              '<div class="card-tags">' +
+              tags +
+              "</div>" +
+              '<div class="card-actions">' +
+              '<a href="./' +
+              ex.name +
+              '/" class="link-run">RUN</a>' +
+              '<a href="https://github.com/pallavL01/vizcrush/tree/main/examples/' +
+              ex.name +
+              '" class="link-source" target="_blank" rel="noopener">SOURCE</a>' +
+              "</div>" +
+              "</div>"
+            );
+          })
+          .join("");
+
+        grid.querySelectorAll(".tag").forEach((tag) => {
+          tag.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const algo = tag.dataset.algo;
+            activeAlgorithm = activeAlgorithm === algo ? null : algo;
+            filterCards();
+          });
+        });
+      }
+
+      function filterCards() {
+        const cards = document.querySelectorAll(".card");
+        const query = searchQuery.toLowerCase();
+        let visible = 0;
+
+        cards.forEach((card) => {
+          const cat = card.dataset.category;
+          const algos = card.dataset.algorithms.toLowerCase();
+          const name = card.dataset.name.toLowerCase();
+          const title = card.querySelector(".card-title").textContent.toLowerCase();
+          const desc = card.querySelector(".card-desc").textContent.toLowerCase();
+
+          let show = true;
+          if (activeCategory !== "All" && cat !== activeCategory) show = false;
+          if (activeAlgorithm && !card.dataset.algorithms.split(",").includes(activeAlgorithm))
+            show = false;
+          if (query) {
+            const match =
+              name.includes(query) ||
+              title.includes(query) ||
+              desc.includes(query) ||
+              algos.includes(query);
+            if (!match) show = false;
+          }
+
+          card.classList.toggle("hidden", !show);
+          if (show) visible++;
+        });
+
+        document.querySelectorAll(".tag").forEach((tag) => {
+          tag.classList.toggle("active-tag", activeAlgorithm === tag.dataset.algo);
+        });
+
+        document.getElementById("countBar").textContent =
+          visible === examples.length
+            ? examples.length + " examples"
+            : visible + " of " + examples.length + " examples";
+
+        renderActiveFilters();
+      }
+
+      function renderActiveFilters() {
+        const container = document.getElementById("activeFilters");
+        const esc = (s) =>
+          s
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        let chips = [];
+
+        if (activeAlgorithm) {
+          chips.push(
+            '<span class="filter-chip" data-type="algorithm">Filtered: ' +
+              esc(activeAlgorithm) +
+              ' <span class="x">\u00d7</span></span>',
+          );
+        }
+        if (searchQuery) {
+          chips.push(
+            '<span class="filter-chip" data-type="search">Search: "' +
+              esc(searchQuery) +
+              '" <span class="x">\u00d7</span></span>',
+          );
+        }
+
+        container.innerHTML = chips.join("");
+
+        container.querySelectorAll(".filter-chip").forEach((chip) => {
+          chip.addEventListener("click", () => {
+            const type = chip.dataset.type;
+            if (type === "algorithm") activeAlgorithm = null;
+            if (type === "search") {
+              searchQuery = "";
+              document.getElementById("searchInput").value = "";
+            }
+            filterCards();
+          });
+        });
+      }
+
+      // Init
+      document.getElementById("searchInput").addEventListener("input", (e) => {
+        searchQuery = e.target.value.trim();
+        filterCards();
+      });
+
+      renderTabs();
+      renderCards();
+      filterCards();
+
+      // Theme toggle
+      const themeBtn = document.getElementById("themeToggle");
+      const saved = localStorage.getItem("vizcrush-theme");
+      if (saved === "light") {
+        document.body.classList.add("light");
+        themeBtn.textContent = "DARK";
+      }
+      themeBtn.addEventListener("click", () => {
+        document.body.classList.toggle("light");
+        const isLight = document.body.classList.contains("light");
+        themeBtn.textContent = isLight ? "DARK" : "LIGHT";
+        localStorage.setItem("vizcrush-theme", isLight ? "light" : "dark");
+      });
+    </script>
+  </body>
+</html>

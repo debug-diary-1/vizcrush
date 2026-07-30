@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — AI Features Playground</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #fafbfc;
+        color: #1a1a2e;
+        font-family: Inter, system-ui, sans-serif;
+      }
+
+      /* Header */
+      .header {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .header h1 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111;
+      }
+      .header h1 span {
+        color: #7c3aed;
+      }
+      .header .subtitle {
+        font-size: 11px;
+        color: #9ca3af;
+      }
+      .badge {
+        background: #f3e8ff;
+        color: #7c3aed;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 12px;
+        letter-spacing: 0.5px;
+      }
+      .badge-note {
+        font-size: 10px;
+        color: #9ca3af;
+        margin-left: 8px;
+      }
+
+      .main {
+        max-width: 100%;
+        padding: 16px 24px;
+      }
+
+      /* Controls bar */
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      select,
+      .query-input {
+        font-family: inherit;
+        font-size: 13px;
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: white;
+        color: #374151;
+        outline: none;
+      }
+      select:focus,
+      .query-input:focus {
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+      }
+      .query-input {
+        flex: 1;
+        min-width: 200px;
+      }
+      .btn {
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .btn-primary {
+        background: #7c3aed;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #6d28d9;
+      }
+      .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+      }
+      .btn-secondary:hover {
+        background: #e5e7eb;
+      }
+      .separator {
+        width: 1px;
+        height: 24px;
+        background: #e5e7eb;
+      }
+
+      /* Chart */
+      .chart-wrap {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .chart-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .chart-stats {
+        display: flex;
+        gap: 16px;
+        font-size: 11px;
+      }
+      .chart-stat {
+        color: #9ca3af;
+      }
+      .chart-stat b {
+        color: #111;
+        font-weight: 600;
+      }
+      canvas {
+        width: 100%;
+        height: 180px;
+        display: block;
+        border-radius: 8px;
+        background: #f9fafb;
+      }
+
+      /* Results grid */
+      .results {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 768px) {
+        .results {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .card-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card-icon .material-symbols-outlined {
+        font-size: 16px;
+      }
+      .card-title {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .card-subtitle {
+        font-size: 10px;
+        color: #9ca3af;
+      }
+      .card-body {
+        padding: 16px;
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      /* Card-specific colors */
+      .card-anomaly .card-icon {
+        background: #fef2f2;
+      }
+      .card-anomaly .card-icon .material-symbols-outlined {
+        color: #ef4444;
+      }
+      .card-auto .card-icon {
+        background: #ecfdf5;
+      }
+      .card-auto .card-icon .material-symbols-outlined {
+        color: #10b981;
+      }
+      .card-summary .card-icon {
+        background: #fffbeb;
+      }
+      .card-summary .card-icon .material-symbols-outlined {
+        color: #f59e0b;
+      }
+      .card-query .card-icon {
+        background: #f5f3ff;
+      }
+      .card-query .card-icon .material-symbols-outlined {
+        color: #7c3aed;
+      }
+
+      /* Code display */
+      .code-block {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 220px;
+        overflow-y: auto;
+        color: #334155;
+      }
+      .code-block .label {
+        color: #7c3aed;
+        font-weight: 500;
+      }
+      .code-block .value {
+        color: #059669;
+      }
+      .code-block .muted {
+        color: #94a3b8;
+      }
+      .code-block .warn {
+        color: #ef4444;
+      }
+      .code-block .info {
+        color: #3b82f6;
+      }
+
+      /* Anomaly markers */
+      .anomaly-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+      }
+      .anomaly-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .anomaly-dot.spike {
+        background: #ef4444;
+      }
+      .anomaly-dot.dip {
+        background: #3b82f6;
+      }
+      .anomaly-dot.shift {
+        background: #f59e0b;
+      }
+
+      /* LLM paragraph */
+      .llm-paragraph {
+        background: linear-gradient(135deg, #f5f3ff, #eff6ff);
+        border: 1px solid #ddd6fe;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: #4338ca;
+        font-style: italic;
+        margin-top: 8px;
+      }
+      .llm-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #7c3aed;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        font-style: normal;
+      }
+
+      /* Similarity bars */
+      .sim-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 0;
+        font-size: 11px;
+      }
+      .sim-label {
+        width: 100px;
+        color: #6b7280;
+        flex-shrink: 0;
+      }
+      .sim-bar-bg {
+        flex: 1;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .sim-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s;
+      }
+      .sim-value {
+        width: 36px;
+        text-align: right;
+        font-weight: 600;
+        font-family: "JetBrains Mono", monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>
+        <h1><span>vizcrush</span> AI Playground</h1>
+        <div class="subtitle">
+          Test anomaly detection, auto-optimization, NLP queries, summarization, and shape
+          embeddings
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span class="badge">100% LOCAL</span>
+        <span class="badge-note">No API keys · No tokens · Pure math</span>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="toolbar">
+        <select id="dataType">
+          <option value="shift" selected>Mean Shift + Spikes</option>
+          <option value="spiky">Volatile Time-Series</option>
+          <option value="sine">Clean Sine Wave</option>
+          <option value="trend">Upward Trend</option>
+          <option value="random">Random Noise</option>
+        </select>
+        <select id="dataSize">
+          <option value="1000">1K pts</option>
+          <option value="5000" selected>5K pts</option>
+          <option value="50000">50K pts</option>
+          <option value="500000">500K pts</option>
+        </select>
+        <button class="btn btn-primary" id="generateBtn">
+          <span style="display: flex; align-items: center; gap: 4px">Generate & Analyze</span>
+        </button>
+        <div class="separator"></div>
+        <input
+          type="text"
+          class="query-input"
+          id="nlQuery"
+          placeholder='Type a question: "find anomalies" or "show spikes above 50"'
+        />
+        <button class="btn btn-secondary" id="queryBtn">Ask</button>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-wrap">
+        <div class="chart-header">
+          <div class="chart-title">Data Visualization</div>
+          <div class="chart-stats" id="chartStats"></div>
+        </div>
+        <canvas id="chart"></canvas>
+      </div>
+
+      <!-- Results -->
+      <div class="results">
+        <div class="card card-anomaly">
+          <div class="card-header">
+            <div class="card-icon"><span class="material-symbols-outlined">crisis_alert</span></div>
+            <div>
+              <div class="card-title">Anomaly Detection</div>
+              <div class="card-subtitle">MAD-based Z-score · No ML model</div>
+            </div>
+          </div>
+          <div class="card-body" id="anomalyOutput">Generate data to start</div>
+        </div>
+
+        <div class="card card-auto">
+          <div class="card-header">
+            <div class="card-icon">
+              <span class="material-symbols-outlined">auto_fix_high</span>
+            </div>
+            <div>
+              <div class="card-title">Auto-Optimization</div>
+              <div class="card-subtitle">Picks the best algorithm for your data</div>
+            </div>
+          </div>
+          <div class="card-body" id="autoOutput">—</div>
+        </div>
+
+        <div class="card card-summary">
+          <div class="card-header">
+            <div class="card-icon"><span class="material-symbols-outlined">description</span></div>
+            <div>
+              <div class="card-title">Data Summary & LLM Context</div>
+              <div class="card-subtitle">Stats + paragraph for AI agent context windows</div>
+            </div>
+          </div>
+          <div class="card-body" id="summaryOutput">—</div>
+        </div>
+
+        <div class="card card-query">
+          <div class="card-header">
+            <div class="card-icon"><span class="material-symbols-outlined">chat</span></div>
+            <div>
+              <div class="card-title">NLP Query & Shape Embedding</div>
+              <div class="card-subtitle">Natural language → operation · Similarity search</div>
+            </div>
+          </div>
+          <div class="card-body" id="queryOutput">Type a question above</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

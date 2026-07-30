@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — 3D Voxel Heatmap</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #0a0a0f;
+        color: #e0e0e0;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          system-ui,
+          sans-serif;
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 20px 28px 12px;
+        border-bottom: 1px solid #1a1a2e;
+      }
+
+      header h1 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #f0f0f0;
+        letter-spacing: -0.02em;
+      }
+
+      header h1 span {
+        color: #7c6aef;
+      }
+
+      header p {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 4px;
+      }
+
+      .stats-bar {
+        display: flex;
+        gap: 24px;
+        padding: 10px 28px;
+        background: #0e0e18;
+        border-bottom: 1px solid #1a1a2e;
+        font-size: 0.78rem;
+      }
+
+      .stat {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .stat-label {
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .stat-value {
+        color: #c0c0c0;
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+      }
+
+      .canvas-wrap {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+      }
+
+      canvas:active {
+        cursor: grabbing;
+      }
+
+      .controls {
+        display: flex;
+        gap: 16px;
+        padding: 12px 28px;
+        background: #0e0e18;
+        border-top: 1px solid #1a1a2e;
+        align-items: center;
+        font-size: 0.8rem;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .control-group label {
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.72rem;
+      }
+
+      .control-group select {
+        background: #16162a;
+        border: 1px solid #2a2a4a;
+        color: #c0c0c0;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        outline: none;
+      }
+
+      .control-group select:hover {
+        border-color: #7c6aef;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1><span>vizcrush</span> — 3D Voxel Heatmap</h1>
+      <p>500K scatter points &rarr; 16&sup3; voxel density grid</p>
+    </header>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">Backend</span>
+        <span class="stat-value" id="stat-backend">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Points</span>
+        <span class="stat-value" id="stat-points">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Grid Size</span>
+        <span class="stat-value" id="stat-grid">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">bin3d Time</span>
+        <span class="stat-value" id="stat-time">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Max Density</span>
+        <span class="stat-value" id="stat-max">--</span>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Points</label>
+        <select id="ctrl-points">
+          <option value="100000">100K</option>
+          <option value="500000" selected>500K</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Grid Resolution</label>
+        <select id="ctrl-grid">
+          <option value="8">8&sup3;</option>
+          <option value="16" selected>16&sup3;</option>
+          <option value="32">32&sup3;</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Color Scale</label>
+        <select id="ctrl-color">
+          <option value="viridis" selected>Viridis</option>
+          <option value="inferno">Inferno</option>
+          <option value="plasma">Plasma</option>
+        </select>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

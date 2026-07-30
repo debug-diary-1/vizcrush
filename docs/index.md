@@ -1,0 +1,66 @@
+---
+layout: home
+
+hero:
+  name: vizcrush
+  text: High-performance data primitives
+  tagline: Rust + WASM — downsample, bin, index, and aggregate millions of points at 60fps
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /user-guide/getting-started
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/pallavL01/vizcrush
+
+features:
+  - title: Downsampling
+    details: LTTB, MinMax-LTTB, M4, LTOB — preserve the visual shape of millions of points in your charts.
+    link: /packages/downsample
+  - title: Binning & Density
+    details: 1D histograms, 2D density grids, hexagonal binning, 3D voxel grids.
+    link: /packages/bin
+  - title: Spatial Indexes
+    details: Quadtree, octree, Morton curves, hash grids, k-NN, range queries, frustum culling.
+    link: /packages/spatial
+  - title: Streaming Stats
+    details: Welford one-pass stats, HyperLogLog, DDSketch, KLL, CountMin, reservoir sampling.
+    link: /packages/aggregate
+  - title: AI Features
+    details: Anomaly + changepoint detection, auto-config, shape embeddings, NL query parsing.
+    link: /packages/ai
+  - title: MCP Server
+    details: Expose 23 tools to Claude, Cursor, and other MCP-aware agents over stdio or HTTP.
+    link: /user-guide/mcp
+---
+
+## Quick taste
+
+> **Not yet on npm.** The `@vizcrush/*` packages have not been published yet —
+> until the first release lands, build from source (see
+> [Installation](/user-guide/installation)).
+
+```typescript
+import { init } from "@vizcrush/core";
+import { lttb } from "@vizcrush/downsample";
+
+// Auto-detect the compute backend (wasm / js)
+const ctx = await init();
+console.log(`Running on: ${ctx.backend}`);
+
+// Downsample 1M points to 1000 in ~2ms
+const x = new Float64Array(1_000_000);
+const y = new Float64Array(1_000_000);
+// ... fill x, y with your data ...
+
+const { x: xs, y: ys } = await lttb(x, y, 1000);
+// xs, ys are Float64Array[1000] — feed them to any renderer
+```
+
+## Where to go next
+
+- New here? Start with the **[Getting Started](/user-guide/getting-started)** guide.
+- Want to see it work end-to-end? Jump to the **[Quickstart](/user-guide/quickstart)**.
+- Looking for a specific algorithm? Check the **[Algorithms reference](/reference/algorithms)**.
+- Building a React app? See **[React Integration](/user-guide/react)**.
+- Wiring it into Claude or Cursor? See **[MCP Server](/user-guide/mcp)**.

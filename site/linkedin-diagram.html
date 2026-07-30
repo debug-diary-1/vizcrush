@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Where It Fits</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0a0a12;
+        font-family: Inter, system-ui;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 20px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <svg
+      viewBox="0 0 1200 680"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style="width: 100%; height: 100%; max-height: 100vh"
+    >
+      <defs>
+        <linearGradient id="gViz" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#0c3a50" />
+          <stop offset="100%" stop-color="#0a4565" />
+        </linearGradient>
+        <linearGradient id="gBook" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#2a1d45" />
+          <stop offset="100%" stop-color="#1f1535" />
+        </linearGradient>
+        <style>
+          text {
+            font-family: Inter, system-ui;
+          }
+          .mono {
+            font-family: "JetBrains Mono", monospace;
+          }
+          @keyframes dash {
+            to {
+              stroke-dashoffset: -16;
+            }
+          }
+          .dash {
+            stroke-dasharray: 4 4;
+            animation: dash 0.8s linear infinite;
+          }
+        </style>
+      </defs>
+
+      <!-- Title -->
+      <text x="600" y="36" text-anchor="middle" font-size="22" font-weight="800" fill="#f1f5f9">
+        The Missing Layer in Browser Data Visualization
+      </text>
+      <text x="600" y="58" text-anchor="middle" font-size="12" fill="#64748b">
+        Where vizcrush fits — and why we wrote a book about it
+      </text>
+
+      <!-- ═══ THE PROBLEM (Left) ═══ -->
+      <text
+        x="300"
+        y="100"
+        text-anchor="middle"
+        font-size="11"
+        font-weight="600"
+        fill="#f87171"
+        letter-spacing="1.5"
+      >
+        THE PROBLEM
+      </text>
+
+      <!-- Raw Data -->
+      <rect
+        x="60"
+        y="120"
+        width="480"
+        height="80"
+        rx="14"
+        fill="#1c1520"
+        stroke="#4a2040"
+        stroke-width="1"
+      />
+      <text x="300" y="150" text-anchor="middle" font-size="13" font-weight="600" fill="#fca5a5">
+        Your Data: 2,000,000 points
+      </text>
+      <text x="300" y="172" text-anchor="middle" font-size="11" fill="#94a3b8">
+        Time-series, scatter plots, spatial, volumetric, streaming sensors
+      </text>
+
+      <!-- Arrow down -->
+      <line
+        x1="300"
+        y1="200"
+        x2="300"
+        y2="230"
+        stroke="#f87171"
+        stroke-width="1.5"
+        class="dash"
+        opacity="0.5"
+      />
+
+      <!-- The Wall -->
+      <rect
+        x="100"
+        y="230"
+        width="400"
+        height="60"
+        rx="12"
+        fill="#2a1215"
+        stroke="#991b1b"
+        stroke-width="1.5"
+      />
+      <text x="300" y="258" text-anchor="middle" font-size="15" font-weight="700" fill="#fca5a5">
+        The 100K Datapoint Wall
+      </text>
+      <text x="300" y="278" text-anchor="middle" font-size="10" fill="#dc2626">
+        Rendering 1M raw points blows the frame budget. The fix: fewer, smarter points.
+      </text>
+
+      <!-- Arrow down -->
+      <line
+        x1="300"
+        y1="290"
+        x2="300"
+        y2="320"
+        stroke="#f87171"
+        stroke-width="1.5"
+        class="dash"
+        opacity="0.5"
+      />
+
+      <!-- Browser dies -->
+      <rect
+        x="140"
+        y="320"
+        width="320"
+        height="45"
+        rx="10"
+        fill="#1a1215"
+        stroke="#7f1d1d"
+        stroke-width="0.5"
+      />
+      <text x="300" y="348" text-anchor="middle" font-size="12" fill="#fca5a5">
+        "Page Unresponsive" at 500K points
+      </text>
+
+      <!-- ═══ THE SOLUTION (Right) ═══ -->
+      <text
+        x="900"
+        y="100"
+        text-anchor="middle"
+        font-size="11"
+        font-weight="600"
+        fill="#4ade80"
+        letter-spacing="1.5"
+      >
+        THE SOLUTION
+      </text>
+
+      <!-- Same data -->
+      <rect
+        x="660"
+        y="120"
+        width="480"
+        height="80"
+        rx="14"
+        fill="#0f1d18"
+        stroke="#1a4d2e"
+        stroke-width="1"
+      />
+      <text x="900" y="150" text-anchor="middle" font-size="13" font-weight="600" fill="#86efac">
+        Same 2,000,000 points
+      </text>
+      <text x="900" y="172" text-anchor="middle" font-size="11" fill="#94a3b8">
+        Feed directly to vizcrush
+      </text>
+
+      <!-- Arrow down -->
+      <line
+        x1="900"
+        y1="200"
+        x2="900"
+        y2="230"
+        stroke="#4ade80"
+        stroke-width="1.5"
+        class="dash"
+        opacity="0.5"
+      />
+
+      <!-- vizcrush layer -->
+      <rect
+        x="690"
+        y="230"
+        width="420"
+        height="100"
+        rx="14"
+        fill="url(#gViz)"
+        stroke="#1a6b8a"
+        stroke-width="1"
+      />
+      <text
+        x="900"
+        y="256"
+        text-anchor="middle"
+        font-size="10"
+        font-weight="600"
+        fill="#38bdf8"
+        letter-spacing="2"
+      >
+        VIZCRUSH
+      </text>
+      <text x="900" y="275" text-anchor="middle" font-size="11" fill="#7dd3fc">
+        Rust → WebAssembly, with a pure-JS fallback
+      </text>
+
+      <!-- Algorithm chips -->
+      <rect
+        x="710"
+        y="288"
+        width="72"
+        height="28"
+        rx="6"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="746" y="306" text-anchor="middle" font-size="9" fill="#bae6fd">LTTB</text>
+
+      <rect
+        x="792"
+        y="288"
+        width="72"
+        height="28"
+        rx="6"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="828" y="306" text-anchor="middle" font-size="9" fill="#bae6fd">Binning</text>
+
+      <rect
+        x="874"
+        y="288"
+        width="72"
+        height="28"
+        rx="6"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="910" y="306" text-anchor="middle" font-size="9" fill="#bae6fd">Spatial</text>
+
+      <rect
+        x="956"
+        y="288"
+        width="72"
+        height="28"
+        rx="6"
+        fill="rgba(255,255,255,0.05)"
+        stroke="rgba(255,255,255,0.1)"
+        stroke-width="0.5"
+      />
+      <text x="992" y="306" text-anchor="middle" font-size="9" fill="#bae6fd">Sketches</text>
+
+      <rect
+        x="1038"
+        y="288"
+        width="52"
+        height="28"
+        rx="6"
+        fill="rgba(167,139,250,0.1)"
+        stroke="rgba(167,139,250,0.2)"
+        stroke-width="0.5"
+      />
+      <text x="1064" y="306" text-anchor="middle" font-size="9" fill="#c4b5fd">AI</text>
+
+      <!-- Arrow down -->
+      <line
+        x1="900"
+        y1="330"
+        x2="900"
+        y2="360"
+        stroke="#4ade80"
+        stroke-width="1.5"
+        class="dash"
+        opacity="0.5"
+      />
+
+      <!-- Output -->
+      <rect
+        x="720"
+        y="360"
+        width="360"
+        height="50"
+        rx="12"
+        fill="#0f2318"
+        stroke="#1a4d2e"
+        stroke-width="1"
+      />
+      <text x="900" y="382" text-anchor="middle" font-size="14" font-weight="700" fill="#d1fae5">
+        1,920 points at 60fps
+      </text>
+      <text x="900" y="400" text-anchor="middle" font-size="10" fill="#6ee7b7">
+        Zero visual loss. Any chart library. ~2ms.
+      </text>
+
+      <!-- ═══ THE STACK DIAGRAM (Bottom Center) ═══ -->
+      <text
+        x="600"
+        y="440"
+        text-anchor="middle"
+        font-size="11"
+        font-weight="600"
+        fill="#94a3b8"
+        letter-spacing="1.5"
+      >
+        WHERE VIZCRUSH FITS IN THE STACK
+      </text>
+
+      <!-- Stack layers -->
+      <rect
+        x="200"
+        y="460"
+        width="800"
+        height="40"
+        rx="8"
+        fill="#1e1b2e"
+        stroke="#3b2e5e"
+        stroke-width="0.5"
+      />
+      <text x="600" y="484" text-anchor="middle" font-size="12" font-weight="600" fill="#a78bfa">
+        Your App / Dashboard
+      </text>
+
+      <rect
+        x="200"
+        y="508"
+        width="800"
+        height="40"
+        rx="8"
+        fill="#1a1a24"
+        stroke="#334155"
+        stroke-width="0.5"
+      />
+      <text x="600" y="532" text-anchor="middle" font-size="12" font-weight="600" fill="#94a3b8">
+        Chart Library (D3, Plotly, Three.js, ECharts, deck.gl)
+      </text>
+
+      <rect
+        x="200"
+        y="556"
+        width="800"
+        height="48"
+        rx="8"
+        fill="url(#gViz)"
+        stroke="#38bdf8"
+        stroke-width="1.5"
+      />
+      <text x="600" y="578" text-anchor="middle" font-size="14" font-weight="700" fill="#38bdf8">
+        vizcrush - the missing compute layer
+      </text>
+      <text x="600" y="594" text-anchor="middle" font-size="9" fill="#7dd3fc">
+        Downsample | Bin | Spatial Index | Stream | Transform | AI | MCP
+      </text>
+
+      <rect
+        x="200"
+        y="612"
+        width="390"
+        height="40"
+        rx="8"
+        fill="#0a2520"
+        stroke="#1a6b5a"
+        stroke-width="0.5"
+      />
+      <text x="395" y="636" text-anchor="middle" font-size="12" font-weight="600" fill="#5eead4">
+        WebAssembly (Rust core)
+      </text>
+
+      <rect
+        x="610"
+        y="612"
+        width="390"
+        height="40"
+        rx="8"
+        fill="#1a1040"
+        stroke="#4c3080"
+        stroke-width="0.5"
+      />
+      <text x="805" y="636" text-anchor="middle" font-size="12" font-weight="600" fill="#a78bfa">
+        JavaScript (typed-array core)
+      </text>
+
+      <!-- Book callout -->
+      <rect
+        x="20"
+        y="420"
+        width="160"
+        height="230"
+        rx="14"
+        fill="url(#gBook)"
+        stroke="#5b3a8e"
+        stroke-width="1"
+      />
+      <text
+        x="100"
+        y="448"
+        text-anchor="middle"
+        font-size="9"
+        font-weight="600"
+        fill="#c4b5fd"
+        letter-spacing="1"
+      >
+        THE BOOK
+      </text>
+      <text x="100" y="475" text-anchor="middle" font-size="11" font-weight="700" fill="#e9d5ff">
+        The vizcrush
+      </text>
+      <text x="100" y="492" text-anchor="middle" font-size="11" font-weight="700" fill="#e9d5ff">
+        Book
+      </text>
+      <line x1="60" y1="505" x2="140" y2="505" stroke="#5b3a8e" stroke-width="0.5" />
+      <text x="100" y="522" text-anchor="middle" font-size="8" fill="#a78bfa">16 chapters</text>
+      <text x="100" y="538" text-anchor="middle" font-size="8" fill="#a78bfa">
+        Why the algorithms
+      </text>
+      <text x="100" y="552" text-anchor="middle" font-size="8" fill="#a78bfa">
+        work the way they do
+      </text>
+      <text x="100" y="572" text-anchor="middle" font-size="8" fill="#7c6daa">LTTB deep-dives</text>
+      <text x="100" y="586" text-anchor="middle" font-size="8" fill="#7c6daa">
+        Spatial indexing
+      </text>
+      <text x="100" y="600" text-anchor="middle" font-size="8" fill="#7c6daa">
+        Streaming sketches
+      </text>
+      <text x="100" y="614" text-anchor="middle" font-size="8" fill="#7c6daa">
+        Performance lessons
+      </text>
+      <text x="100" y="628" text-anchor="middle" font-size="8" fill="#7c6daa">
+        The math behind it
+      </text>
+      <text x="100" y="648" text-anchor="middle" font-size="9" font-weight="600" fill="#c4b5fd">
+        Free + Open Source
+      </text>
+    </svg>
+  </body>
+</html>

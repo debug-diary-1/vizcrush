@@ -1,0 +1,19 @@
+[package]
+name = "vizcrush-spatial"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Quadtree and kd-tree spatial indexing"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+vizcrush-core = { path = "../vizcrush-core" }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

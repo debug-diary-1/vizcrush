@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Sketch Comparison</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .controls label {
+        color: #888;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .controls select {
+        padding: 0.4rem 0.8rem;
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        font-family: inherit;
+        border-radius: 6px;
+      }
+
+      /* Gauge grid */
+      .gauge-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .gauge-header {
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #888;
+      }
+      .gauge-header.exact {
+        color: #4a7fd4;
+      }
+      .gauge-header.dd {
+        color: #fb923c;
+      }
+      .gauge-header.kll {
+        color: #4ade80;
+      }
+      .gauge {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+      }
+      .gauge .label {
+        font-size: 0.75rem;
+        color: #888;
+        margin-bottom: 0.3rem;
+      }
+      .gauge .value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Charts area */
+      .charts-row {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .panel {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1rem;
+      }
+      .panel h3 {
+        color: #ccc;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+      }
+      canvas {
+        width: 100%;
+        display: block;
+      }
+
+      /* Error table */
+      .error-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .error-table th {
+        color: #888;
+        font-weight: 600;
+        text-align: right;
+        padding: 0.4rem 0.6rem;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .error-table th:first-child {
+        text-align: left;
+      }
+      .error-table td {
+        text-align: right;
+        padding: 0.4rem 0.6rem;
+        border-bottom: 1px solid #222;
+      }
+      .error-table td:first-child {
+        text-align: left;
+        color: #aaa;
+      }
+      .error-table .dd-col {
+        color: #fb923c;
+      }
+      .error-table .kll-col {
+        color: #4ade80;
+      }
+      .error-table .exact-col {
+        color: #4a7fd4;
+      }
+
+      .legend {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #888;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .legend-swatch {
+        width: 16px;
+        height: 3px;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Sketch Comparison — DDSketch vs KLL vs Exact</h1>
+      <p class="subtitle">
+        Head-to-head quantile approximation accuracy and memory usage on the same dataset.
+      </p>
+
+      <div class="controls">
+        <label
+          >Distribution:
+          <select id="distribution">
+            <option value="lognormal" selected>Log-Normal</option>
+            <option value="exponential">Exponential</option>
+            <option value="uniform">Uniform</option>
+            <option value="bimodal">Bimodal</option>
+          </select>
+        </label>
+        <label
+          >Data Size:
+          <select id="data-size">
+            <option value="10000">10K</option>
+            <option value="100000" selected>100K</option>
+            <option value="500000">500K</option>
+          </select>
+        </label>
+        <label
+          >DDSketch &alpha;:
+          <select id="dd-alpha">
+            <option value="0.01" selected>0.01</option>
+            <option value="0.05">0.05</option>
+          </select>
+        </label>
+        <label
+          >KLL k:
+          <select id="kll-k">
+            <option value="100">100</option>
+            <option value="200" selected>200</option>
+            <option value="500">500</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Gauge grid: 4 columns x 4 rows (header + p50/p90/p99) -->
+      <div class="gauge-grid">
+        <div class="gauge-header"></div>
+        <div class="gauge-header exact">Exact</div>
+        <div class="gauge-header dd">DDSketch</div>
+        <div class="gauge-header kll">KLL</div>
+
+        <div class="gauge"><div class="label">p50</div></div>
+        <div class="gauge" id="g-exact-p50">
+          <div class="label">p50</div>
+          <div class="value exact-col" style="color: #4a7fd4">--</div>
+        </div>
+        <div class="gauge" id="g-dd-p50">
+          <div class="label">p50</div>
+          <div class="value" style="color: #fb923c">--</div>
+        </div>
+        <div class="gauge" id="g-kll-p50">
+          <div class="label">p50</div>
+          <div class="value" style="color: #4ade80">--</div>
+        </div>
+
+        <div class="gauge"><div class="label">p90</div></div>
+        <div class="gauge" id="g-exact-p90">
+          <div class="label">p90</div>
+          <div class="value" style="color: #4a7fd4">--</div>
+        </div>
+        <div class="gauge" id="g-dd-p90">
+          <div class="label">p90</div>
+          <div class="value" style="color: #fb923c">--</div>
+        </div>
+        <div class="gauge" id="g-kll-p90">
+          <div class="label">p90</div>
+          <div class="value" style="color: #4ade80">--</div>
+        </div>
+
+        <div class="gauge"><div class="label">p99</div></div>
+        <div class="gauge" id="g-exact-p99">
+          <div class="label">p99</div>
+          <div class="value" style="color: #4a7fd4">--</div>
+        </div>
+        <div class="gauge" id="g-dd-p99">
+          <div class="label">p99</div>
+          <div class="value" style="color: #fb923c">--</div>
+        </div>
+        <div class="gauge" id="g-kll-p99">
+          <div class="label">p99</div>
+          <div class="value" style="color: #4ade80">--</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="panel">
+          <h3>CDF Overlay</h3>
+          <canvas id="cdf-canvas" height="400"></canvas>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-swatch" style="background: #4a7fd4"></div>
+              Exact
+            </div>
+            <div class="legend-item">
+              <div class="legend-swatch" style="background: #fb923c"></div>
+              DDSketch
+            </div>
+            <div class="legend-item">
+              <div class="legend-swatch" style="background: #4ade80"></div>
+              KLL
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Memory Usage (bytes)</h3>
+          <canvas id="memory-canvas" height="400"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Error Comparison</h3>
+        <table class="error-table">
+          <thead>
+            <tr>
+              <th>Percentile</th>
+              <th class="exact-col">Exact</th>
+              <th class="dd-col">DDSketch</th>
+              <th class="dd-col">DD Error</th>
+              <th class="kll-col">KLL</th>
+              <th class="kll-col">KLL Error</th>
+            </tr>
+          </thead>
+          <tbody id="error-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

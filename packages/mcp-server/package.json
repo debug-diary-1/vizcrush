@@ -1,0 +1,60 @@
+{
+  "name": "@vizcrush/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for vizcrush — AI-agent access to high-performance data primitives",
+  "keywords": [
+    "agent",
+    "ai",
+    "llm",
+    "mcp",
+    "model-context-protocol",
+    "visualization"
+  ],
+  "homepage": "https://github.com/pallavL01/vizcrush#readme",
+  "bugs": {
+    "url": "https://github.com/pallavL01/vizcrush/issues"
+  },
+  "license": "MIT",
+  "author": "vizcrush contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pallavL01/vizcrush.git",
+    "directory": "packages/mcp-server"
+  },
+  "bin": {
+    "vizcrush-mcp-server": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "catalog:",
+    "@vizcrush/aggregate": "workspace:*",
+    "@vizcrush/ai": "workspace:*",
+    "@vizcrush/bin": "workspace:*",
+    "@vizcrush/bin3d": "workspace:*",
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/downsample": "workspace:*",
+    "@vizcrush/spatial": "workspace:*",
+    "@vizcrush/spatial3d": "workspace:*",
+    "@vizcrush/transform": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

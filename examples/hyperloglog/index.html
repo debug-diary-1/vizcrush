@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — HyperLogLog</title>
+    <style>
+      body {
+        margin: 0;
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-top: 0;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 1.5rem 0;
+        align-items: center;
+      }
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .control-group label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      select,
+      input[type="range"] {
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #2a2a2a;
+        font-family: inherit;
+        border-radius: 4px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+      }
+      input[type="range"] {
+        width: 180px;
+        accent-color: #4a7fd4;
+      }
+      .range-val {
+        color: #4a7fd4;
+        font-weight: bold;
+        font-size: 0.85rem;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+      }
+      .charts {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      canvas {
+        width: 100%;
+        background: #111;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+      }
+      #counter-chart {
+        height: 260px;
+      }
+      #convergence {
+        height: 200px;
+      }
+      .side-panel {
+        background: #1c1b1b;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+        padding: 1.25rem;
+      }
+      .side-panel h3 {
+        color: #4a7fd4;
+        margin-top: 0;
+        font-size: 0.95rem;
+      }
+      .counter {
+        text-align: center;
+        margin-bottom: 1.25rem;
+      }
+      .counter .big {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #4a7fd4;
+        font-variant-numeric: tabular-nums;
+      }
+      .counter .label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+      }
+      .counter .exact {
+        font-size: 1rem;
+        color: #666;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      .stat {
+        background: #0f0f1e;
+        padding: 0.5rem;
+        border-radius: 6px;
+        text-align: center;
+      }
+      .stat-label {
+        font-size: 0.65rem;
+        color: #888;
+        text-transform: uppercase;
+      }
+      .stat-value {
+        font-size: 0.95rem;
+        font-weight: bold;
+        color: #4a7fd4;
+        font-variant-numeric: tabular-nums;
+      }
+      #register-strip {
+        width: 100%;
+        height: 60px;
+        image-rendering: pixelated;
+      }
+      .register-label {
+        font-size: 0.7rem;
+        color: #666;
+        margin-top: 0.25rem;
+      }
+      @media (max-width: 800px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>HyperLogLog</h1>
+      <p class="subtitle">Precision vs error vs memory tradeoff for cardinality estimation</p>
+      <div class="controls">
+        <div class="control-group">
+          <label>Precision (p): <span id="p-val" class="range-val">14</span></label>
+          <input type="range" id="p-slider" min="4" max="18" value="14" />
+        </div>
+        <div class="control-group">
+          <label>Unique count</label>
+          <select id="unique-count">
+            <option value="1000">1K</option>
+            <option value="10000" selected>10K</option>
+            <option value="100000">100K</option>
+            <option value="1000000">1M</option>
+          </select>
+        </div>
+      </div>
+      <div class="layout">
+        <div class="charts">
+          <canvas id="counter-chart"></canvas>
+          <canvas id="convergence"></canvas>
+        </div>
+        <div class="side-panel">
+          <div class="counter">
+            <div class="label">HLL Estimate</div>
+            <div class="big" id="hll-estimate">0</div>
+            <div class="exact" id="exact-count">Exact: 0</div>
+          </div>
+          <div class="stats-grid" id="stats"></div>
+          <h3>Register Heatmap</h3>
+          <canvas id="register-strip"></canvas>
+          <div class="register-label" id="reg-info">2^p = 0 registers</div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+[package]
+name = "vizcrush-ai"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+description = "AI-native data analysis algorithms for vizcrush"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

@@ -1,0 +1,19 @@
+[package]
+name = "vizcrush-aggregate"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Streaming statistics and percentiles"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+vizcrush-downsample = { path = "../vizcrush-downsample" }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

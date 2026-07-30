@@ -1,0 +1,59 @@
+{
+  "name": "@vizcrush/react",
+  "version": "1.0.0",
+  "description": "React hooks for vizcrush — useDownsample, useBin2d, useStats",
+  "keywords": [
+    "data",
+    "hooks",
+    "react",
+    "visualization",
+    "webgpu"
+  ],
+  "homepage": "https://github.com/pallavL01/vizcrush#readme",
+  "bugs": {
+    "url": "https://github.com/pallavL01/vizcrush/issues"
+  },
+  "license": "MIT",
+  "author": "vizcrush contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pallavL01/vizcrush.git",
+    "directory": "packages/react"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vizcrush/aggregate": "workspace:*",
+    "@vizcrush/bin": "workspace:*",
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/downsample": "workspace:*",
+    "@vizcrush/spatial": "workspace:*",
+    "@vizcrush/transform": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "^19.2.3",
+    "jsdom": "^29.1.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

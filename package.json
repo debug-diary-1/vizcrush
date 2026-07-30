@@ -1,0 +1,59 @@
+{
+  "name": "vizcrush-monorepo",
+  "private": true,
+  "scripts": {
+    "build:wasm": "bash scripts/build-wasm.sh",
+    "build": "pnpm build:wasm && pnpm turbo build",
+    "test": "pnpm turbo test",
+    "test:rust": "cargo test --workspace",
+    "lint": "oxlint --deny-warnings",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "typecheck": "pnpm turbo typecheck",
+    "bench": "pnpm --filter vizcrush-benchmarks run bench",
+    "test:vitest": "npx vitest run",
+    "test:all": "cargo test --workspace && npx vitest run",
+    "test:examples": "bash scripts/test-examples.sh",
+    "examples": "portless examples npx vite examples",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "d3-array": "catalog:",
+    "downsample": "catalog:",
+    "fast-check": "catalog:",
+    "kdbush": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "rbush": "catalog:",
+    "simple-statistics": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "vitepress": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "volta": {
+    "node": "24.14.1"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "overrides": {
+      "@hono/node-server@<2.0.5": "2.0.5",
+      "hono@<4.12.27": "4.12.27",
+      "esbuild@<0.25.0": "0.25.12",
+      "vite@<6.4.3": "6.4.3",
+      "fast-uri@<3.1.4": "3.1.4",
+      "postcss@<8.5.18": "8.5.18",
+      "qs@<6.15.2": "6.15.2",
+      "ip-address@<10.3.1": "10.3.1",
+      "body-parser@<2.3.0": "2.3.0"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

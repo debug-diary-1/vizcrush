@@ -1,0 +1,17 @@
+{
+  "name": "vizcrush-medical-volume",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless medical vite"
+  },
+  "dependencies": {
+    "@vizcrush/bin3d": "workspace:*",
+    "@vizcrush/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

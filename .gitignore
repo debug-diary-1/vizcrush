@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+
+# Claude Code local
+.claude/
+
+# VitePress build output
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# Supply chain shield — track manifests for verifiable builds
+# .supplychainshield/
+
+# Python virtualenvs (e.g. docs/site/.venv for mkdocs)
+.venv/
+
+node_modules/
+dist/
+target/
+*.d
+pkg/
+out/
+.turbo/
+benchmark-results.json
+*.tsbuildinfo
+.env*.local
+
+# WASM binaries are excluded from git.
+# They are built via `pnpm build:wasm` and included in npm packages via the `files` field.
+packages/*/wasm/
+
+# Secrets and credentials
+.env
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+*.secret

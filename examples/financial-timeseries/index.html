@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Financial Time-Series</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0a0a0a;
+        color: #e0e0e0;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #3b9ecf;
+        margin-bottom: 0.5rem;
+      }
+      .subtitle {
+        color: #888;
+        margin-bottom: 1.5rem;
+      }
+      .controls {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+      .control {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .control label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      select {
+        background: #1a1a1a;
+        color: #e0e0e0;
+        border: 1px solid #333;
+        padding: 0.5rem;
+        border-radius: 4px;
+      }
+      .stats-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+      }
+      .stat {
+        background: #1a1a1a;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        min-width: 140px;
+      }
+      .stat-label {
+        font-size: 0.7rem;
+        color: #666;
+        text-transform: uppercase;
+      }
+      .stat-value {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #3b9ecf;
+        font-variant-numeric: tabular-nums;
+      }
+      canvas {
+        width: 100%;
+        height: 400px;
+        background: #111;
+        border-radius: 8px;
+        display: block;
+      }
+      .chart-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      @media (max-width: 768px) {
+        .chart-pair {
+          grid-template-columns: 1fr;
+        }
+      }
+      .chart-label {
+        font-size: 0.85rem;
+        color: #888;
+        margin-bottom: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Financial Time-Series Dashboard</h1>
+      <p class="subtitle">LTTB vs MinMaxLTTB — preserving visual shape of 2M candlestick data</p>
+
+      <div class="controls">
+        <div class="control">
+          <label>Data Size</label>
+          <select id="dataSize">
+            <option value="10000">10K</option>
+            <option value="100000">100K</option>
+            <option value="500000">500K</option>
+            <option value="1000000" selected>1M</option>
+            <option value="2000000">2M</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Target Points</label>
+          <select id="targetPoints">
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option value="1000" selected>1000</option>
+            <option value="2000">2000</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats"></div>
+
+      <div class="chart-pair">
+        <div>
+          <div class="chart-label">LTTB (preserves visual shape)</div>
+          <canvas id="lttb-chart"></canvas>
+        </div>
+        <div>
+          <div class="chart-label">MinMaxLTTB (preserves spikes)</div>
+          <canvas id="minmax-chart"></canvas>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

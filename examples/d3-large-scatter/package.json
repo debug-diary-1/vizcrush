@@ -1,0 +1,19 @@
+{
+  "name": "vizcrush-d3-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless d3scatter vite"
+  },
+  "dependencies": {
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/spatial": "workspace:*",
+    "d3": "catalog:"
+  },
+  "devDependencies": {
+    "@types/d3": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

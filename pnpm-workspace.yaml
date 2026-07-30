@@ -1,0 +1,31 @@
+packages:
+  - "packages/*"
+  - "benchmarks"
+  - "examples/*"
+
+catalog:
+  # ── Runtime deps ──────────────────────────────────────────────
+  "@modelcontextprotocol/sdk": "1.30.0"
+  d3: "7.9.0"
+  d3-array: "3.2.4"
+  downsample: "1.4.0"
+  kdbush: "4.0.2"
+  rbush: "4.0.1"
+  simple-statistics: "7.8.9"
+  sparse-octree: "7.1.8"
+  three: "0.172.0"
+  zod: "3.25.76"
+
+  # ── Dev / build deps ─────────────────────────────────────────
+  "@types/d3": "7.4.3"
+  "@types/node": "20.19.39"
+  "@types/react": "19.2.17"
+  "@types/three": "0.172.0"
+  fast-check: "4.6.0"
+  oxfmt: "0.44.0"
+  oxlint: "1.59.0"
+  turbo: "2.10.7"
+  typescript: "5.9.3"
+  vite: "6.4.3"
+  vitepress: "1.6.4"
+  vitest: "4.1.3"

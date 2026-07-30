@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Stream Analytics</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .panel {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1.5rem;
+      }
+      .panel h2 {
+        color: #ccc;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .panel .desc {
+        color: #666;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .big-number {
+        font-size: 3rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.5rem;
+      }
+      .hll-number {
+        color: #a78bfa;
+      }
+      .cm-number {
+        color: #fb923c;
+      }
+      .rs-number {
+        color: #4ade80;
+      }
+      canvas {
+        width: 100%;
+        height: 250px;
+        display: block;
+        margin-top: 1rem;
+      }
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+      }
+      .controls button {
+        padding: 0.5rem 1rem;
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .controls button:hover {
+        background: #252525;
+      }
+      .controls button.active {
+        background: #4a7fd4;
+        color: #000;
+        border-color: #4a7fd4;
+      }
+      .stat-row {
+        display: flex;
+        gap: 2rem;
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+      }
+      .full-width {
+        grid-column: 1 / -1;
+      }
+      .scatter-area {
+        position: relative;
+      }
+      .scatter-area canvas {
+        height: 350px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Stream Analytics</h1>
+      <p class="subtitle">
+        HyperLogLog unique counting + Count-Min heavy hitters + Reservoir sampling — all streaming
+      </p>
+
+      <div class="controls">
+        <button class="active" data-events="1000">1K events/s</button>
+        <button data-events="5000">5K events/s</button>
+        <button data-events="10000">10K events/s</button>
+        <button id="btn-pause">Pause</button>
+        <button id="btn-reset">Reset</button>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>HyperLogLog++ — Unique Values</h2>
+          <p class="desc">Cardinality estimation with ~1% error in 6KB</p>
+          <div class="big-number hll-number" id="hll-estimate">0</div>
+          <div class="stat-row">
+            <span>Exact: <span id="hll-exact">0</span></span>
+            <span>Error: <span id="hll-error">0%</span></span>
+            <span>Memory: <span id="hll-memory">0 KB</span></span>
+          </div>
+          <canvas id="hll-chart"></canvas>
+        </div>
+
+        <div class="panel">
+          <h2>Count-Min — Heavy Hitters</h2>
+          <p class="desc">Top-K frequent values with streaming frequency estimation</p>
+          <div class="big-number cm-number" id="cm-top">—</div>
+          <div class="stat-row">
+            <span>Total events: <span id="cm-total">0</span></span>
+            <span>Width×Depth: <span id="cm-dims">1024×5</span></span>
+          </div>
+          <canvas id="cm-chart"></canvas>
+        </div>
+
+        <div class="panel">
+          <h2>Reservoir Sampling — Fair Preview</h2>
+          <p class="desc">k=500 uniform random sample from the stream</p>
+          <div class="big-number rs-number" id="rs-count">0</div>
+          <div class="stat-row">
+            <span>Sample size: <span id="rs-k">500</span></span>
+            <span>Ingested: <span id="rs-ingested">0</span></span>
+          </div>
+          <canvas id="rs-chart"></canvas>
+        </div>
+
+        <div class="panel full-width scatter-area">
+          <h2>Reservoir Sample vs Full Data</h2>
+          <p class="desc">
+            Faded: all data points. Bright: reservoir sample (k=500). The sample should look
+            representative.
+          </p>
+          <canvas id="scatter"></canvas>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

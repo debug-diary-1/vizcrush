@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-07-09T05:45:59Z",
+  "artifacts": {
+    "packages/aggregate/wasm/vizcrush_aggregate_bg.wasm": "sha256:cc605a69fb3dafaf73a941c28e0004a17a5cbcb39abc935a8b9f26b0fea6dd55",
+    "packages/bin/wasm/vizcrush_bin_bg.wasm": "sha256:fdc23d44bafdffdca00d10fbc1f20f4ce20cd9f1f15da927ee16d45353bbe525",
+    "packages/bin3d/wasm/vizcrush_bin3d_bg.wasm": "sha256:e7d87ad5e9fe21dc5b2a38bf997cb6fc5c8af68dc9f7767dfb8d70a8802c1cd7",
+    "packages/downsample/wasm/vizcrush_downsample_bg.wasm": "sha256:1af740146647df2373ff7757167c0a0c8f1b6355ba828bf801bcc765ee0c9f02",
+    "packages/spatial/wasm/vizcrush_spatial_bg.wasm": "sha256:f9c50790861a26331d5888caf299e2b329c7ef7b5a4439ce2048982122813743",
+    "packages/spatial3d/wasm/vizcrush_spatial3d_bg.wasm": "sha256:05c0f4e3c376aa503301a5801d1bc6316fc2c878d282f378dc31f49ab46f5843",
+    "packages/transform/wasm/vizcrush_transform_bg.wasm": "sha256:0d0bfa7349244878cdf8dc1e511368198b0edbac2b798a8497530e1b6eb6f9ba"
+  }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush + D3 — 1M Point Scatter</title>
+    <style>
+      body {
+        margin: 0;
+        background: #0a0a0a;
+        color: #e0e0e0;
+        font-family: system-ui;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #3b9ecf;
+      }
+      svg {
+        background: #111;
+        border-radius: 8px;
+      }
+      .info {
+        display: flex;
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+      .info span {
+        background: #1a1a1a;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+      }
+      .info .value {
+        color: #3b9ecf;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>vizcrush + D3.js — 1M Point Scatter</h1>
+      <p>Quadtree spatial index: build once, query viewport on every pan/zoom in &lt;1ms.</p>
+      <div class="info" id="info"></div>
+      <svg id="chart" width="900" height="600"></svg>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

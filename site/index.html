@@ -1,0 +1,1261 @@
+<!doctype html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>vizcrush — Crush millions of data points into smooth visualizations</title>
+    <meta
+      name="description"
+      content="High-performance data primitives for browser visualization. Rust-to-WASM downsampling, binning, and spatial indexing with a pure-JS fallback. Open source."
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#00658b",
+              "primary-container": "#3b9ecf",
+              secondary: "#9c4417",
+              "secondary-container": "#ff915d",
+              surface: "#f8f9fa",
+              "surface-low": "#f3f4f5",
+              "surface-high": "#e7e8e9",
+              "on-surface": "#191c1d",
+              "on-surface-variant": "#3f484f",
+              outline: "#6f787f",
+              "outline-variant": "#bec8d0",
+            },
+            fontFamily: {
+              headline: ["Space Grotesk", "system-ui"],
+              body: ["Inter", "system-ui"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .gradient-text {
+        background: linear-gradient(135deg, #00658b 0%, #3b9ecf 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .gradient-btn {
+        background: linear-gradient(135deg, #00658b 0%, #3b9ecf 100%);
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+      }
+    </style>
+  </head>
+  <body class="bg-surface font-body text-on-surface selection:bg-primary/20">
+    <!-- Nav -->
+    <header
+      class="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100/50"
+    >
+      <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-3xl">blur_on</span>
+          <span class="text-2xl font-bold tracking-tighter text-slate-900 font-headline"
+            >vizcrush</span
+          >
+        </div>
+        <nav class="hidden md:flex gap-8 items-center">
+          <a
+            class="text-slate-500 text-sm font-medium hover:text-primary transition-colors"
+            href="#engine"
+            >Engine</a
+          >
+          <a
+            class="text-slate-500 text-sm font-medium hover:text-primary transition-colors"
+            href="#benchmarks"
+            >Benchmarks</a
+          >
+          <a
+            class="text-slate-500 text-sm font-medium hover:text-primary transition-colors"
+            href="#features"
+            >Features</a
+          >
+          <a
+            class="text-violet-500 text-sm font-medium hover:text-violet-700 transition-colors"
+            href="#ai"
+            >AI</a
+          >
+          <a
+            class="text-slate-500 text-sm font-medium hover:text-primary transition-colors"
+            href="#mcp"
+            >MCP</a
+          >
+          <a
+            class="text-violet-500 text-sm font-medium hover:text-violet-700 transition-colors"
+            href="https://github.com/pallavL01/vizcrush-book"
+            >Book</a
+          >
+          <a
+            class="gradient-btn text-white px-5 py-2 rounded-md text-sm font-semibold"
+            href="https://github.com/pallavL01/vizcrush"
+            >GitHub</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-20">
+      <!-- Hero -->
+      <section class="relative px-6 py-20 lg:py-32 max-w-7xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <div class="z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-high rounded-full mb-6">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span
+                class="text-[10px] font-headline font-bold uppercase tracking-widest text-on-surface-variant"
+                >Open Source — MIT Licensed</span
+              >
+            </div>
+            <h1
+              class="font-headline text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-on-surface leading-[0.9] mb-6"
+            >
+              Crush millions of data points into
+              <span class="gradient-text">smooth visualizations.</span>
+            </h1>
+            <p class="text-lg text-on-surface-variant max-w-xl mb-4 leading-relaxed">
+              High-performance data primitives for browser visualization. Written in Rust, compiled
+              to WebAssembly, with a pure-JS fallback. The missing compute layer between raw data
+              and chart libraries.
+            </p>
+            <p class="text-sm text-primary font-medium mb-10">
+              Zero data loss — your original data stays intact. vizcrush picks the points that
+              matter for your screen.
+            </p>
+            <div class="flex flex-wrap gap-4 items-center">
+              <div
+                class="flex items-center gap-3 bg-slate-900 text-slate-300 px-4 py-3 rounded-lg font-mono text-sm"
+              >
+                <span class="text-slate-500">$</span>
+                <code>npm install @vizcrush/core</code>
+                <button
+                  onclick="navigator.clipboard.writeText('npm install @vizcrush/core')"
+                  class="material-symbols-outlined text-slate-500 hover:text-white text-base cursor-pointer"
+                >
+                  content_copy
+                </button>
+              </div>
+              <a
+                href="#features"
+                class="text-primary font-semibold hover:underline flex items-center gap-1"
+              >
+                See what it does
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+              </a>
+            </div>
+            <a
+              href="https://tally.so/r/A7bNvN"
+              target="_blank"
+              class="text-xs text-slate-400 hover:text-primary underline mt-3 inline-block"
+            >
+              Get launch updates
+            </a>
+          </div>
+          <div class="relative">
+            <div
+              class="aspect-square bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-100 p-8 flex items-center justify-center"
+            >
+              <!-- Code preview -->
+              <pre
+                class="font-mono text-sm text-slate-700 leading-relaxed"
+              ><code><span class="text-primary">import</span> { init } <span class="text-primary">from</span> <span class="text-amber-600">'@vizcrush/core'</span>;
+<span class="text-primary">import</span> { lttb } <span class="text-primary">from</span> <span class="text-amber-600">'@vizcrush/downsample'</span>;
+
+<span class="text-primary">const</span> vc = <span class="text-primary">await</span> init();
+<span class="text-slate-400">// vc.backend: 'wasm' | 'js'</span>
+
+<span class="text-slate-400">// 1M points → 1,920 points in ~2ms</span>
+<span class="text-slate-400">// Visually identical. Zero data loss.</span>
+<span class="text-primary">const</span> { x, y } = <span class="text-primary">await</span> lttb(
+  timestamps, values, <span class="text-amber-600">1920</span>
+);</code></pre>
+            </div>
+            <!-- Floating badge -->
+            <div
+              class="absolute -bottom-6 -left-6 glass-card p-5 rounded-lg shadow-xl border border-white/50"
+            >
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-11 h-11 rounded-lg bg-primary-container flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-white">speed</span>
+                </div>
+                <div>
+                  <div class="font-headline font-bold text-2xl text-primary">60 FPS</div>
+                  <div
+                    class="text-[10px] uppercase font-headline tracking-widest text-on-surface-variant"
+                  >
+                    Constant Rendering
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The Problem -->
+      <section id="engine" class="bg-surface-low py-24 px-6">
+        <div class="max-w-7xl mx-auto">
+          <div class="grid md:grid-cols-2 gap-20 items-center">
+            <div>
+              <h2 class="font-headline text-4xl font-bold tracking-tight mb-6">
+                The 100K+ Datapoint Wall
+              </h2>
+              <p class="text-on-surface-variant mb-8 text-lg leading-relaxed">
+                Chart libraries render every point. At 100K, your main thread dies. At 1M, your
+                browser crashes. vizcrush processes data before rendering — your chart only gets
+                what it needs.
+              </p>
+              <div class="space-y-6">
+                <div class="flex items-start gap-4">
+                  <span class="material-symbols-outlined text-red-500 mt-1">block</span>
+                  <div>
+                    <h4 class="font-semibold">Without vizcrush</h4>
+                    <p class="text-sm text-on-surface-variant">
+                      1,000,000 DOM nodes &bull; 850ms frame time &bull;
+                      <span class="text-red-500 font-semibold">Unresponsive</span>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-4">
+                  <span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+                  <div>
+                    <h4 class="font-semibold">With vizcrush LTTB</h4>
+                    <p class="text-sm text-on-surface-variant">
+                      1,920 visual points &bull; ~2ms processing &bull;
+                      <span class="text-primary font-semibold">60fps smooth</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div
+                class="bg-white p-8 rounded-xl flex flex-col justify-between border border-slate-100 h-64"
+              >
+                <div
+                  class="text-[10px] font-headline uppercase tracking-widest text-on-surface-variant"
+                >
+                  Input Data
+                </div>
+                <div class="font-headline text-5xl font-bold text-secondary">1M</div>
+                <div class="text-sm text-on-surface-variant">Raw points processed</div>
+              </div>
+              <div
+                class="bg-white p-8 rounded-xl flex flex-col justify-between border border-slate-100 h-64 mt-12"
+              >
+                <div
+                  class="text-[10px] font-headline uppercase tracking-widest text-on-surface-variant"
+                >
+                  Output
+                </div>
+                <div class="font-headline text-5xl font-bold text-primary">1,920</div>
+                <div class="text-sm text-on-surface-variant">Pixel-perfect points</div>
+              </div>
+              <div class="col-span-2 bg-white p-6 rounded-xl border border-slate-100 text-center">
+                <span class="text-sm text-on-surface-variant">Processing time: </span>
+                <span class="font-headline font-bold text-primary text-lg">~2ms</span>
+                <span class="text-sm text-on-surface-variant">
+                  &bull; Zero visual loss &bull; Zoom re-crushes from full data</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Architecture — Clean 3-Layer -->
+      <section id="architecture" class="py-24 px-6 max-w-4xl mx-auto">
+        <div class="text-center mb-14">
+          <h2 class="font-headline text-4xl font-bold mb-4">The Missing Middle Layer</h2>
+          <p class="text-on-surface-variant max-w-2xl mx-auto">
+            Chart libraries handle rendering. GPU APIs handle buffers. Nobody built the data
+            algorithms in between — until now.
+          </p>
+        </div>
+
+        <style>
+          @keyframes archFlow {
+            to {
+              stroke-dashoffset: -20;
+            }
+          }
+          .arch-flow {
+            stroke-dasharray: 5 5;
+            animation: archFlow 1s linear infinite;
+          }
+        </style>
+
+        <svg
+          viewBox="0 0 600 340"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style="max-width: 600px; margin: 0 auto; display: block"
+        >
+          <!-- Layer 1: Rendering -->
+          <rect
+            x="50"
+            y="10"
+            width="500"
+            height="64"
+            rx="14"
+            fill="white"
+            stroke="#e2e8f0"
+            stroke-width="1"
+          />
+          <text
+            x="300"
+            y="32"
+            text-anchor="middle"
+            font-family="Space Grotesk,system-ui"
+            font-weight="700"
+            font-size="14"
+            fill="#334155"
+          >
+            Rendering
+          </text>
+          <text
+            x="300"
+            y="55"
+            text-anchor="middle"
+            font-family="Inter,system-ui"
+            font-size="11"
+            fill="#94a3b8"
+          >
+            D3 · Three.js · Plotly · ECharts · Canvas — Mature
+          </text>
+
+          <!-- Flow down -->
+          <line
+            x1="200"
+            y1="74"
+            x2="200"
+            y2="108"
+            class="arch-flow"
+            stroke="#3b82f6"
+            stroke-width="1.5"
+            opacity=".5"
+          />
+          <text
+            x="175"
+            y="96"
+            text-anchor="end"
+            font-family="Inter,system-ui"
+            font-size="10"
+            font-weight="500"
+            fill="#3b82f6"
+          >
+            1M points
+          </text>
+
+          <!-- Flow up -->
+          <line
+            x1="400"
+            y1="108"
+            x2="400"
+            y2="74"
+            class="arch-flow"
+            stroke="#10b981"
+            stroke-width="1.5"
+            opacity=".5"
+          />
+          <text
+            x="425"
+            y="96"
+            font-family="Inter,system-ui"
+            font-size="10"
+            font-weight="500"
+            fill="#10b981"
+          >
+            1,920 pts
+          </text>
+
+          <!-- Layer 2: vizcrush (HERO) -->
+          <rect
+            x="30"
+            y="108"
+            width="540"
+            height="120"
+            rx="16"
+            fill="url(#vcGrad)"
+            stroke="#3b9ecf"
+            stroke-width="1.5"
+          />
+          <defs>
+            <linearGradient id="vcGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#00658b" />
+              <stop offset="100%" stop-color="#3b9ecf" />
+            </linearGradient>
+          </defs>
+
+          <text
+            x="300"
+            y="138"
+            text-anchor="middle"
+            font-family="Space Grotesk,system-ui"
+            font-weight="700"
+            font-size="18"
+            fill="white"
+          >
+            vizcrush
+          </text>
+          <text
+            x="300"
+            y="156"
+            text-anchor="middle"
+            font-family="Inter,system-ui"
+            font-size="10"
+            fill="white"
+            opacity=".6"
+            letter-spacing="2"
+          >
+            DATA COMPUTE LAYER
+          </text>
+
+          <!-- Algorithm chips inside -->
+          <g font-family="Inter,system-ui" font-size="10" font-weight="500">
+            <rect
+              x="60"
+              y="172"
+              width="80"
+              height="26"
+              rx="6"
+              fill="white"
+              fill-opacity=".15"
+              stroke="white"
+              stroke-opacity=".15"
+            />
+            <text x="100" y="189" text-anchor="middle" fill="white" opacity=".9">Downsample</text>
+
+            <rect
+              x="152"
+              y="172"
+              width="60"
+              height="26"
+              rx="6"
+              fill="white"
+              fill-opacity=".15"
+              stroke="white"
+              stroke-opacity=".15"
+            />
+            <text x="182" y="189" text-anchor="middle" fill="white" opacity=".9">Bin 2D/3D</text>
+
+            <rect
+              x="224"
+              y="172"
+              width="60"
+              height="26"
+              rx="6"
+              fill="white"
+              fill-opacity=".15"
+              stroke="white"
+              stroke-opacity=".15"
+            />
+            <text x="254" y="189" text-anchor="middle" fill="white" opacity=".9">Spatial</text>
+
+            <rect
+              x="296"
+              y="172"
+              width="64"
+              height="26"
+              rx="6"
+              fill="white"
+              fill-opacity=".15"
+              stroke="white"
+              stroke-opacity=".15"
+            />
+            <text x="328" y="189" text-anchor="middle" fill="white" opacity=".9">Streaming</text>
+
+            <rect
+              x="372"
+              y="172"
+              width="38"
+              height="26"
+              rx="6"
+              fill="white"
+              fill-opacity=".15"
+              stroke="white"
+              stroke-opacity=".15"
+            />
+            <text x="391" y="189" text-anchor="middle" fill="white" opacity=".9">AI</text>
+
+            <rect
+              x="422"
+              y="172"
+              width="48"
+              height="26"
+              rx="6"
+              fill="white"
+              fill-opacity=".15"
+              stroke="white"
+              stroke-opacity=".15"
+            />
+            <text x="446" y="189" text-anchor="middle" fill="white" opacity=".9">MCP</text>
+
+            <rect
+              x="482"
+              y="172"
+              width="72"
+              height="26"
+              rx="6"
+              fill="white"
+              fill-opacity=".1"
+              stroke="white"
+              stroke-opacity=".1"
+            />
+            <text x="518" y="189" text-anchor="middle" fill="white" opacity=".5" font-size="9">
+              Rust · WASM
+            </text>
+          </g>
+
+          <!-- Arrow showing "this was missing" -->
+          <text
+            x="20"
+            y="170"
+            text-anchor="end"
+            font-family="Inter,system-ui"
+            font-size="9"
+            fill="#3b9ecf"
+            font-weight="600"
+            transform="rotate(-90, 20, 170)"
+          >
+            THIS WAS MISSING
+          </text>
+
+          <!-- Layer 3: GPU Access -->
+          <rect
+            x="50"
+            y="262"
+            width="500"
+            height="64"
+            rx="14"
+            fill="white"
+            stroke="#e2e8f0"
+            stroke-width="1"
+          />
+          <text
+            x="300"
+            y="284"
+            text-anchor="middle"
+            font-family="Space Grotesk,system-ui"
+            font-weight="700"
+            font-size="14"
+            fill="#334155"
+          >
+            Browser Compute
+          </text>
+          <text
+            x="300"
+            y="307"
+            text-anchor="middle"
+            font-family="Inter,system-ui"
+            font-size="11"
+            fill="#94a3b8"
+          >
+            WebAssembly · JavaScript engines — Mature
+          </text>
+
+          <!-- Flow between vizcrush and GPU -->
+          <line
+            x1="300"
+            y1="228"
+            x2="300"
+            y2="262"
+            stroke="#cbd5e1"
+            stroke-width="1"
+            stroke-dasharray="3 3"
+            opacity=".4"
+          />
+        </svg>
+
+        <div class="text-center mt-10 space-y-4 max-w-lg mx-auto">
+          <div class="flex items-center justify-center gap-6 text-sm text-on-surface-variant">
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+              <span>1M points in</span>
+            </div>
+            <span class="material-symbols-outlined text-primary text-base">arrow_forward</span>
+            <span class="font-headline font-bold text-primary">~2ms</span>
+            <span class="material-symbols-outlined text-emerald-500 text-base">arrow_forward</span>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+              <span>1,920 points out</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400">
+            Zero visual loss. Your data stays intact. Zoom re-crushes from the full dataset.
+          </p>
+        </div>
+      </section>
+      <!-- Performance -->
+      <section id="benchmarks" class="py-24 px-6 bg-surface-low">
+        <div class="max-w-7xl mx-auto">
+          <h3 class="font-headline text-xs font-bold text-primary uppercase tracking-[0.2em] mb-12">
+            Performance Benchmarks
+          </h3>
+          <div class="grid md:grid-cols-4 gap-px bg-slate-200 rounded-xl overflow-hidden">
+            <div class="bg-white p-10">
+              <div class="font-headline text-4xl font-bold text-primary mb-2">1.8ms</div>
+              <div
+                class="text-[10px] font-headline font-bold uppercase tracking-widest text-on-surface mb-4"
+              >
+                LTTB 1M→1K
+              </div>
+              <p class="text-xs text-on-surface-variant">
+                Downsample one million points to one thousand, measured on the pure-JS core (V8).
+                WASM is ~4x faster in Chromium; engine-dependent elsewhere.
+              </p>
+            </div>
+            <div class="bg-white p-10">
+              <div class="font-headline text-4xl font-bold text-primary mb-2">2.5ms</div>
+              <div
+                class="text-[10px] font-headline font-bold uppercase tracking-widest text-on-surface mb-4"
+              >
+                Histogram 1M
+              </div>
+              <p class="text-xs text-on-surface-variant">
+                One million values into 50 bins — 3.4x faster than d3-array's bin().
+              </p>
+            </div>
+            <div class="bg-white p-10">
+              <div class="font-headline text-4xl font-bold text-primary mb-2">0.02ms</div>
+              <div
+                class="text-[10px] font-headline font-bold uppercase tracking-widest text-on-surface mb-4"
+              >
+                Quadtree Query
+              </div>
+              <p class="text-xs text-on-surface-variant">
+                1% viewport range query across 500K quadtree-indexed points.
+              </p>
+            </div>
+            <div class="bg-white p-10">
+              <div class="font-headline text-4xl font-bold text-secondary mb-2">8-27KB</div>
+              <div
+                class="text-[10px] font-headline font-bold uppercase tracking-widest text-on-surface mb-4"
+              >
+                WASM per Package
+              </div>
+              <p class="text-xs text-on-surface-variant">
+                Each algorithm package ships its own gzipped WASM module. Zero runtime JS
+                dependencies.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features -->
+      <section id="features" class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="grid md:grid-cols-6 md:grid-rows-2 gap-4">
+          <div
+            class="md:col-span-2 bg-white p-8 rounded-xl border border-slate-100 hover:shadow-lg transition-shadow"
+          >
+            <span class="material-symbols-outlined text-primary text-3xl mb-4">compress</span>
+            <h4 class="font-semibold mb-2">Downsampling</h4>
+            <p class="text-sm text-on-surface-variant">
+              LTTB, MinMaxLTTB, M4, LTOB — preserve visual shape, discard invisible points. 99%
+              reduction, zero visual loss.
+            </p>
+          </div>
+          <div
+            class="md:col-span-2 bg-white p-8 rounded-xl border border-slate-100 hover:shadow-lg transition-shadow"
+          >
+            <span class="material-symbols-outlined text-secondary text-3xl mb-4">grid_on</span>
+            <h4 class="font-semibold mb-2">2D Binning</h4>
+            <p class="text-sm text-on-surface-variant">
+              Histogram, bin2d density grids, hexagonal binning. 500K scatter → heatmap in
+              milliseconds.
+            </p>
+          </div>
+          <div
+            class="md:col-span-2 bg-white p-8 rounded-xl border border-slate-100 hover:shadow-lg transition-shadow"
+          >
+            <span class="material-symbols-outlined text-primary text-3xl mb-4">account_tree</span>
+            <h4 class="font-semibold mb-2">Spatial Indexing</h4>
+            <p class="text-sm text-on-surface-variant">
+              Quadtree + kd-tree over flat typed arrays. Sub-millisecond viewport queries and kNN.
+            </p>
+          </div>
+          <div class="md:col-span-3 bg-primary p-8 rounded-xl flex items-center justify-between">
+            <div>
+              <h4 class="font-semibold text-white text-xl mb-2">Streaming Stats</h4>
+              <p class="text-sm text-white/80 max-w-xs">
+                Rolling min/max/mean/stddev. DDSketch + KLL approximate percentiles.
+                appendAndDownsample in one pass. 1K pts/sec at 60fps.
+              </p>
+            </div>
+            <span class="material-symbols-outlined text-white/20 text-8xl">waves</span>
+          </div>
+          <div class="md:col-span-3 bg-surface-high p-8 rounded-xl border border-slate-100">
+            <div class="flex justify-between">
+              <div>
+                <h4 class="font-semibold mb-2">Zero Dependencies</h4>
+                <p class="text-sm text-on-surface-variant max-w-xs">
+                  Per-package WASM modules 8-27KB gzipped. No runtime JS dependencies. Works with
+                  any chart library — D3, Plotly, ChartGPU, ECharts, Canvas 2D.
+                </p>
+              </div>
+              <span class="material-symbols-outlined text-primary text-4xl">package_2</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Intelligence Section -->
+      <section id="ai" class="py-24 px-6 bg-gradient-to-b from-slate-50 to-white">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center mb-16">
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1 bg-violet-50 border border-violet-200 rounded-full mb-4"
+            >
+              <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
+              <span
+                class="text-[10px] font-headline font-bold uppercase tracking-widest text-violet-600"
+                >AI-Native</span
+              >
+            </div>
+            <h2 class="font-headline text-4xl font-bold mb-4">
+              Your data talks. vizcrush listens.
+            </h2>
+            <p class="text-on-surface-variant max-w-2xl mx-auto">
+              Not just faster rendering — vizcrush understands your data. Anomaly detection,
+              auto-optimization, natural language queries, and LLM-ready summaries. Built in.
+            </p>
+          </div>
+
+          <!-- Feature 1: Ask your data a question -->
+          <div class="grid lg:grid-cols-2 gap-8 mb-8">
+            <div
+              class="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm hover:shadow-lg transition-shadow"
+            >
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
+                  <span class="material-symbols-outlined text-violet-600" style="font-size: 22px"
+                    >chat</span
+                  >
+                </div>
+                <div>
+                  <h3 class="font-headline font-bold text-lg">Ask your data in plain English</h3>
+                  <p class="text-xs text-on-surface-variant">
+                    No API docs needed — just describe what you want
+                  </p>
+                </div>
+              </div>
+              <div class="bg-slate-900 rounded-xl p-5 font-mono text-sm space-y-3">
+                <div class="text-slate-400">// Natural language → structured operation</div>
+                <div>
+                  <span class="text-violet-400">parseDataQuery</span>(<span class="text-amber-300"
+                    >"show spikes above 50"</span
+                  >)
+                </div>
+                <div class="text-slate-500 pl-4">
+                  → { operation: <span class="text-emerald-400">"filter"</span>, params: { min: 50 }
+                  }
+                </div>
+                <div class="mt-2">
+                  <span class="text-violet-400">parseDataQuery</span>(<span class="text-amber-300"
+                    >"find anomalies"</span
+                  >)
+                </div>
+                <div class="text-slate-500 pl-4">
+                  → { operation: <span class="text-emerald-400">"anomaly"</span>, sensitivity: 3 }
+                </div>
+                <div class="mt-2">
+                  <span class="text-violet-400">parseDataQuery</span>(<span class="text-amber-300"
+                    >"downsample to 1000 points"</span
+                  >)
+                </div>
+                <div class="text-slate-500 pl-4">
+                  → { operation: <span class="text-emerald-400">"downsample"</span>, target: 1000 }
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature 2: Anomaly Detection -->
+            <div
+              class="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm hover:shadow-lg transition-shadow"
+            >
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                  <span class="material-symbols-outlined text-red-500" style="font-size: 22px"
+                    >crisis_alert</span
+                  >
+                </div>
+                <div>
+                  <h3 class="font-headline font-bold text-lg">Anomaly detection in microseconds</h3>
+                  <p class="text-xs text-on-surface-variant">
+                    MAD-based Z-scores — robust, no ML model needed
+                  </p>
+                </div>
+              </div>
+              <div class="bg-slate-900 rounded-xl p-5 font-mono text-sm space-y-3">
+                <div class="text-slate-400">// Finds spikes, dips, and distribution shifts</div>
+                <div>
+                  <span class="text-violet-400">detectAnomalies</span>(sensorData,
+                  <span class="text-amber-300">3.0</span>)
+                </div>
+                <div class="mt-3 space-y-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span class="text-slate-300">Index 25:</span>
+                    <span class="text-red-400">spike</span>
+                    <span class="text-slate-500">z=17.47</span>
+                    <span class="text-slate-600">value=200.0</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span class="text-slate-300">Index 75:</span>
+                    <span class="text-blue-400">dip</span>
+                    <span class="text-slate-500">z=-12.25</span>
+                    <span class="text-slate-600">value=-50.0</span>
+                  </div>
+                </div>
+                <div class="text-slate-500 text-xs mt-3 border-t border-slate-800 pt-2">
+                  Zero false positives on clean data. No training required.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 3 + 4 + 5: Three columns -->
+          <div class="grid md:grid-cols-3 gap-6">
+            <!-- Auto-Optimization -->
+            <div
+              class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-lg transition-shadow"
+            >
+              <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-emerald-600" style="font-size: 22px"
+                  >auto_fix_high</span
+                >
+              </div>
+              <h3 class="font-headline font-bold mb-2">Zero-config optimization</h3>
+              <p class="text-sm text-on-surface-variant mb-4">
+                vizcrush analyzes your data and picks the best algorithm, target points, and backend
+                automatically.
+              </p>
+              <div class="bg-slate-50 rounded-lg p-3 font-mono text-xs space-y-1">
+                <div class="text-primary font-semibold">autoOptimize(data, 1920)</div>
+                <div class="text-slate-500">
+                  → algorithm: <span class="text-emerald-600">minmax_lttb</span>
+                </div>
+                <div class="text-slate-500">
+                  → targetPoints: <span class="text-emerald-600">3840</span>
+                </div>
+                <div class="text-slate-400 text-[10px] mt-1 italic">
+                  "Spiky time-series detected. Using MinMax+LTTB to preserve extrema."
+                </div>
+              </div>
+            </div>
+
+            <!-- LLM Summarization -->
+            <div
+              class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-lg transition-shadow"
+            >
+              <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-amber-600" style="font-size: 22px"
+                  >description</span
+                >
+              </div>
+              <h3 class="font-headline font-bold mb-2">LLM-ready summaries</h3>
+              <p class="text-sm text-on-surface-variant mb-4">
+                Compress 1M data points into one paragraph that fits an LLM context window.
+              </p>
+              <div class="bg-slate-50 rounded-lg p-3 text-xs text-slate-600 leading-relaxed italic">
+                "500K time-series points spanning 5.8 days. Increasing trend, slope 0.013/unit. Mean
+                4,140, range [51, 7,553]. 6,712 spike events. Recommended: MinMaxLTTB to 3,840
+                points."
+              </div>
+              <div class="text-[10px] text-slate-400 mt-2">
+                AI agents see this instead of raw numbers.
+              </div>
+            </div>
+
+            <!-- Shape Embeddings -->
+            <div
+              class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-lg transition-shadow"
+            >
+              <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-blue-600" style="font-size: 22px"
+                  >fingerprint</span
+                >
+              </div>
+              <h3 class="font-headline font-bold mb-2">Shape fingerprints</h3>
+              <p class="text-sm text-on-surface-variant mb-4">
+                "Find charts that look like this one." 16-dimension embeddings with cosine
+                similarity.
+              </p>
+              <div class="bg-slate-50 rounded-lg p-3 font-mono text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">sine ↔ cosine</span>
+                  <div class="flex items-center gap-2">
+                    <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-500 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <span class="text-emerald-600 font-bold">1.00</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">sine ↔ noise</span>
+                  <div class="flex items-center gap-2">
+                    <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-amber-500 rounded-full" style="width: 42%"></div>
+                    </div>
+                    <span class="text-amber-600 font-bold">0.42</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">self ↔ self</span>
+                  <div class="flex items-center gap-2">
+                    <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-500 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <span class="text-emerald-600 font-bold">1.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MCP Section -->
+      <section id="mcp" class="py-24 px-6 bg-slate-900 overflow-hidden">
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <h3 class="font-headline text-white text-4xl font-bold mb-6">
+              AI-native. MCP built in.
+            </h3>
+            <p class="text-slate-400 mb-8 leading-relaxed">
+              vizcrush ships with an MCP server. AI coding agents (Claude Code, Cursor, Copilot) can
+              invoke compute tools directly — no docs needed.
+            </p>
+            <ul class="space-y-4 mb-8">
+              <li class="flex items-center gap-3 text-slate-300 text-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                23 tools: downsample, bin, spatial, stats, sort, normalize, AI
+              </li>
+              <li class="flex items-center gap-3 text-slate-300 text-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                3 prompts: optimize_chart, profile_data, migration_guide
+              </li>
+              <li class="flex items-center gap-3 text-slate-300 text-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                stdio + HTTP transport, CSV file input
+              </li>
+            </ul>
+            <div class="bg-slate-800 p-4 rounded-lg font-mono text-xs text-slate-300">
+              <span class="text-slate-500">// claude_desktop_config.json</span><br />
+              { "mcpServers": { "vizcrush": {<br />
+              &nbsp;&nbsp;"command": "npx",<br />
+              &nbsp;&nbsp;"args": ["-y", "@vizcrush/mcp-server"]<br />
+              }}}
+            </div>
+          </div>
+          <div
+            class="bg-slate-950 rounded-xl border border-slate-800 p-1 font-mono text-sm shadow-2xl"
+          >
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
+              <div class="flex gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+              </div>
+              <span class="text-slate-500 text-xs ml-4">AI Agent Session</span>
+            </div>
+            <div class="p-6 text-slate-300 space-y-4 text-xs leading-relaxed">
+              <div>
+                <span class="text-slate-500">Developer:</span> "My chart has 1M points and freezes
+                on zoom"
+              </div>
+              <div class="text-slate-500">Agent calls vizcrush_auto_downsample...</div>
+              <div class="bg-slate-900 p-3 rounded text-primary-container">
+                <div>{ algorithm: "minmax_lttb",</div>
+                <div>&nbsp;&nbsp;original: 1000000, output: 1920,</div>
+                <div>&nbsp;&nbsp;elapsed_ms: 2.1,</div>
+                <div>&nbsp;&nbsp;backend: "wasm" }</div>
+              </div>
+              <div>
+                <span class="text-emerald-400">Agent:</span> "Done! MinMaxLTTB reduced 1M → 1,920
+                points in 2.1ms. Chart now runs at 60fps."
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Packages -->
+      <section class="py-24 px-6 max-w-7xl mx-auto">
+        <h3 class="font-headline text-3xl font-bold mb-12">The Ecosystem</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-slate-200">
+                <th
+                  class="pb-4 text-[10px] font-headline uppercase tracking-widest text-on-surface-variant"
+                >
+                  Package
+                </th>
+                <th
+                  class="pb-4 text-[10px] font-headline uppercase tracking-widest text-on-surface-variant"
+                >
+                  Description
+                </th>
+                <th
+                  class="pb-4 text-[10px] font-headline uppercase tracking-widest text-on-surface-variant"
+                >
+                  Compute Path
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">@vizcrush/core</td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  Init, capability detection, backend selection
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">JS</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">
+                  @vizcrush/downsample
+                </td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  LTTB, MinMaxLTTB, M4, LTOB algorithms
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">WASM + JS</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">@vizcrush/bin</td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  Histogram, bin2d density grids, hexagonal binning
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">WASM + JS</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">@vizcrush/spatial</td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  Quadtree, kd-tree, range + kNN queries
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">WASM + JS</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">
+                  @vizcrush/aggregate
+                </td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  Streaming stats, DDSketch/KLL percentiles, append+downsample
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">WASM + JS</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">
+                  @vizcrush/transform
+                </td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  Radix sort, normalize, filterRange
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">WASM + JS</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">@vizcrush/ai</td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  Anomaly detection, auto-optimize, NLP queries, LLM summaries, shape embeddings
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">JS + WASM</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">@vizcrush/react</td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  useDownsample, useBin2d, useStats, useStreamingStats
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">Hooks</td>
+              </tr>
+              <tr class="hover:bg-surface-low transition-colors">
+                <td class="py-5 font-mono font-semibold text-primary text-sm">
+                  @vizcrush/mcp-server
+                </td>
+                <td class="py-5 text-sm text-on-surface-variant">
+                  23 tools, 3 prompts, 2 resources, stdio + HTTP transport
+                </td>
+                <td class="py-5 text-xs font-mono text-slate-400">Node.js</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- The Book -->
+      <section class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1 bg-violet-50 border border-violet-200 rounded-full mb-6"
+            >
+              <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+              <span
+                class="text-[10px] font-headline font-bold uppercase tracking-widest text-violet-600"
+                >Free &amp; Open Source</span
+              >
+            </div>
+            <h2 class="font-headline text-4xl font-bold mb-6">The vizcrush Book</h2>
+            <p class="text-on-surface-variant text-lg mb-6 leading-relaxed">
+              16 chapters explaining why these algorithms work the way they do. Not an API
+              reference. Read it front to back and walk away understanding when to reach for each
+              tool and what tradeoffs you're making.
+            </p>
+            <ul class="space-y-3 mb-8 text-sm text-on-surface-variant">
+              <li class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-violet-500 text-base">menu_book</span>
+                The 100K Datapoint Wall and why it exists
+              </li>
+              <li class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-violet-500 text-base">menu_book</span>
+                LTTB, binning, spatial indexing deep dives
+              </li>
+              <li class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-violet-500 text-base">menu_book</span>
+                Streaming sketches for data that never stops
+              </li>
+              <li class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-violet-500 text-base">menu_book</span>
+                Performance lessons from Rust + WASM in browsers
+              </li>
+              <li class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-violet-500 text-base">menu_book</span>
+                The math behind it all
+              </li>
+            </ul>
+            <a
+              href="https://github.com/pallavL01/vizcrush-book"
+              class="inline-flex items-center gap-2 gradient-btn text-white px-6 py-3 rounded-lg font-semibold text-sm"
+            >
+              Read the Book
+              <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </a>
+          </div>
+          <div class="bg-slate-900 rounded-2xl p-10 font-mono text-sm shadow-2xl">
+            <div class="text-slate-500 text-xs mb-6">Table of Contents</div>
+            <div class="space-y-2 text-slate-300 text-xs leading-relaxed">
+              <div class="text-slate-500 font-bold uppercase text-[10px] tracking-widest mb-3">
+                Part I: Why vizcrush Exists
+              </div>
+              <div>1. The Wall</div>
+              <div>2. What vizcrush Actually Does</div>
+              <div>3. The Two Engines: WASM and WebGPU</div>
+              <div class="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-5 mb-3">
+                Part II: The Algorithms
+              </div>
+              <div>4. LTTB: The Algorithm That Started Everything</div>
+              <div>5. MinMaxLTTB, M4, LTOB</div>
+              <div>6. Binning: When Scatter Plots Lie To You</div>
+              <div>7. Quadtrees, kd-trees, Hash Grids</div>
+              <div>8. Streaming and Sketches</div>
+              <div>9. Sorting, Normalizing, Filtering</div>
+              <div>10. 3D: Voxels, Octrees, Frustum Culling</div>
+              <div>11. AI-Assisted Viz</div>
+              <div class="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-5 mb-3">
+                Part III: Using Them
+              </div>
+              <div>12. Picking the Right Tool</div>
+              <div>13. Using vizcrush: A Tour in Code</div>
+              <div class="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-5 mb-3">
+                Part IV: Under the Hood
+              </div>
+              <div>14. Why It Doesn't Break (Fallback Strategy)</div>
+              <div>15. Making It Fast (Performance Lessons)</div>
+              <div>16. The Math Behind It All</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="px-6 pb-24 max-w-7xl mx-auto">
+        <div class="bg-primary rounded-2xl p-12 lg:p-20 text-center relative overflow-hidden">
+          <div class="relative z-10">
+            <h2 class="font-headline text-4xl md:text-6xl font-bold text-white mb-6">
+              Ready to crush your data?
+            </h2>
+            <p class="text-white/80 max-w-xl mx-auto mb-10 text-lg">
+              Open source. MIT licensed. Built with Rust + WebAssembly.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+              <a
+                href="https://github.com/pallavL01/vizcrush"
+                class="bg-white text-primary px-8 py-4 rounded-md font-bold hover:bg-sky-50 transition-colors"
+                >View on GitHub</a
+              >
+              <a
+                href="https://github.com/pallavL01/vizcrush-book"
+                class="bg-primary-container text-white px-8 py-4 rounded-md font-bold border border-white/20 hover:bg-sky-600 transition-colors"
+                >Read the Book</a
+              >
+            </div>
+          </div>
+          <div class="absolute inset-0 opacity-10">
+            <div
+              class="absolute top-0 left-0 w-full h-full"
+              style="
+                background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0);
+                background-size: 40px 40px;
+              "
+            ></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-slate-200 bg-white">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+        <div class="flex items-center gap-6">
+          <span class="text-lg font-bold font-headline text-slate-900">vizcrush</span>
+          <span class="text-slate-300">|</span>
+          <span class="text-sm text-slate-500"
+            >Crush millions of data points into smooth visualizations.</span
+          >
+        </div>
+        <div class="flex gap-8 items-center">
+          <a
+            class="text-xs text-slate-500 hover:text-slate-900 transition-colors"
+            href="https://github.com/pallavL01/vizcrush"
+            >GitHub</a
+          >
+          <a
+            class="text-xs text-slate-500 hover:text-slate-900 transition-colors"
+            href="https://github.com/pallavL01/vizcrush-book"
+            >The Book</a
+          >
+          <a
+            class="text-xs text-slate-500 hover:text-slate-900 transition-colors"
+            href="https://tally.so/r/A7bNvN"
+            target="_blank"
+            >Updates</a
+          >
+          <span class="text-xs text-slate-400">MIT &copy; 2026</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

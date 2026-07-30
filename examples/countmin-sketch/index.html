@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Count-Min Sketch</title>
+    <style>
+      body {
+        margin: 0;
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-top: 0;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 1.5rem 0;
+        align-items: center;
+      }
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .control-group label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      select {
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #2a2a2a;
+        font-family: inherit;
+        border-radius: 4px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+      }
+      .charts {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      canvas {
+        width: 100%;
+        background: #111;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+      }
+      #bar-chart {
+        height: 360px;
+      }
+      #heat-strip {
+        height: 80px;
+      }
+      .side-panel {
+        background: #1c1b1b;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+        padding: 1.25rem;
+      }
+      .side-panel h3 {
+        color: #4a7fd4;
+        margin-top: 0;
+        font-size: 0.95rem;
+      }
+      .stats-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .stat {
+        background: #0f0f1e;
+        padding: 0.5rem;
+        border-radius: 6px;
+        flex: 1;
+        text-align: center;
+      }
+      .stat-label {
+        font-size: 0.65rem;
+        color: #888;
+        text-transform: uppercase;
+      }
+      .stat-value {
+        font-size: 0.95rem;
+        font-weight: bold;
+        color: #4a7fd4;
+        font-variant-numeric: tabular-nums;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+      }
+      th {
+        text-align: left;
+        color: #888;
+        font-weight: normal;
+        text-transform: uppercase;
+        font-size: 0.65rem;
+        padding: 0.3rem;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      td {
+        padding: 0.3rem;
+        border-bottom: 1px solid #1c1b1b;
+        font-variant-numeric: tabular-nums;
+      }
+      .over {
+        color: #f44336;
+      }
+      .heat-label {
+        font-size: 0.7rem;
+        color: #666;
+        margin-top: 0.25rem;
+      }
+      @media (max-width: 800px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Count-Min Sketch</h1>
+      <p class="subtitle">Width/depth tradeoffs and over-counting visualization</p>
+      <div class="controls">
+        <div class="control-group">
+          <label>Width</label>
+          <select id="width-sel">
+            <option value="256">256</option>
+            <option value="512">512</option>
+            <option value="1024" selected>1024</option>
+            <option value="2048">2048</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Depth</label>
+          <select id="depth-sel">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Zipf exponent</label>
+          <select id="zipf-sel">
+            <option value="1.0">1.0</option>
+            <option value="1.5" selected>1.5</option>
+            <option value="2.0">2.0</option>
+          </select>
+        </div>
+      </div>
+      <div class="layout">
+        <div class="charts">
+          <canvas id="bar-chart"></canvas>
+          <canvas id="heat-strip"></canvas>
+          <div class="heat-label" id="heat-label">Row 0 of count table</div>
+        </div>
+        <div class="side-panel">
+          <h3>Sketch Stats</h3>
+          <div class="stats-row" id="stats"></div>
+          <h3>Worst Over-estimates</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Actual</th>
+                <th>CM Est</th>
+                <th>Over</th>
+              </tr>
+            </thead>
+            <tbody id="worst-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "name": "@vizcrush/core",
+  "version": "2.0.0",
+  "description": "Shared WASM/JS dispatch kernel and capability detection for vizcrush packages",
+  "keywords": [
+    "data",
+    "simd",
+    "visualization",
+    "wasm"
+  ],
+  "homepage": "https://github.com/pallavL01/vizcrush#readme",
+  "bugs": {
+    "url": "https://github.com/pallavL01/vizcrush/issues"
+  },
+  "license": "MIT",
+  "author": "vizcrush contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pallavL01/vizcrush.git",
+    "directory": "packages/core"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./parity": {
+      "import": "./dist/parity.js",
+      "types": "./dist/parity.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

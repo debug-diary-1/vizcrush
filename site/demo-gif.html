@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Demo Recording</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0a0a0f;
+        color: #e0e0e8;
+        font-family: system-ui;
+        height: 100vh;
+        overflow: hidden;
+      }
+      .split {
+        display: flex;
+        height: 100vh;
+      }
+      .panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .left {
+        border-right: 2px solid #1a1a2e;
+      }
+      .panel-header {
+        padding: 14px 20px;
+      }
+      .left .panel-header {
+        background: #1a0505;
+      }
+      .right .panel-header {
+        background: #051a0a;
+      }
+      .panel-header h2 {
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .left h2 {
+        color: #ef4444;
+      }
+      .right h2 {
+        color: #10b981;
+      }
+      .panel-header .sub {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+      .chart-area {
+        flex: 1;
+        position: relative;
+      }
+      .chart-area canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .stats-bar {
+        padding: 10px 20px;
+        background: rgba(10, 10, 15, 0.95);
+        border-top: 1px solid #1a1a2e;
+        font-size: 12px;
+        display: flex;
+        gap: 20px;
+      }
+      .stats-bar .label {
+        color: #6b7280;
+      }
+      .stats-bar .val {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .bad {
+        color: #ef4444;
+      }
+      .good {
+        color: #10b981;
+      }
+
+      .frozen-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+      .frozen-overlay.show {
+        opacity: 1;
+      }
+      .dialog-box {
+        background: #fff;
+        color: #1a1a1a;
+        border-radius: 12px;
+        padding: 28px 36px;
+        text-align: center;
+        max-width: 320px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        font-family: -apple-system, system-ui, sans-serif;
+      }
+      .dialog-box h3 {
+        font-size: 17px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .dialog-box p {
+        font-size: 13px;
+        color: #555;
+        line-height: 1.5;
+        margin-bottom: 18px;
+      }
+      .dialog-box .url {
+        font-size: 11px;
+        color: #999;
+        background: #f5f5f5;
+        padding: 6px 12px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+      }
+      .dialog-btns {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+      .dialog-btn {
+        padding: 8px 22px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        border: none;
+        cursor: default;
+      }
+      .dialog-btn.outline {
+        background: #f0f0f0;
+        color: #333;
+      }
+      .dialog-btn.primary {
+        background: #3478f6;
+        color: white;
+      }
+
+      .anim-line {
+        position: absolute;
+        bottom: 30%;
+        right: 20px;
+        color: #10b981;
+        font-size: 60px;
+        font-weight: 800;
+        font-family: "SF Mono", monospace;
+        opacity: 0;
+        transition: opacity 0.8s;
+      }
+      .anim-line.show {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="split">
+      <!-- Left: Without vizcrush -->
+      <div class="panel left">
+        <div class="panel-header">
+          <h2>Without vizcrush</h2>
+          <div class="sub">Rendering 1,000,000 points directly</div>
+        </div>
+        <div class="chart-area">
+          <canvas id="leftCanvas"></canvas>
+          <div class="frozen-overlay" id="frozenOverlay">
+            <div class="dialog-box">
+              <h3>Page Unresponsive</h3>
+              <p>
+                This page is slowing down your browser. You can wait for it to respond or exit the
+                page.
+              </p>
+              <div class="url">dashboard.yourapp.com</div>
+              <div class="dialog-btns">
+                <button class="dialog-btn outline">Exit Page</button>
+                <button class="dialog-btn primary">Wait</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="stats-bar">
+          <span><span class="label">Points </span><span class="val bad">1,000,000</span></span>
+          <span><span class="label">Frame </span><span class="val bad">850ms</span></span>
+          <span><span class="label">FPS </span><span class="val bad">1</span></span>
+          <span><span class="label">Status </span><span class="val bad">FROZEN</span></span>
+        </div>
+      </div>
+
+      <!-- Right: With vizcrush -->
+      <div class="panel right">
+        <div class="panel-header">
+          <h2>With vizcrush</h2>
+          <div class="sub">LTTB downsampled to 1,920 points — visually identical</div>
+        </div>
+        <div class="chart-area">
+          <canvas id="rightCanvas"></canvas>
+          <div class="anim-line" id="speedLabel">60fps</div>
+        </div>
+        <div class="stats-bar">
+          <span><span class="label">Points </span><span class="val good">1,920</span></span>
+          <span><span class="label">Crush </span><span class="val good">~2ms</span></span>
+          <span><span class="label">FPS </span><span class="val good">60</span></span>
+          <span
+            ><span class="label">vs downsample (npm) </span
+            ><span class="val good">32x faster</span></span
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function drawChart(canvas, numPoints, color, animate) {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = devicePixelRatio;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
+        const w = rect.width,
+          h = rect.height;
+
+        // Generate random walk
+        const points = [];
+        let val = h * 0.5;
+        for (let i = 0; i < numPoints; i++) {
+          val += (Math.random() - 0.498) * (h * 0.008);
+          val = Math.max(h * 0.08, Math.min(h * 0.92, val));
+          points.push(val);
+        }
+
+        function render(progress) {
+          ctx.clearRect(0, 0, w, h);
+          const count = animate ? Math.floor(points.length * progress) : points.length;
+
+          // Area
+          ctx.fillStyle = color === "green" ? "rgba(16,185,129,0.06)" : "rgba(239,68,68,0.04)";
+          ctx.beginPath();
+          ctx.moveTo(0, h);
+          for (let i = 0; i < count; i++) {
+            ctx.lineTo((i / points.length) * w, points[i]);
+          }
+          ctx.lineTo((count / points.length) * w, h);
+          ctx.fill();
+
+          // Line
+          ctx.strokeStyle = color === "green" ? "#10b981" : "#ef4444";
+          ctx.lineWidth = color === "green" ? 1.8 : 0.5;
+          ctx.globalAlpha = color === "green" ? 0.9 : 0.3;
+          ctx.beginPath();
+          for (let i = 0; i < count; i++) {
+            const x = (i / points.length) * w;
+            if (i === 0) ctx.moveTo(x, points[i]);
+            else ctx.lineTo(x, points[i]);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+
+        if (animate) {
+          let start = null;
+          function step(ts) {
+            if (!start) start = ts;
+            const progress = Math.min(1, (ts - start) / 1500);
+            render(progress);
+            if (progress < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        } else {
+          render(1);
+        }
+      }
+
+      // Wait for layout, then draw
+      window.addEventListener("load", () => {
+        // Right side: animate in smoothly
+        setTimeout(() => {
+          drawChart(document.getElementById("rightCanvas"), 1920, "green", true);
+        }, 500);
+
+        // Show "60fps" label after chart draws
+        setTimeout(() => {
+          document.getElementById("speedLabel").classList.add("show");
+        }, 2200);
+
+        // Left side: show frozen dialog after 1.5s
+        setTimeout(() => {
+          // Draw a partial/messy chart on the left
+          const lc = document.getElementById("leftCanvas");
+          const rect = lc.parentElement.getBoundingClientRect();
+          const dpr = devicePixelRatio;
+          lc.width = rect.width * dpr;
+          lc.height = rect.height * dpr;
+          const ctx = lc.getContext("2d");
+          ctx.scale(dpr, dpr);
+
+          // Draw scattered dots to simulate a frozen render attempt
+          ctx.globalAlpha = 0.15;
+          for (let i = 0; i < 5000; i++) {
+            ctx.fillStyle = "#ef4444";
+            ctx.fillRect(Math.random() * rect.width, Math.random() * rect.height, 1, 1);
+          }
+          ctx.globalAlpha = 1;
+        }, 800);
+
+        setTimeout(() => {
+          document.getElementById("frozenOverlay").classList.add("show");
+        }, 1500);
+      });
+    </script>
+  </body>
+</html>

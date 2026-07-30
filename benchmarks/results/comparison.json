@@ -1,0 +1,185 @@
+{
+  "timestamp": "2026-03-29T02:27:24.195Z",
+  "results": [
+    {
+      "operation": "LTTB",
+      "dataSize": 100000,
+      "vizcrush": {
+        "median": 0.24
+      },
+      "competitor": {
+        "name": "downsample (npm)",
+        "median": 3.64
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "LTTB",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 0.91
+      },
+      "competitor": {
+        "name": "downsample (npm)",
+        "median": 28.73
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "LTTB",
+      "dataSize": 1000000,
+      "vizcrush": {
+        "median": 1.72
+      },
+      "competitor": {
+        "name": "downsample (npm)",
+        "median": 55.52
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Histogram (50 bins)",
+      "dataSize": 100000,
+      "vizcrush": {
+        "median": 0.25
+      },
+      "competitor": {
+        "name": "d3-array bin()",
+        "median": 0.73
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Histogram (50 bins)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 1.35
+      },
+      "competitor": {
+        "name": "d3-array bin()",
+        "median": 3.73
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Histogram (50 bins)",
+      "dataSize": 1000000,
+      "vizcrush": {
+        "median": 2.51
+      },
+      "competitor": {
+        "name": "d3-array bin()",
+        "median": 8.47
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Stats (mean+std+min+max)",
+      "dataSize": 100000,
+      "vizcrush": {
+        "median": 0.39
+      },
+      "competitor": {
+        "name": "simple-statistics",
+        "median": 0.79
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Stats (mean+std+min+max)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 1.93
+      },
+      "competitor": {
+        "name": "simple-statistics",
+        "median": 2.08
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Spatial index build",
+      "dataSize": 100000,
+      "vizcrush": {
+        "median": 24.86
+      },
+      "competitor": {
+        "name": "rbush",
+        "median": 42.6
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Spatial index build",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 146.11
+      },
+      "competitor": {
+        "name": "rbush",
+        "median": 319.21
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Range query (1%)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 0.02
+      },
+      "competitor": {
+        "name": "rbush",
+        "median": 0.07
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Sort (numeric)",
+      "dataSize": 100000,
+      "vizcrush": {
+        "median": 5.68
+      },
+      "competitor": {
+        "name": "Array.sort",
+        "median": 25.94
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "Sort (numeric)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 33.5
+      },
+      "competitor": {
+        "name": "Array.sort",
+        "median": 137.39
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "filterRange (50%)",
+      "dataSize": 500000,
+      "vizcrush": {
+        "median": 2.56
+      },
+      "competitor": {
+        "name": "Array.filter (objects)",
+        "median": 3.84
+      },
+      "speedup": ""
+    },
+    {
+      "operation": "filterRange (50%)",
+      "dataSize": 1000000,
+      "vizcrush": {
+        "median": 5.87
+      },
+      "competitor": {
+        "name": "Array.filter (objects)",
+        "median": 8.35
+      },
+      "speedup": ""
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Neon Time-Series</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+      }
+      h1 {
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: #4a7fd4;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+      #overlay {
+        position: fixed;
+        top: 16px;
+        left: 20px;
+        z-index: 10;
+        pointer-events: none;
+      }
+      #controls {
+        position: fixed;
+        bottom: 16px;
+        left: 20px;
+        z-index: 10;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      #stats-bar {
+        position: fixed;
+        bottom: 16px;
+        right: 20px;
+        z-index: 10;
+        font-size: 11px;
+        color: #555;
+        letter-spacing: 0.03em;
+      }
+      .ctrl-group {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .ctrl-label {
+        font-size: 10px;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-right: 4px;
+      }
+      .ctrl-btn {
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #2a2a2a;
+        padding: 4px 10px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: all 0.15s;
+      }
+      .ctrl-btn:hover {
+        border-color: #4a7fd4;
+        color: #4a7fd4;
+      }
+      .ctrl-btn.active {
+        background: #4a7fd4;
+        color: #131313;
+        border-color: #4a7fd4;
+      }
+      .ctrl-btn.series-btn {
+        position: relative;
+        padding-left: 18px;
+      }
+      .ctrl-btn.series-btn::before {
+        content: "";
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .ctrl-btn.series-btn.off {
+        opacity: 0.35;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="overlay"><h1>Neon Time-Series</h1></div>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Series</span>
+        <button
+          class="ctrl-btn series-btn active"
+          data-series="0"
+          style="--dot-color: rgb(74, 127, 212)"
+        >
+          CPU
+        </button>
+        <button
+          class="ctrl-btn series-btn active"
+          data-series="1"
+          style="--dot-color: rgb(212, 74, 127)"
+        >
+          Memory
+        </button>
+        <button
+          class="ctrl-btn series-btn active"
+          data-series="2"
+          style="--dot-color: rgb(74, 212, 160)"
+        >
+          Network
+        </button>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Speed</span>
+        <button class="ctrl-btn active" data-speed="1">1x</button>
+        <button class="ctrl-btn" data-speed="2">2x</button>
+        <button class="ctrl-btn" data-speed="5">5x</button>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">LTTB</span>
+        <button class="ctrl-btn" data-lttb="500">500</button>
+        <button class="ctrl-btn active" data-lttb="1000">1000</button>
+        <button class="ctrl-btn" data-lttb="2000">2000</button>
+      </div>
+    </div>
+    <div id="stats-bar"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
