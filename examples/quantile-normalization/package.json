@@ -1,0 +1,17 @@
+{
+  "name": "vizcrush-quantile-normalization",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "portless qnorm vite"
+  },
+  "dependencies": {
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/transform": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

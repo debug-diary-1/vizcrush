@@ -1,0 +1,48 @@
+{
+  "name": "@vizcrush/aggregate",
+  "version": "1.0.0",
+  "description": "Streaming statistics, percentiles, and append+downsample",
+  "keywords": [
+    "countmin",
+    "ddsketch",
+    "hyperloglog",
+    "kll",
+    "reservoir",
+    "sketch",
+    "streaming"
+  ],
+  "homepage": "https://github.com/pallavL01/vizcrush#readme",
+  "bugs": {
+    "url": "https://github.com/pallavL01/vizcrush/issues"
+  },
+  "license": "MIT",
+  "author": "vizcrush contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pallavL01/vizcrush.git",
+    "directory": "packages/aggregate"
+  },
+  "files": [
+    "dist",
+    "wasm"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vizcrush/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

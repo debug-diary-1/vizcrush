@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebGPU Compute Heatmap</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap");
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+
+      h1 {
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: #e5e2e1;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        color: #888;
+        font-size: 11px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        padding: 10px 20px;
+        border-bottom: 1px solid #2a2a2a;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .control-group label {
+        color: #888;
+        font-size: 11px;
+      }
+
+      select,
+      button {
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        font-family: inherit;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        outline: none;
+      }
+
+      select:hover,
+      button:hover {
+        border-color: #4a7fd4;
+      }
+
+      select:focus,
+      button:focus {
+        border-color: #4a7fd4;
+        box-shadow: 0 0 0 1px #4a7fd433;
+      }
+
+      button {
+        background: #4a7fd4;
+        color: #fff;
+        border-color: #4a7fd4;
+        font-weight: 600;
+        padding: 4px 14px;
+      }
+
+      button:hover {
+        background: #5a8fe4;
+      }
+
+      .main-area {
+        flex: 1;
+        display: flex;
+        padding: 16px 20px;
+        gap: 16px;
+        min-height: 0;
+      }
+
+      .canvas-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      .colorbar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        width: 40px;
+        flex-shrink: 0;
+      }
+
+      .colorbar-label {
+        font-size: 10px;
+        color: #888;
+      }
+
+      .colorbar-gradient {
+        width: 16px;
+        flex: 1;
+        border-radius: 2px;
+        border: 1px solid #2a2a2a;
+        min-height: 200px;
+      }
+
+      .stats-bar {
+        display: flex;
+        gap: 20px;
+        padding: 8px 20px;
+        border-top: 1px solid #2a2a2a;
+        background: #1c1b1b;
+        flex-wrap: wrap;
+      }
+
+      .stat {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .stat-label {
+        color: #888;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .stat-value {
+        color: #4a7fd4;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .fallback-msg {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: #1c1b1b;
+        border: 1px solid #353534;
+        padding: 4px 10px;
+        font-size: 11px;
+        color: #c9a03c;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>WEBGPU COMPUTE HEATMAP</h1>
+      <div class="subtitle">
+        1M points &rarr; 256&times;256 density grid &rarr; viridis colormap &mdash; entirely on GPU
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="point-count">points</label>
+        <select id="point-count">
+          <option value="100000">100K</option>
+          <option value="500000">500K</option>
+          <option value="1000000" selected>1M</option>
+          <option value="5000000">5M</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="grid-res">grid</label>
+        <select id="grid-res">
+          <option value="64">64</option>
+          <option value="128">128</option>
+          <option value="256" selected>256</option>
+          <option value="512">512</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="distribution">distribution</label>
+        <select id="distribution">
+          <option value="uniform">uniform</option>
+          <option value="clustered" selected>clustered</option>
+          <option value="spiral">spiral</option>
+        </select>
+      </div>
+      <button id="run-btn">RUN</button>
+    </div>
+
+    <div class="main-area">
+      <div class="canvas-wrap">
+        <canvas id="heatmap-canvas" width="512" height="512"></canvas>
+      </div>
+      <div class="colorbar">
+        <span class="colorbar-label" id="cb-max">max</span>
+        <canvas class="colorbar-gradient" id="colorbar-canvas" width="16" height="256"></canvas>
+        <span class="colorbar-label" id="cb-min">0</span>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">compute</span>
+        <span class="stat-value" id="stat-compute">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">render</span>
+        <span class="stat-value" id="stat-render">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">total gpu</span>
+        <span class="stat-value" id="stat-total">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">points/sec</span>
+        <span class="stat-value" id="stat-throughput">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">backend</span>
+        <span class="stat-value" id="stat-backend">--</span>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

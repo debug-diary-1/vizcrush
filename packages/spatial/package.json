@@ -1,0 +1,47 @@
+{
+  "name": "@vizcrush/spatial",
+  "version": "1.0.0",
+  "description": "Quadtree, hash grid, and Morton-order spatial indexing",
+  "keywords": [
+    "2d",
+    "hashgrid",
+    "indexing",
+    "morton",
+    "spatial",
+    "z-order"
+  ],
+  "homepage": "https://github.com/pallavL01/vizcrush#readme",
+  "bugs": {
+    "url": "https://github.com/pallavL01/vizcrush/issues"
+  },
+  "license": "MIT",
+  "author": "vizcrush contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pallavL01/vizcrush.git",
+    "directory": "packages/spatial"
+  },
+  "files": [
+    "dist",
+    "wasm"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vizcrush/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

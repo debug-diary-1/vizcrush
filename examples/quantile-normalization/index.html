@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Quantile Normalization</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+      .section {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .section h2 {
+        color: #ccc;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
+      .section .desc {
+        color: #666;
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+      }
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .controls select {
+        padding: 0.4rem 0.8rem;
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        font-family: inherit;
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+      .controls label {
+        color: #888;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+      .panel h3 {
+        color: #aaa;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+      canvas {
+        width: 100%;
+        height: 300px;
+        display: block;
+      }
+      .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        font-size: 0.8rem;
+      }
+      .stats-table th {
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 500;
+        padding: 0.4rem 0.6rem;
+        text-align: left;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .stats-table td {
+        padding: 0.4rem 0.6rem;
+        border-bottom: 1px solid #222;
+        color: #aaa;
+      }
+      .color-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 0.4rem;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Quantile Normalization</h1>
+      <p class="subtitle">Aligning multiple distributions to share the same shape</p>
+
+      <div class="section">
+        <div class="controls">
+          <label
+            >Series Count:
+            <select id="num-series">
+              <option value="2">2 Series</option>
+              <option value="3">3 Series</option>
+              <option value="4" selected>4 Series</option>
+            </select>
+          </label>
+          <label
+            >Distribution Mix:
+            <select id="dist-mix">
+              <option value="diverse" selected>Diverse (Normal, Exp, Uniform, Bimodal)</option>
+              <option value="all-skewed">All Skewed</option>
+              <option value="similar">Similar Normals</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Before Normalization</h3>
+            <canvas id="canvas-before"></canvas>
+          </div>
+          <div class="panel">
+            <h3>After Quantile Normalization</h3>
+            <canvas id="canvas-after"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Per-Series Statistics</h2>
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Series</th>
+              <th>Mean (Before)</th>
+              <th>Mean (After)</th>
+              <th>StdDev (Before)</th>
+              <th>StdDev (After)</th>
+            </tr>
+          </thead>
+          <tbody id="stats-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

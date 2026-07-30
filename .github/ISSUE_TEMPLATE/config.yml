@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/pallavL01/vizcrush/tree/main/docs
+    about: Check the docs site before filing an issue — your question might already be answered there.
+  - name: Security vulnerability
+    url: https://github.com/pallavL01/vizcrush/blob/main/SECURITY.md
+    about: Please do not file a public issue for security vulnerabilities — see SECURITY.md for how to report privately.

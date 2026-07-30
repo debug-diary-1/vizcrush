@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush + ChartGPU Integration</title>
+    <style>
+      body {
+        margin: 0;
+        background: #0a0a0a;
+        color: #e0e0e0;
+        font-family: system-ui;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #3b9ecf;
+      }
+      .chart {
+        width: 100%;
+        height: 400px;
+        background: #111;
+        border-radius: 8px;
+        margin: 1rem 0;
+      }
+      .stats {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .stat {
+        background: #1a1a1a;
+        padding: 1rem;
+        border-radius: 6px;
+        min-width: 150px;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        color: #888;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #3b9ecf;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>vizcrush + ChartGPU</h1>
+      <p>vizcrush preprocesses data → ChartGPU renders. Best of both worlds.</p>
+      <div class="stats" id="stats"></div>
+      <div class="chart" id="line-chart">
+        <p style="padding: 2rem; color: #666">Line chart: LTTB downsampled 1M → 2000 points</p>
+      </div>
+      <div class="chart" id="scatter-chart">
+        <p style="padding: 2rem; color: #666">Scatter density: bin2d 500K → 128×128 grid</p>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

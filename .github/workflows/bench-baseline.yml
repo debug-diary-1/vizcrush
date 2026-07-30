@@ -1,0 +1,35 @@
+name: Capture Benchmark Baseline
+
+# Manually-triggered workflow that runs the benchmark suite on a CI runner
+# and uploads the resulting `benchmark-baseline.json` as an artifact. Download
+# the artifact and commit `benchmarks/benchmark-baseline.json` to main when
+# you're happy with the numbers — subsequent CI runs will compare against it.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Run benchmarks and capture baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v6
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install
+      - run: pnpm turbo build
+      - name: Run benchmarks with --save-baseline
+        run: node --experimental-vm-modules benchmarks/dist/runner.js --save-baseline
+      - name: Upload baseline artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: benchmark-baseline
+          path: benchmarks/benchmark-baseline.json
+          if-no-files-found: error
+          retention-days: 30

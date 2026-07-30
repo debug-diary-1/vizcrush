@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — GPU Voronoi</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        overflow: hidden;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+      h1 {
+        color: #4a7fd4;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      #controls {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        background: rgba(28, 27, 27, 0.88);
+        border: 1px solid rgba(74, 127, 212, 0.25);
+        border-radius: 6px;
+        padding: 14px 18px;
+        z-index: 10;
+        min-width: 220px;
+        backdrop-filter: blur(8px);
+        user-select: none;
+      }
+      #stats {
+        position: fixed;
+        bottom: 16px;
+        left: 16px;
+        background: rgba(28, 27, 27, 0.88);
+        border: 1px solid rgba(74, 127, 212, 0.15);
+        border-radius: 4px;
+        padding: 8px 14px;
+        z-index: 10;
+        font-size: 11px;
+        color: #888;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 6px 0;
+      }
+      .row label {
+        color: #888;
+        font-size: 11px;
+      }
+      .btn-group {
+        display: flex;
+        gap: 2px;
+      }
+      .btn {
+        background: #1c1b1b;
+        color: #888;
+        border: 1px solid #333;
+        border-radius: 3px;
+        padding: 3px 8px;
+        font-size: 10px;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .btn.active {
+        background: #4a7fd4;
+        color: #131313;
+        border-color: #4a7fd4;
+      }
+      .btn:hover:not(.active) {
+        border-color: #4a7fd4;
+        color: #e5e2e1;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+      <h1>Voronoi Diagram</h1>
+      <div class="row">
+        <label>Seeds</label>
+        <div class="btn-group" id="seedBtns">
+          <button class="btn" data-v="50">50</button>
+          <button class="btn active" data-v="200">200</button>
+          <button class="btn" data-v="350">350</button>
+          <button class="btn" data-v="500">500</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Palette</label>
+        <div class="btn-group" id="paletteBtns">
+          <button class="btn active" data-v="rainbow">Rainbow</button>
+          <button class="btn" data-v="blue">Blue</button>
+          <button class="btn" data-v="earth">Earth</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Edge Glow</label>
+        <div class="btn-group" id="glowBtns">
+          <button class="btn active" data-v="on">On</button>
+          <button class="btn" data-v="off">Off</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Animate</label>
+        <div class="btn-group" id="animBtns">
+          <button class="btn active" data-v="on">On</button>
+          <button class="btn" data-v="off">Off</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Click Add</label>
+        <div class="btn-group" id="clickBtns">
+          <button class="btn active" data-v="on">On</button>
+          <button class="btn" data-v="off">Off</button>
+        </div>
+      </div>
+    </div>
+    <div id="stats"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

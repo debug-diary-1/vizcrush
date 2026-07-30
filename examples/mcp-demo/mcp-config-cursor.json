@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vizcrush": {
+      "command": "npx",
+      "args": ["-y", "@vizcrush/mcp-server"]
+    }
+  }
+}

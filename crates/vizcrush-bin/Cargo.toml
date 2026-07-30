@@ -1,0 +1,19 @@
+[package]
+name = "vizcrush-bin"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "1D/2D histogram binning"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+vizcrush-core = { path = "../vizcrush-core" }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

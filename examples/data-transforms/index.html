@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Data Transforms</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+      .section {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .section h2 {
+        color: #ccc;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
+      .section .desc {
+        color: #666;
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+      }
+      .side-by-side {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+      .hist-panel {
+        text-align: center;
+      }
+      .hist-panel h3 {
+        color: #aaa;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+      canvas {
+        width: 100%;
+        height: 250px;
+        display: block;
+      }
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      .controls select,
+      .controls input {
+        padding: 0.4rem 0.8rem;
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-family: inherit;
+      }
+      .controls label {
+        color: #888;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .stat-row {
+        display: flex;
+        gap: 2rem;
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+      }
+      .arrow {
+        color: #4a7fd4;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .three-col {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 1rem;
+      }
+      .qn-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Data Transforms</h1>
+      <p class="subtitle">
+        Log/power transforms and quantile normalization — before/after visualizations
+      </p>
+
+      <div class="section">
+        <h2>Log Transform — Tame Skewed Distributions</h2>
+        <p class="desc">
+          Raw log-normal data (heavy right tail) becomes normally distributed after log transform.
+          Essential for latency data, income distributions, sensor readings spanning orders of
+          magnitude.
+        </p>
+
+        <div class="controls">
+          <label
+            >Distribution:
+            <select id="dist-type">
+              <option value="lognormal">Log-Normal (skewed)</option>
+              <option value="exponential">Exponential</option>
+              <option value="pareto">Pareto (power law)</option>
+            </select>
+          </label>
+          <label
+            >N:
+            <select id="data-size">
+              <option value="10000">10K</option>
+              <option value="50000" selected>50K</option>
+              <option value="100000">100K</option>
+            </select>
+          </label>
+          <label
+            >Base:
+            <select id="log-base">
+              <option value="e" selected>ln (base e)</option>
+              <option value="10">log10</option>
+              <option value="2">log2</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="three-col">
+          <div class="hist-panel">
+            <h3>Raw Data</h3>
+            <canvas id="hist-raw"></canvas>
+            <div class="stat-row">
+              <span>Skew: <span id="raw-skew">—</span></span>
+              <span>Range: <span id="raw-range">—</span></span>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="hist-panel">
+            <h3>After Log Transform</h3>
+            <canvas id="hist-log"></canvas>
+            <div class="stat-row">
+              <span>Skew: <span id="log-skew">—</span></span>
+              <span>Range: <span id="log-range">—</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Power Transform</h2>
+        <p class="desc">
+          Adjust distribution shape with different exponents. Square root (0.5) compresses; square
+          (2) expands.
+        </p>
+
+        <div class="controls">
+          <label
+            >Exponent:
+            <input type="range" id="power-exp" min="0.1" max="3" step="0.1" value="0.5" />
+            <span id="power-exp-val">0.5</span>
+          </label>
+        </div>
+
+        <div class="three-col">
+          <div class="hist-panel">
+            <h3>Raw Data</h3>
+            <canvas id="hist-power-raw"></canvas>
+          </div>
+          <div class="arrow">→</div>
+          <div class="hist-panel">
+            <h3>After Power Transform (x^<span id="power-label">0.5</span>)</h3>
+            <canvas id="hist-power-out"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Quantile Normalization — Align Multiple Distributions</h2>
+        <p class="desc">
+          Three series with different scales and shapes get normalized to share the same
+          distribution. Used in genomics, multi-sensor alignment, and cross-series comparison.
+        </p>
+
+        <div class="qn-grid">
+          <div>
+            <h3 style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.5rem">
+              Before Normalization
+            </h3>
+            <canvas id="qn-before"></canvas>
+          </div>
+          <div>
+            <h3 style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.5rem">
+              After Quantile Normalization
+            </h3>
+            <canvas id="qn-after"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

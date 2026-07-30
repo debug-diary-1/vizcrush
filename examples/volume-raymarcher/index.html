@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Volume Raymarcher</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+      }
+      h1 {
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: #4a7fd4;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+      #controls {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        background: #1c1b1b;
+        border: 1px solid #2a2929;
+        border-radius: 6px;
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 10;
+        min-width: 220px;
+      }
+      .ctrl-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        gap: 10px;
+      }
+      .ctrl-row label {
+        color: #888;
+        white-space: nowrap;
+      }
+      .ctrl-row select,
+      .ctrl-row button {
+        background: #252424;
+        color: #e5e2e1;
+        border: 1px solid #333;
+        border-radius: 3px;
+        font-family: inherit;
+        font-size: 11px;
+        padding: 3px 8px;
+        cursor: pointer;
+      }
+      .ctrl-row select:focus,
+      .ctrl-row button:focus {
+        outline: 1px solid #4a7fd4;
+      }
+      .ctrl-row button.active {
+        background: #4a7fd4;
+        color: #131313;
+      }
+      #stats {
+        position: fixed;
+        bottom: 16px;
+        left: 16px;
+        background: #1c1b1bcc;
+        border: 1px solid #2a2929;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-size: 11px;
+        color: #888;
+        z-index: 10;
+      }
+      #stats span {
+        color: #e5e2e1;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="controls">
+      <h1>Volume Raymarcher</h1>
+      <div class="ctrl-row">
+        <label>Volume</label>
+        <select id="volSize">
+          <option value="16">16&sup3;</option>
+          <option value="32" selected>32&sup3;</option>
+          <option value="64">64&sup3;</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Steps</label>
+        <select id="steps">
+          <option value="32">32</option>
+          <option value="64" selected>64</option>
+          <option value="128">128</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Scale</label>
+        <select id="scale">
+          <option value="0.25">0.25x</option>
+          <option value="0.5" selected>0.5x</option>
+          <option value="1">1.0x</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Transfer</label>
+        <select id="transfer">
+          <option value="emission" selected>Emission</option>
+          <option value="absorption">Absorption</option>
+          <option value="mip">MIP</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Rotate</label>
+        <button id="autoRotate" class="active">On</button>
+      </div>
+    </div>
+    <div id="stats">
+      Volume: <span id="sVol">32&sup3;</span> &middot; Steps: <span id="sSteps">64</span> &middot;
+      Render: <span id="sTime">--</span>ms &middot; Scale: <span id="sScale">0.5x</span>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

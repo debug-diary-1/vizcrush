@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — DDSketch</title>
+    <style>
+      body {
+        margin: 0;
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-top: 0;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 1.5rem 0;
+        align-items: center;
+      }
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .control-group label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      select,
+      input[type="range"] {
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        font-family: inherit;
+      }
+      input[type="range"] {
+        width: 180px;
+        accent-color: #4a7fd4;
+      }
+      .range-val {
+        color: #4a7fd4;
+        font-weight: bold;
+        font-size: 0.85rem;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+      }
+      canvas {
+        width: 100%;
+        height: 400px;
+        background: #111;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+      }
+      .side-panel {
+        background: #1c1b1b;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+        padding: 1.25rem;
+      }
+      .side-panel h3 {
+        color: #4a7fd4;
+        margin-top: 0;
+        font-size: 0.95rem;
+      }
+      .stats-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .stat {
+        background: #0f0f1e;
+        padding: 0.6rem;
+        border-radius: 6px;
+        flex: 1;
+        text-align: center;
+      }
+      .stat-label {
+        font-size: 0.7rem;
+        color: #888;
+        text-transform: uppercase;
+      }
+      .stat-value {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #4a7fd4;
+        font-variant-numeric: tabular-nums;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      th {
+        text-align: left;
+        color: #888;
+        font-weight: normal;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        padding: 0.4rem;
+        border-bottom: 1px solid #333;
+      }
+      td {
+        padding: 0.4rem;
+        border-bottom: 1px solid #1c1b1b;
+        font-variant-numeric: tabular-nums;
+      }
+      td.error {
+        color: #f44336;
+      }
+      td.good {
+        color: #4caf50;
+      }
+      @media (max-width: 800px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>DDSketch</h1>
+      <p class="subtitle">How relative accuracy (alpha) affects quantile estimation</p>
+      <div class="controls">
+        <div class="control-group">
+          <label>Alpha: <span id="alpha-val" class="range-val">0.01</span></label>
+          <input type="range" id="alpha-slider" min="0" max="100" value="50" />
+        </div>
+        <div class="control-group">
+          <label>Distribution</label>
+          <select id="distribution">
+            <option value="lognormal" selected>Log-normal</option>
+            <option value="exponential">Exponential</option>
+            <option value="uniform">Uniform</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Data size</label>
+          <select id="data-size">
+            <option value="10000">10K</option>
+            <option value="100000" selected>100K</option>
+          </select>
+        </div>
+      </div>
+      <div class="layout">
+        <canvas id="cdf-chart"></canvas>
+        <div class="side-panel">
+          <h3>Sketch Stats</h3>
+          <div class="stats-row" id="stats"></div>
+          <h3>Quantile Comparison</h3>
+          <table id="quantile-table">
+            <thead>
+              <tr>
+                <th>Percentile</th>
+                <th>Exact</th>
+                <th>DDSketch</th>
+                <th>Error %</th>
+              </tr>
+            </thead>
+            <tbody id="qtable-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

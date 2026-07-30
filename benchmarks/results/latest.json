@@ -1,0 +1,95 @@
+{
+  "timestamp": "2026-04-01T04:02:59.872Z",
+  "platform": "darwin arm64",
+  "nodeVersion": "v22.22.1",
+  "results": [
+    {
+      "name": "lttb",
+      "dataSize": 100000,
+      "medianMs": 0.24,
+      "p95Ms": 0.27,
+      "minMs": 0.23,
+      "backend": "js"
+    },
+    {
+      "name": "lttb",
+      "dataSize": 500000,
+      "medianMs": 0.96,
+      "p95Ms": 0.98,
+      "minMs": 0.89,
+      "backend": "js"
+    },
+    {
+      "name": "lttb",
+      "dataSize": 1000000,
+      "medianMs": 1.83,
+      "p95Ms": 1.88,
+      "minMs": 1.76,
+      "backend": "js"
+    },
+    {
+      "name": "filterRange",
+      "dataSize": 100000,
+      "medianMs": 0.47,
+      "p95Ms": 0.93,
+      "minMs": 0.39,
+      "backend": "js"
+    },
+    {
+      "name": "filterRange",
+      "dataSize": 500000,
+      "medianMs": 2.23,
+      "p95Ms": 2.5,
+      "minMs": 1.99,
+      "backend": "js"
+    },
+    {
+      "name": "filterRange",
+      "dataSize": 1000000,
+      "medianMs": 5.34,
+      "p95Ms": 6.63,
+      "minMs": 4.64,
+      "backend": "js"
+    },
+    {
+      "name": "stats",
+      "dataSize": 100000,
+      "medianMs": 0.38,
+      "p95Ms": 0.39,
+      "minMs": 0.38,
+      "backend": "js"
+    },
+    {
+      "name": "stats",
+      "dataSize": 500000,
+      "medianMs": 1.93,
+      "p95Ms": 2.02,
+      "minMs": 1.91,
+      "backend": "js"
+    },
+    {
+      "name": "stats",
+      "dataSize": 1000000,
+      "medianMs": 3.85,
+      "p95Ms": 4.08,
+      "minMs": 3.82,
+      "backend": "js"
+    },
+    {
+      "name": "sort",
+      "dataSize": 100000,
+      "medianMs": 27.77,
+      "p95Ms": 30.18,
+      "minMs": 26.76,
+      "backend": "js"
+    },
+    {
+      "name": "sort",
+      "dataSize": 500000,
+      "medianMs": 149.02,
+      "p95Ms": 154.83,
+      "minMs": 143.79,
+      "backend": "js"
+    }
+  ]
+}

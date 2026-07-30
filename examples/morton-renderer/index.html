@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Morton Z-Order Renderer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #131313;
+        color: #e5e2e1;
+        font-family: "JetBrains Mono", "SF Mono", monospace;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      h1 {
+        color: #4a7fd4;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .controls label {
+        color: #888;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .controls select {
+        padding: 0.4rem 0.8rem;
+        background: #1c1b1b;
+        color: #e5e2e1;
+        border: 1px solid #353534;
+        font-family: inherit;
+        border-radius: 6px;
+      }
+      .controls button {
+        padding: 0.5rem 1.2rem;
+        background: #4a7fd4;
+        font-family: inherit;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .controls button:hover {
+        background: #2a8ebf;
+      }
+
+      .canvas-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .canvas-panel {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1rem;
+      }
+      .canvas-panel h3 {
+        color: #ccc;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .canvas-panel h3 .progress {
+        font-size: 0.8rem;
+        color: #888;
+        font-weight: 400;
+      }
+      canvas {
+        width: 100%;
+        aspect-ratio: 1;
+        display: block;
+        border-radius: 8px;
+      }
+
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+      }
+      .stat-card {
+        background: #1c1b1b;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1.2rem;
+        text-align: center;
+      }
+      .stat-card .label {
+        font-size: 0.75rem;
+        color: #888;
+        margin-bottom: 0.3rem;
+      }
+      .stat-card .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .random-color {
+        color: #f87171;
+      }
+      .morton-color {
+        color: #4ade80;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Morton Z-Order Renderer</h1>
+      <p class="subtitle">
+        Visualize how Z-order (Morton) curve reordering improves spatial locality compared to random
+        traversal.
+      </p>
+
+      <div class="controls">
+        <label
+          >Grid Resolution:
+          <select id="resolution">
+            <option value="8">8 x 8</option>
+            <option value="16" selected>16 x 16</option>
+            <option value="32">32 x 32</option>
+            <option value="64">64 x 64</option>
+          </select>
+        </label>
+        <label
+          >Speed:
+          <select id="speed">
+            <option value="1">Slow</option>
+            <option value="3" selected>Medium</option>
+            <option value="8">Fast</option>
+            <option value="0">Instant</option>
+          </select>
+        </label>
+        <button id="restart-btn">Restart</button>
+      </div>
+
+      <div class="canvas-row">
+        <div class="canvas-panel">
+          <h3>
+            Random Order
+            <span class="progress" id="random-progress">0%</span>
+          </h3>
+          <canvas id="random-canvas"></canvas>
+        </div>
+        <div class="canvas-panel">
+          <h3>
+            Z-Order (Morton)
+            <span class="progress" id="morton-progress">0%</span>
+          </h3>
+          <canvas id="morton-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="label">Random Avg Distance</div>
+          <div class="value random-color" id="stat-random-dist">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Morton Avg Distance</div>
+          <div class="value morton-color" id="stat-morton-dist">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Random Locality</div>
+          <div class="value random-color" id="stat-random-locality">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Morton Locality</div>
+          <div class="value morton-color" id="stat-morton-locality">--</div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
