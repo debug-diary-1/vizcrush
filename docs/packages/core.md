@@ -25,7 +25,7 @@ const ctx = await init();
 // }
 ```
 
-`backend` is `"wasm"` when WebAssembly is available and `"js"` otherwise. The `capabilities` object still reports the raw WebGPU/SIMD/SharedArrayBuffer probes, but a single SIMD-enabled WASM binary is always built and no WebGPU compute path is wired, so those probes do not name distinct selectable backends.
+`backend` is `"wasm"` when WebAssembly is available and `"js"` otherwise. The `capabilities` object still reports the raw WebGPU/SIMD/SharedArrayBuffer probes, but a single SIMD-enabled WASM binary is always built, so those probes do not name distinct selectable backends. (The opt-in WebGPU path on `@vizcrush/bin`’s bin2d is requested per call, not selected here — ADR 0004.)
 
 ## `detectCapabilities()`
 

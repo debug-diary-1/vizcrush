@@ -1,5 +1,24 @@
 # Changelog
 
+## @vizcrush/bin v1.1.0 (2026-07-31)
+
+### WebGPU compute path for bin2d — opt-in, measured
+
+- **`bin2d(x, y, opts, { backend: "webgpu" })`** runs the previously-draft
+  `bin2d.wgsl` compute shader on a real WebGPU pipeline: lazy device
+  acquisition with device-loss recovery, f64→f32 range rebase (epoch-scale
+  values bin correctly), silent fallback to the wasm/js kernel on any failure.
+- Never auto-selected — and for a reason: measured end-to-end it is ~15×
+  slower than WASM at 100K/1M/5M points on Apple Silicon/Metal
+  (upload + dispatch + readback dominate; ADR 0004 has the numbers and the
+  conditions under which this could flip).
+- Parity: totals identical to the f64 cores; at most a few boundary-adjacent
+  counts differ (f32 bin-edge effects). Edges are always f64.
+- New exports: `bin2dGpu`, `rebaseToF32`, `bin2dBounds`; new
+  `benchmarks/webgpu-bin2d.html` harness and
+  `benchmarks/results/webgpu-bin2d.json`.
+- The other four `.wgsl` files remain unwired drafts.
+
 ## @vizcrush/core v2.0.0 (2026-05-29)
 
 ### Breaking changes — core honesty pass

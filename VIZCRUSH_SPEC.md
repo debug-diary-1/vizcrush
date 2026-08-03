@@ -5,7 +5,8 @@
 
 > **This is the original vision document — not current behavior.** Several
 > things described below as shipped were never wired up, most importantly
-> WebGPU compute (there is no WebGPU dispatch path anywhere in the codebase;
+> WebGPU compute (only bin2d has a WebGPU path — opt-in, added 2026-07, and
+> measured slower than WASM, see ADR 0004;
 > `detectCapabilities()` probes `navigator.gpu` for reporting only) and
 > t-digest-backed percentiles (`percentile()` is exact/sort-based; `TDigest`
 > exists in the `vizcrush-aggregate` Rust crate but has no caller). For what

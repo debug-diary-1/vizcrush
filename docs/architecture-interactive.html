@@ -1131,9 +1131,9 @@
     </div>
     <div style="color: var(--color-text-secondary)">
       Rust crates compile to WASM via <code>wasm-bindgen</code>. TypeScript packages build with
-      <code>tsc</code> orchestrated by Turbo. WGSL compute-shader drafts exist in the repo but are
-      not wired into any runtime path (see ADR 0002). 158 Rust tests + 277 TypeScript tests +
-      benchmark regression checks.
+      <code>tsc</code> orchestrated by Turbo. Five WGSL compute shaders ship in the repo: bin2d's is
+      wired as an opt-in path — measured slower than WASM (ADR 0004) — and the rest are unwired
+      drafts. 158 Rust tests + 277 TypeScript tests + benchmark regression checks.
     </div>
   </div>
 </div>
