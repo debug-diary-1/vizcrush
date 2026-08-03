@@ -9,9 +9,17 @@ vizcrush picks its compute backend at runtime. You usually don't have to think a
 | **`wasm`** | WebAssembly build of the Rust core | WebAssembly is available (essentially everywhere modern)       | ~4× faster in Chromium/V8; comparable to slower in Firefox/WebKit (ADR 0003) |
 | **`js`**   | Pure JavaScript core               | WASM unavailable (very old browsers / restricted environments) | Comparable — often faster in Firefox/Safari, and no cold-start module load   |
 
-A single WASM binary is built for every crate, so there is no separate scalar-WASM or `wasm-simd` path. (The build passes `+simd128`, but the output is byte-identical to a scalar build, so SIMD contributes no speedup today — see ADR 0002.) No WebGPU compute path is wired into the algorithm packages, so `webgpu` is not a selectable backend — the `.wgsl` files in some packages' `src/shaders/` are unwired drafts.
+A single WASM binary is built for every crate, so there is no separate scalar-WASM or `wasm-simd` path. (The build passes `+simd128`, but the output is byte-identical to a scalar build, so SIMD contributes no speedup today — see ADR 0002.) The selection is feature detection alone — there's no benchmarking. `webgpu` is not a selectable default backend. One operation — `bin2d` — has an opt-in WebGPU compute path (below); the other `.wgsl` files in `src/shaders/` remain unwired drafts.
 
-The selection is feature detection alone — there's no benchmarking.
+## Opt-in WebGPU for bin2d
+
+`bin2d` accepts `{ backend: "webgpu" }` to run its wired WGSL compute shader. It is a request, not a guarantee: when WebGPU is unavailable (no `navigator.gpu`, device denied or lost, degenerate or oversized input) the call silently falls back to the wasm/js kernel, and it is **never auto-selected**. Measured end-to-end (f64→f32 rebase + upload + dispatch + readback) it is roughly 15× _slower_ than WASM at every tested size on Apple Silicon/Metal — see ADR 0004 for the numbers and when that might change. Inputs are rebased against the range minimum in f64 before narrowing to f32, so bin assignment survives epoch-scale values; counts can differ from the f64 cores by at most a few boundary-adjacent points, and edges are always f64.
+
+```typescript
+import { bin2d } from "@vizcrush/bin";
+
+const result = await bin2d(x, y, { xBins: 256, yBins: 256 }, { backend: "webgpu" });
+```
 
 ## How `init()` chooses
 

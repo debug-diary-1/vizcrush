@@ -52,17 +52,20 @@ export function bin1dCore(data: Float64Array, bins = 50, range?: [number, number
   return { counts, edges };
 }
 
-/** 2D density grid. Mirrors `vizcrush_bin::bin2d`. */
-export function bin2dCore(
+/**
+ * Resolve the effective bin2d bounds: explicit (non-NaN) ranges win, NaN means
+ * "scan the data". Shared by the JS core and the WebGPU path, which must
+ * rebase inputs in f64 against these bounds before narrowing to f32.
+ * Returns the raw bounds; degenerate-range adjustment stays with the callers.
+ */
+export function bin2dBounds(
   x: Float64Array,
   y: Float64Array,
-  xBins: number,
-  yBins: number,
   xMin: number,
   xMax: number,
   yMin: number,
   yMax: number,
-): Bin2dResult {
+): { mnX: number; mxX: number; mnY: number; mxY: number } {
   let mnX = isNaN(xMin) ? Infinity : xMin;
   let mxX = isNaN(xMax) ? -Infinity : xMax;
   let mnY = isNaN(yMin) ? Infinity : yMin;
@@ -80,6 +83,23 @@ export function bin2dCore(
       }
     }
   }
+
+  return { mnX, mxX, mnY, mxY };
+}
+
+/** 2D density grid. Mirrors `vizcrush_bin::bin2d`. */
+export function bin2dCore(
+  x: Float64Array,
+  y: Float64Array,
+  xBins: number,
+  yBins: number,
+  xMin: number,
+  xMax: number,
+  yMin: number,
+  yMax: number,
+): Bin2dResult {
+  const bounds = bin2dBounds(x, y, xMin, xMax, yMin, yMax);
+  let { mnX, mxX, mnY, mxY } = bounds;
 
   if (mnX >= mxX) mxX = mnX + 1;
   if (mnY >= mxY) mxY = mnY + 1;

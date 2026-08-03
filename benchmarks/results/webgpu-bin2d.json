@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-07-31T18:43:03Z",
+  "environment": {
+    "browser": "Chrome 150",
+    "gpu": "Apple Silicon (Metal 3)",
+    "cores": 12,
+    "platform": "darwin arm64"
+  },
+  "method": "benchmarks/webgpu-bin2d.html served over local HTTP; 10 reps per backend per size; webgpu timed end-to-end (f64→f32 rebase, upload, dispatch, readback); bins 256×256; mixture-of-gaussians data with epoch-ms-scale x values",
+  "bins": [256, 256],
+  "reps": 10,
+  "sizes": [
+    {
+      "n": 100000,
+      "js": { "medianMs": 2.9, "minMs": 2.7, "backendUsed": "js" },
+      "wasm": { "medianMs": 0.6, "minMs": 0.5, "backendUsed": "wasm" },
+      "webgpu": { "medianMs": 27.1, "minMs": 10.6 }
+    },
+    {
+      "n": 1000000,
+      "js": { "medianMs": 27.7, "minMs": 27.0, "backendUsed": "js" },
+      "wasm": { "medianMs": 3.1, "minMs": 3.0, "backendUsed": "wasm" },
+      "webgpu": { "medianMs": 220.8, "minMs": 44.7 }
+    },
+    {
+      "n": 5000000,
+      "js": { "medianMs": 130.6, "minMs": 127.4, "backendUsed": "js" },
+      "wasm": { "medianMs": 14.6, "minMs": 14.5, "backendUsed": "wasm" },
+      "webgpu": { "medianMs": 944.8, "minMs": 202.9 }
+    }
+  ],
+  "parity": {
+    "available": true,
+    "n": 500000,
+    "totalGpu": 500000,
+    "totalRef": 500000,
+    "sumAbsDiff": 14,
+    "maxAbsDiff": 1,
+    "edgesMatch": true
+  }
+}

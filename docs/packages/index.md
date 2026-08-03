@@ -42,7 +42,7 @@ packages/<name>/
 ├── src/
 │   ├── index.ts        # public exports — what you import
 │   ├── wasm.ts         # WASM loader (async)
-│   └── shaders/        # *.wgsl compute-shader drafts (some packages; not wired to any runtime path)
+│   └── shaders/        # *.wgsl compute shaders (bin2d wired as opt-in, ADR 0004; rest are drafts)
 └── wasm/               # generated wasm-bindgen output (gitignored, built locally)
 ```
 

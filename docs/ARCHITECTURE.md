@@ -186,21 +186,23 @@ flowchart LR
     style FAR fill:#7f1d1d,stroke:#ef4444,color:#fecaca
 ```
 
-## 7. WGSL Shader Drafts (Unwired)
+## 7. WGSL Shaders (One Wired, Four Drafts)
 
-Five `.wgsl` compute shader drafts live alongside the TypeScript source:
+Five `.wgsl` compute shaders live alongside the TypeScript source:
 
-- `packages/bin/src/shaders/bin2d.wgsl`
+- `packages/bin/src/shaders/bin2d.wgsl` — **wired** as an opt-in compute path
+  (`bin2d(..., { backend: "webgpu" })`, silent fallback to wasm/js). Measured
+  correct but ~15× slower than WASM at every tested size on Apple
+  Silicon/Metal — see ADR 0004; it is never auto-selected.
 - `packages/bin/src/shaders/hexbin.wgsl`
 - `packages/bin3d/src/shaders/bin3d.wgsl`
 - `packages/spatial/src/shaders/quadtree.wgsl`
 - `packages/spatial3d/src/shaders/octree-morton.wgsl`
 
-They are design sketches only. No code creates a WebGPU pipeline or
-dispatches them — there is no `createComputePipeline` or
-`dispatchWorkgroups` call anywhere in the repo — so no WebGPU compute path
-exists (see ADR 0002/0003). All compute runs on WASM or the JS core, as
-shown in section 2.
+The four drafts are design sketches only — nothing compiles or dispatches
+them. Default compute always runs on WASM or the JS core, as shown in
+section 2; `webgpu` is a per-call request on bin2d, never a selected
+backend (ADR 0002/0004).
 
 ## 8. MCP Server Architecture
 

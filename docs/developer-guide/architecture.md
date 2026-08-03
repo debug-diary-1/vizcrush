@@ -1,6 +1,6 @@
 # Architecture
 
-vizcrush is a **hybrid Rust + TypeScript monorepo**. Algorithms live in Rust crates that compile to WebAssembly with `wasm-bindgen`; thin TypeScript packages wrap the WASM modules with async APIs and a JavaScript fallback. There is no WebGPU compute path — see ADR 0002/0003 for why, and `VIZCRUSH_SPEC.md`'s header note for what the original vision document got wrong about this.
+vizcrush is a **hybrid Rust + TypeScript monorepo**. Algorithms live in Rust crates that compile to WebAssembly with `wasm-bindgen`; thin TypeScript packages wrap the WASM modules with async APIs and a JavaScript fallback. The only WebGPU compute path is bin2d's opt-in one — measured slower than WASM (ADR 0004); ADR 0002/0003 explain why GPU/SIMD are not default paths, and `VIZCRUSH_SPEC.md`'s header note covers what the original vision document got wrong about this.
 
 ## Pipeline overview
 
@@ -100,7 +100,7 @@ At runtime, `init()` from `@vizcrush/core` probes the environment and picks the 
               └───────────────────────────┘
 ```
 
-Each algorithm package then dispatches to WASM when the module is loaded, and to the inline JS fallback otherwise. WGSL shader drafts live alongside the TypeScript source in `packages/<name>/src/shaders/*.wgsl`, but they are unwired — nothing compiles or dispatches them. The JS fallback is implemented inline in TypeScript to keep the package self-contained.
+Each algorithm package then dispatches to WASM when the module is loaded, and to the inline JS fallback otherwise. WGSL shaders live alongside the TypeScript source in `packages/<name>/src/shaders/*.wgsl`; bin2d's is wired to an opt-in WebGPU path (ADR 0004), the rest are unwired drafts. The JS fallback is implemented inline in TypeScript to keep the package self-contained.
 
 See the [Backends & Capabilities](../user-guide/backends.md) user guide for the selection logic and how to override per call.
 

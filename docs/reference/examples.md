@@ -238,7 +238,7 @@ Full/sample scatter overlay with KS test and quadrant density comparison.
 
 Compute shader bins 1M points into a viridis-colored heatmap via fragment shader.
 
-**vizcrush algorithms:** none — a standalone WebGPU demo; the compute shader is the example's own (vizcrush itself has no WebGPU compute path)
+**vizcrush algorithms:** none — a standalone WebGPU demo; the compute shader is the example's own (vizcrush's only WebGPU compute path is bin2d's opt-in one — ADR 0004)
 
 **Folder:** `examples/webgpu-heatmap/`
 

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>bin2d backend benchmark: webgpu vs wasm vs js</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@vizcrush/core": "/packages/core/dist/index.js",
+          "@vizcrush/bin": "/packages/bin/dist/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>bin2d backend benchmark</h1>
+    <p>
+      Serve the repo root (<code>python3 -m http.server</code>) and open this page in a
+      WebGPU-capable browser. Times each backend end-to-end — the webgpu number includes f64→f32
+      rebase, upload, dispatch, and readback, because that is what a caller pays.
+    </p>
+    <pre id="out">running…</pre>
+    <script type="module">
+      import { bin2d, bin2dGpu, bin2dCore, binKernels } from "@vizcrush/bin";
+
+      const XBINS = 256;
+      const YBINS = 256;
+      const SIZES = [100_000, 1_000_000, 5_000_000];
+      const REPS = 10;
+      const out = document.getElementById("out");
+      const log = (s) => {
+        out.textContent += "\n" + s;
+      };
+
+      // Deterministic mixture-of-gaussians point cloud (mulberry32 PRNG).
+      function makeData(n, seed = 42) {
+        let s = seed;
+        const rand = () => {
+          s |= 0;
+          s = (s + 0x6d2b79f5) | 0;
+          let t = Math.imul(s ^ (s >>> 15), 1 | s);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        const gauss = () => {
+          const u = Math.max(rand(), 1e-12);
+          return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
+        };
+        // Epoch-ms-sized x values on purpose: exercises the f64 rebase.
+        const base = 1_700_000_000_000;
+        const x = new Float64Array(n);
+        const y = new Float64Array(n);
+        for (let i = 0; i < n; i++) {
+          const cluster = i % 3;
+          x[i] = base + cluster * 400_000 + gauss() * 90_000;
+          y[i] = cluster * 40 + gauss() * 12;
+        }
+        return { x, y };
+      }
+
+      function median(arr) {
+        const a = [...arr].sort((p, q) => p - q);
+        return a[Math.floor(a.length / 2)];
+      }
+
+      async function timeBackend(fn, reps) {
+        const times = [];
+        for (let i = 0; i < reps; i++) {
+          const t0 = performance.now();
+          await fn();
+          times.push(performance.now() - t0);
+        }
+        return { medianMs: +median(times).toFixed(3), minMs: +Math.min(...times).toFixed(3) };
+      }
+
+      async function main() {
+        out.textContent = "";
+        const results = { bins: [XBINS, YBINS], reps: REPS, sizes: [], parity: null };
+
+        // ── Parity: GPU vs f64 JS core at 500K ──
+        {
+          const { x, y } = makeData(500_000);
+          const gpu = await bin2dGpu(x, y, XBINS, YBINS, NaN, NaN, NaN, NaN);
+          if (!gpu) {
+            results.parity = { available: false };
+            log("WebGPU unavailable — parity and gpu timings skipped");
+          } else {
+            const ref = bin2dCore(x, y, XBINS, YBINS, NaN, NaN, NaN, NaN);
+            let sumAbs = 0;
+            let maxAbs = 0;
+            let totalGpu = 0;
+            let totalRef = 0;
+            for (let i = 0; i < gpu.grid.length; i++) {
+              const d = Math.abs(gpu.grid[i] - ref.grid[i]);
+              sumAbs += d;
+              if (d > maxAbs) maxAbs = d;
+              totalGpu += gpu.grid[i];
+              totalRef += ref.grid[i];
+            }
+            results.parity = {
+              available: true,
+              n: 500_000,
+              totalGpu,
+              totalRef,
+              sumAbsDiff: sumAbs,
+              maxAbsDiff: maxAbs,
+              edgesMatch:
+                gpu.xEdges.every((v, i) => v === ref.xEdges[i]) &&
+                gpu.yEdges.every((v, i) => v === ref.yEdges[i]),
+            };
+            log(`parity @500K: totals ${totalGpu}/${totalRef}, sum|Δ|=${sumAbs}, max|Δ|=${maxAbs}`);
+          }
+        }
+
+        // ── Timings ──
+        for (const n of SIZES) {
+          const { x, y } = makeData(n);
+          const row = { n };
+
+          const jsCheck = await binKernels.bin2d.withBackend(
+            x,
+            y,
+            XBINS,
+            YBINS,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            {
+              backend: "js",
+            },
+          );
+          row.js = await timeBackend(
+            () => bin2d(x, y, { xBins: XBINS, yBins: YBINS }, { backend: "js" }),
+            REPS,
+          );
+          row.js.backendUsed = jsCheck.backend;
+
+          const wasmCheck = await binKernels.bin2d.withBackend(
+            x,
+            y,
+            XBINS,
+            YBINS,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            { backend: "wasm" },
+          );
+          row.wasm = await timeBackend(
+            () => bin2d(x, y, { xBins: XBINS, yBins: YBINS }, { backend: "wasm" }),
+            REPS,
+          );
+          row.wasm.backendUsed = wasmCheck.backend;
+
+          if (results.parity?.available) {
+            row.webgpu = await timeBackend(
+              () => bin2dGpu(x, y, XBINS, YBINS, NaN, NaN, NaN, NaN),
+              REPS,
+            );
+          }
+
+          results.sizes.push(row);
+          log(
+            `n=${n}: js ${row.js.medianMs}ms (${row.js.backendUsed}), wasm ${row.wasm.medianMs}ms ` +
+              `(${row.wasm.backendUsed})` +
+              (row.webgpu ? `, webgpu ${row.webgpu.medianMs}ms` : ""),
+          );
+        }
+
+        log("\nRESULT_JSON " + JSON.stringify(results));
+        console.log("RESULT_JSON " + JSON.stringify(results));
+        document.title = "bin2d benchmark: done";
+      }
+
+      main().catch((e) => {
+        log("ERROR " + (e?.stack || e));
+        console.log("RESULT_JSON " + JSON.stringify({ error: String(e) }));
+        document.title = "bin2d benchmark: error";
+      });
+    </script>
+  </body>
+</html>

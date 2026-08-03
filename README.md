@@ -4,7 +4,7 @@
 
 **vizcrush** is an open-source library that provides data processing primitives purpose-built for browser-based data visualization. Written in Rust and compiled to WebAssembly, with a pure-JS fallback so the same API runs everywhere.
 
-> **Performance note:** WASM vs the JS fallback is **engine-dependent** (measured, see [ADR 0003](docs/adr/0003-wasm-vs-js-is-engine-dependent.md)): WASM is ~4× faster in Chromium/V8 (the dominant engine), but comparable-to-slower in Firefox and Safari, and slower on a cold first call everywhere. The `+simd128` flag does not autovectorize these branch-heavy loops, so there is no SIMD speedup ([ADR 0002](docs/adr/0002-wasm-simd-not-engaged.md)). Net: WASM wins the common case; the JS fallback keeps the same API working everywhere.
+> **Performance note:** WASM vs the JS fallback is **engine-dependent** (measured, see [ADR 0003](docs/adr/0003-wasm-vs-js-is-engine-dependent.md)): WASM is ~4× faster in Chromium/V8 (the dominant engine), but comparable-to-slower in Firefox and Safari, and slower on a cold first call everywhere. The `+simd128` flag does not autovectorize these branch-heavy loops, so there is no SIMD speedup ([ADR 0002](docs/adr/0002-wasm-simd-not-engaged.md)). Net: WASM wins the common case; the JS fallback keeps the same API working everywhere. There is also an opt-in WebGPU compute path for `bin2d` (`{ backend: "webgpu" }`) — measured ~15× slower than WASM end-to-end, so it is never auto-selected ([ADR 0004](docs/adr/0004-webgpu-bin2d-wired-but-loses.md)).
 
 ## The Gap
 

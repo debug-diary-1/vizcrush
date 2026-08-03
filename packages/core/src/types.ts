@@ -1,9 +1,10 @@
 /**
- * The path an algorithm actually runs on. Only `'wasm'` and `'js'` are real:
- * one SIMD-enabled WASM binary is always built (so there is no separate
- * `'wasm-simd'` path), and no WebGPU compute path is wired. `detectCapabilities`
- * still probes WebGPU/SIMD/SharedArrayBuffer for reporting, but the selected
- * backend reflects what will run.
+ * The default path an algorithm runs on. Only `'wasm'` and `'js'` are
+ * selectable defaults: one SIMD-enabled WASM binary is always built (so there
+ * is no separate `'wasm-simd'` path). `detectCapabilities` still probes
+ * WebGPU/SIMD/SharedArrayBuffer for reporting. The opt-in WebGPU compute path
+ * (`@vizcrush/bin`'s bin2d, ADR 0004) is requested per call via that
+ * package's own options and never appears here.
  */
 export type Backend = "wasm" | "js";
 

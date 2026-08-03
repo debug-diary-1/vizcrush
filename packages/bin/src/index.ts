@@ -3,12 +3,15 @@ import type {
   Bin2dResult,
   Bin2dOptions,
   HexBinEntry,
+  KernelBackend,
   KernelCallOptions,
 } from "@vizcrush/core";
 import { defineKernel, createWasmLoader } from "@vizcrush/core";
 import { bin1dCore, bin2dCore, hexbinCore } from "./cores.js";
+import { bin2dGpu } from "./gpu.js";
 
-export { bin1dCore, bin2dCore, hexbinCore } from "./cores.js";
+export { bin1dCore, bin2dCore, bin2dBounds, hexbinCore } from "./cores.js";
+export { bin2dGpu, rebaseToF32 } from "./gpu.js";
 
 /**
  * Single WASM loader for the bin crate. The dynamic import is authored here so
@@ -136,13 +139,23 @@ export function bin1d(
 }
 
 /**
+ * Backends accepted by `bin2d`: the kernel's own plus the opt-in WebGPU
+ * compute path. `"webgpu"` is a request, not a guarantee — when the GPU path
+ * cannot run (no `navigator.gpu`, device denied/lost, degenerate or oversized
+ * input) the call silently falls back to the wasm/js kernel.
+ */
+export interface Bin2dCallOptions {
+  backend?: KernelBackend | "webgpu";
+}
+
+/**
  * 2D density grid binning for heatmaps.
  */
-export function bin2d(
+export async function bin2d(
   x: Float64Array,
   y: Float64Array,
   opts: Bin2dOptions = {},
-  callOpts?: KernelCallOptions,
+  callOpts?: Bin2dCallOptions,
 ): Promise<Bin2dResult> {
   const xBins = opts.xBins ?? 256;
   const yBins = opts.yBins ?? 256;
@@ -150,7 +163,12 @@ export function bin2d(
   const xMax = opts.xRange ? opts.xRange[1] : NaN;
   const yMin = opts.yRange ? opts.yRange[0] : NaN;
   const yMax = opts.yRange ? opts.yRange[1] : NaN;
-  return bin2dKernel(x, y, xBins, yBins, xMin, xMax, yMin, yMax, callOpts);
+  if (callOpts?.backend === "webgpu") {
+    const gpu = await bin2dGpu(x, y, xBins, yBins, xMin, xMax, yMin, yMax);
+    if (gpu) return gpu;
+    return bin2dKernel(x, y, xBins, yBins, xMin, xMax, yMin, yMax, { backend: "auto" });
+  }
+  return bin2dKernel(x, y, xBins, yBins, xMin, xMax, yMin, yMax, callOpts as KernelCallOptions);
 }
 
 /**
