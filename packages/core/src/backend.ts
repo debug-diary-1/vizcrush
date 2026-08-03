@@ -51,10 +51,11 @@ export async function detectCapabilities(): Promise<Capabilities> {
 
 /**
  * The path that will actually run. The library ships a single SIMD-enabled
- * WASM binary and wires no WebGPU compute path, so the only honest choices are
- * `'wasm'` (when WebAssembly is available) and `'js'` (the pure fallback).
- * `capabilities` still carries the raw WebGPU/SIMD/SharedArrayBuffer probes for
- * reporting, but they no longer imply distinct selectable backends.
+ * WASM binary, so the only selectable defaults are `'wasm'` (when WebAssembly
+ * is available) and `'js'` (the pure fallback). `capabilities` still carries
+ * the raw WebGPU/SIMD/SharedArrayBuffer probes for reporting. The opt-in
+ * WebGPU compute path (`@vizcrush/bin`'s bin2d, per ADR 0004) is requested
+ * per call and is never selected here.
  */
 export function selectBackend(capabilities: Capabilities): Backend {
   return capabilities.wasm ? "wasm" : "js";
