@@ -1,10 +1,21 @@
 import { describe, test, expect } from "vitest";
-import { loadWasmForParity, expectFloatArraysClose, PARITY_EPSILON } from "@vizcrush/core/parity";
-import { statsCore, percentileCore } from "./cores.js";
+import {
+  loadWasmForParity,
+  parityMode,
+  injectWasmModuleForTesting,
+  expectFloatArraysClose,
+  PARITY_EPSILON,
+} from "@vizcrush/core/parity";
+import { aggregateKernels } from "./index.js";
 
-// Load the REAL wasm-bindgen module once. If the build is absent, the parity
-// tests skip rather than fail (CI builds wasm; local runs may not).
+// Load the REAL wasm-bindgen module from disk (Node can't run bindgen's
+// import.meta fetch) and register it as the loaders' module transport. From
+// here on, everything — marshal, dispatch, unmarshal, fallback — is the same
+// production kernel path callers use. Missing wasm fails under
+// VIZCRUSH_REQUIRE_WASM (CI), and skips loudly otherwise.
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_aggregate");
+const mode = parityMode(wasm, "vizcrush_aggregate");
+if (wasm) injectWasmModuleForTesting("vizcrush_aggregate", wasm);
 
 function makeData(n: number): Float64Array {
   const d = new Float64Array(n);
@@ -14,44 +25,41 @@ function makeData(n: number): Float64Array {
   return d;
 }
 
-describe.runIf(wasm !== null)("aggregate JS ≡ WASM parity", () => {
-  describe("stats / compute_stats", () => {
-    test.each([{ n: 1000 }, { n: 2048 }, { n: 333 }])("n=$n", ({ n }) => {
+describe.runIf(mode === "run")("aggregate JS ≡ WASM parity (kernel seam)", () => {
+  describe("stats", () => {
+    test.each([{ n: 1000 }, { n: 2048 }, { n: 333 }])("n=$n", async ({ n }) => {
       const data = makeData(n);
 
-      const js = statsCore(data);
-      const wasmRaw = (wasm as any).compute_stats(data) as Float64Array;
+      const js = await aggregateKernels.stats.withBackend(data, { backend: "js" });
+      const ws = await aggregateKernels.stats.withBackend(data, { backend: "wasm" });
 
-      const jsPacked = new Float64Array([
-        js.count,
-        js.min,
-        js.max,
-        js.mean,
-        js.stdDev,
-        js.variance,
-      ]);
+      // The seam must report what actually ran — a silent JS fallback here
+      // would mean "parity" compared JS against itself.
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
 
-      expectFloatArraysClose(wasmRaw, jsPacked, PARITY_EPSILON, "compute_stats");
+      expect(ws.result.count).toBe(js.result.count);
+      expectFloatArraysClose(
+        [ws.result.min, ws.result.max, ws.result.mean, ws.result.stdDev, ws.result.variance],
+        [js.result.min, js.result.max, js.result.mean, js.result.stdDev, js.result.variance],
+        PARITY_EPSILON,
+        "stats(min,max,mean,stdDev,variance)",
+      );
     });
   });
 
-  describe("percentile / compute_percentiles", () => {
+  describe("percentile", () => {
     const pcts = [0, 25, 50, 75, 90, 95, 99, 100];
-    test.each([{ n: 1000 }, { n: 2048 }, { n: 333 }])("n=$n", ({ n }) => {
+    test.each([{ n: 1000 }, { n: 2048 }, { n: 333 }])("n=$n", async ({ n }) => {
       const data = makeData(n);
 
-      const js = percentileCore(data, pcts);
-      const wasmRaw = (wasm as any).compute_percentiles(
-        data,
-        new Float64Array(pcts),
-      ) as Float64Array;
+      const js = await aggregateKernels.percentile.withBackend(data, pcts, { backend: "js" });
+      const ws = await aggregateKernels.percentile.withBackend(data, pcts, { backend: "wasm" });
 
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "compute_percentiles");
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
+
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "percentile");
     });
   });
-});
-
-// Guardrail: surface module availability without failing CI when wasm is absent.
-test("aggregate wasm module availability is reported", () => {
-  expect(typeof (wasm === null ? "absent" : "present")).toBe("string");
 });

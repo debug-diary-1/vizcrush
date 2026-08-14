@@ -43,6 +43,29 @@ export async function loadWasmForParity(
   }
 }
 
+export { injectWasmModuleForTesting } from "./kernel.js";
+
+/**
+ * Decide whether a parity suite runs. With the module loaded: run. Without it:
+ * throw when `VIZCRUSH_REQUIRE_WASM` is set (CI builds wasm first, so absence
+ * there is a broken pipeline, not an environment quirk) — otherwise skip
+ * LOUDLY so a local run can never be mistaken for verified parity.
+ */
+export function parityMode(wasm: unknown | null, moduleBase: string): "run" | "skip" {
+  if (wasm) return "run";
+  if (typeof process !== "undefined" && process.env.VIZCRUSH_REQUIRE_WASM) {
+    throw new Error(
+      `${moduleBase}: VIZCRUSH_REQUIRE_WASM is set but the wasm module failed to load — ` +
+        `run \`pnpm build:wasm\` before the test suite`,
+    );
+  }
+  console.warn(
+    `[parity] ${moduleBase} wasm module absent — JS ≡ WASM parity SKIPPED ` +
+      `(build wasm, or set VIZCRUSH_REQUIRE_WASM=1 to make this fail)`,
+  );
+  return "skip";
+}
+
 /** Default numeric tolerance for float parity comparisons. */
 export const PARITY_EPSILON = 1e-9;
 

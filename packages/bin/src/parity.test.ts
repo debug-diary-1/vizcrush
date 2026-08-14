@@ -1,10 +1,21 @@
 import { describe, test, expect } from "vitest";
-import { loadWasmForParity, expectFloatArraysClose, PARITY_EPSILON } from "@vizcrush/core/parity";
-import { bin1dCore, bin2dCore, hexbinCore } from "./cores.js";
+import {
+  loadWasmForParity,
+  parityMode,
+  injectWasmModuleForTesting,
+  expectFloatArraysClose,
+  PARITY_EPSILON,
+} from "@vizcrush/core/parity";
+import { binKernels } from "./index.js";
 
-// Load the REAL wasm-bindgen module once. If the build is absent, the parity
-// tests skip rather than fail (CI builds wasm; local runs may not).
+// Load the REAL wasm-bindgen module from disk (Node can't run bindgen's
+// import.meta fetch) and register it as the loaders' module transport. From
+// here on, everything — marshal, dispatch, unmarshal, fallback — is the same
+// production kernel path callers use. Missing wasm fails under
+// VIZCRUSH_REQUIRE_WASM (CI), and skips loudly otherwise.
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_bin");
+const mode = parityMode(wasm, "vizcrush_bin");
+if (wasm) injectWasmModuleForTesting("vizcrush_bin", wasm);
 
 function makeData(n: number): Float64Array {
   const d = new Float64Array(n);
@@ -24,24 +35,25 @@ function makeXY(n: number): { x: Float64Array; y: Float64Array } {
   return { x, y };
 }
 
-describe.runIf(wasm !== null)("bin JS ≡ WASM parity", () => {
+describe.runIf(mode === "run")("bin JS ≡ WASM parity (kernel seam)", () => {
   describe("bin1d / histogram", () => {
     test.each([
       { n: 1000, bins: 50 },
       { n: 2048, bins: 64 },
       { n: 333, bins: 16 },
-    ])("n=$n bins=$bins", ({ n, bins }) => {
+    ])("n=$n bins=$bins", async ({ n, bins }) => {
       const data = makeData(n);
 
-      const js = bin1dCore(data, bins);
-      const wasmRaw = (wasm as any).histogram(data, bins, NaN, NaN) as Float64Array;
+      const js = await binKernels.bin1d.withBackend(data, bins, undefined, { backend: "js" });
+      const ws = await binKernels.bin1d.withBackend(data, bins, undefined, { backend: "wasm" });
 
-      // Reconstruct JS packed form: counts as f64, then edges.
-      const jsPacked = new Float64Array(bins + bins + 1);
-      for (let i = 0; i < bins; i++) jsPacked[i] = js.counts[i];
-      for (let i = 0; i <= bins; i++) jsPacked[bins + i] = js.edges[i];
+      // The seam must report what actually ran — a silent JS fallback here
+      // would mean "parity" compared JS against itself.
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
 
-      expectFloatArraysClose(wasmRaw, jsPacked, PARITY_EPSILON, "histogram");
+      expect(ws.result.counts).toEqual(js.result.counts);
+      expectFloatArraysClose(ws.result.edges, js.result.edges, PARITY_EPSILON, "bin1d edges");
     });
   });
 
@@ -49,19 +61,23 @@ describe.runIf(wasm !== null)("bin JS ≡ WASM parity", () => {
     test.each([
       { n: 1000, xb: 16, yb: 16 },
       { n: 2048, xb: 32, yb: 24 },
-    ])("n=$n xb=$xb yb=$yb", ({ n, xb, yb }) => {
+    ])("n=$n xb=$xb yb=$yb", async ({ n, xb, yb }) => {
       const { x, y } = makeXY(n);
 
-      const js = bin2dCore(x, y, xb, yb, NaN, NaN, NaN, NaN);
-      const wasmRaw = (wasm as any).bin2d(x, y, xb, yb, NaN, NaN, NaN, NaN) as Float64Array;
+      const js = await binKernels.bin2d.withBackend(x, y, xb, yb, NaN, NaN, NaN, NaN, {
+        backend: "js",
+      });
+      const ws = await binKernels.bin2d.withBackend(x, y, xb, yb, NaN, NaN, NaN, NaN, {
+        backend: "wasm",
+      });
 
-      const gridSize = xb * yb;
-      const jsPacked = new Float64Array(gridSize + (xb + 1) + (yb + 1));
-      for (let i = 0; i < gridSize; i++) jsPacked[i] = js.grid[i];
-      for (let i = 0; i <= xb; i++) jsPacked[gridSize + i] = js.xEdges[i];
-      for (let i = 0; i <= yb; i++) jsPacked[gridSize + xb + 1 + i] = js.yEdges[i];
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
 
-      expectFloatArraysClose(wasmRaw, jsPacked, PARITY_EPSILON, "bin2d");
+      expect(ws.result.grid).toEqual(js.result.grid);
+      expect(ws.result.maxCount).toBe(js.result.maxCount);
+      expectFloatArraysClose(ws.result.xEdges, js.result.xEdges, PARITY_EPSILON, "bin2d xEdges");
+      expectFloatArraysClose(ws.result.yEdges, js.result.yEdges, PARITY_EPSILON, "bin2d yEdges");
     });
   });
 
@@ -69,36 +85,31 @@ describe.runIf(wasm !== null)("bin JS ≡ WASM parity", () => {
     test.each([
       { n: 1000, radius: 20 },
       { n: 333, radius: 35 },
-    ])("n=$n radius=$radius", ({ n, radius }) => {
+    ])("n=$n radius=$radius", async ({ n, radius }) => {
       const { x, y } = makeXY(n);
 
-      const js = hexbinCore(x, y, radius);
-      const wasmRaw = (wasm as any).hexbin(x, y, radius) as Float64Array;
+      const js = await binKernels.hexbin.withBackend(x, y, radius, { backend: "js" });
+      const ws = await binKernels.hexbin.withBackend(x, y, radius, { backend: "wasm" });
 
-      // Both store non-zero bins in arbitrary (hash/map) order — compare as
-      // sets keyed by quantised centre. Total count and bin set must match.
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
+
+      // Both backends emit non-zero bins in arbitrary (hash/map) order — compare
+      // as sets keyed by quantised centre. Total count and bin set must match.
       const key = (cx: number, cy: number) => `${cx.toFixed(6)},${cy.toFixed(6)}`;
-      const wasmMap = new Map<string, number>();
-      for (let i = 0; i + 2 < wasmRaw.length; i += 3) {
-        wasmMap.set(key(wasmRaw[i], wasmRaw[i + 1]), wasmRaw[i + 2]);
-      }
+      const wsMap = new Map<string, number>();
+      for (const e of ws.result) wsMap.set(key(e.cx, e.cy), e.count);
       const jsMap = new Map<string, number>();
-      for (const e of js) jsMap.set(key(e.cx, e.cy), e.count);
+      for (const e of js.result) jsMap.set(key(e.cx, e.cy), e.count);
 
-      expect(jsMap.size).toBe(wasmMap.size);
-      const jsTotal = js.reduce((a, e) => a + e.count, 0);
-      let wasmTotal = 0;
-      for (const c of wasmMap.values()) wasmTotal += c;
-      expect(jsTotal).toBe(wasmTotal);
+      expect(jsMap.size).toBe(wsMap.size);
+      const jsTotal = js.result.reduce((a, e) => a + e.count, 0);
+      const wsTotal = ws.result.reduce((a, e) => a + e.count, 0);
+      expect(jsTotal).toBe(wsTotal);
       expect(jsTotal).toBe(n);
       for (const [k, c] of jsMap) {
-        expect(wasmMap.get(k)).toBe(c);
+        expect(wsMap.get(k)).toBe(c);
       }
     });
   });
-});
-
-// Guardrail: surface module availability without failing CI when wasm is absent.
-test("bin wasm module availability is reported", () => {
-  expect(typeof (wasm === null ? "absent" : "present")).toBe("string");
 });

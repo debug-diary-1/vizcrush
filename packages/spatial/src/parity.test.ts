@@ -1,17 +1,21 @@
 import { describe, test, expect } from "vitest";
-import { loadWasmForParity } from "@vizcrush/core/parity";
+import { loadWasmForParity, parityMode, injectWasmModuleForTesting } from "@vizcrush/core/parity";
 import {
-  buildQuadtreeCore,
-  queryRangeCore,
-  mortonOrder2dCore,
-  buildHashGridCore,
-  hashGridQueryRadiusCore,
-  hashGridQueryRangeCore,
-} from "./cores.js";
+  spatialKernels,
+  queryRange,
+  queryNearest,
+  hashGridQueryRadius,
+  hashGridQueryRange,
+} from "./index.js";
 
-// Load the REAL wasm-bindgen module once. If the build is absent, the parity
-// tests skip rather than fail (CI builds wasm; local runs may not).
+// Load the REAL wasm-bindgen module from disk (Node can't run bindgen's
+// import.meta fetch) and register it as the loaders' module transport. From
+// here on, everything — marshal, dispatch, unmarshal, fallback — is the same
+// production kernel path callers use. Missing wasm fails under
+// VIZCRUSH_REQUIRE_WASM (CI), and skips loudly otherwise.
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_spatial");
+const mode = parityMode(wasm, "vizcrush_spatial");
+if (wasm) injectWasmModuleForTesting("vizcrush_spatial", wasm);
 
 function makePoints(n: number): { x: Float64Array; y: Float64Array } {
   const x = new Float64Array(n);
@@ -23,7 +27,7 @@ function makePoints(n: number): { x: Float64Array; y: Float64Array } {
   return { x, y };
 }
 
-/** Compare two index lists as sets — range/cull queries are order-agnostic. */
+/** Compare two index lists as sets — spatial queries are order-agnostic. */
 function expectSameIndexSet(actual: ArrayLike<number>, expected: ArrayLike<number>, label: string) {
   const a = new Set(Array.from(actual as ArrayLike<number>));
   const e = new Set(Array.from(expected as ArrayLike<number>));
@@ -35,7 +39,7 @@ function expectSameIndexSet(actual: ArrayLike<number>, expected: ArrayLike<numbe
   }
 }
 
-describe.runIf(wasm !== null)("spatial JS ≡ WASM parity", () => {
+describe.runIf(mode === "run")("spatial JS ≡ WASM parity (kernel seam)", () => {
   const sizes = [{ n: 1000 }, { n: 4096 }, { n: 333 }];
   const queries = [
     { xMin: 100, xMax: 400, yMin: 200, yMax: 700 },
@@ -44,15 +48,40 @@ describe.runIf(wasm !== null)("spatial JS ≡ WASM parity", () => {
     { xMin: 480, xMax: 520, yMin: 480, yMax: 520 },
   ];
 
-  describe("quadtree range query", () => {
-    test.each(sizes)("n=$n", ({ n }) => {
+  describe("quadtree range + nearest query", () => {
+    test.each(sizes)("n=$n", async ({ n }) => {
       const { x, y } = makePoints(n);
-      const jsTree = buildQuadtreeCore(x, y);
-      const wasmTree = (wasm as any).build_quadtree(x, y);
+
+      const js = await spatialKernels.buildQuadtree.withBackend(x, y, { backend: "js" });
+      const ws = await spatialKernels.buildQuadtree.withBackend(x, y, { backend: "wasm" });
+
+      // The seam must report what actually ran — a silent JS fallback here
+      // would mean "parity" compared JS against itself.
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
+      expect(ws.result.pointCount).toBe(js.result.pointCount);
+
+      // Which adapter backs a handle is the module's private knowledge; parity
+      // is observable only through the public query functions — the same
+      // queries on both handles must agree.
       for (const q of queries) {
-        const js = queryRangeCore(jsTree, q);
-        const w = wasmTree.query_range(q.xMin, q.xMax, q.yMin, q.yMax) as Uint32Array;
-        expectSameIndexSet(w, js, `quadtree-range n=${n}`);
+        expectSameIndexSet(
+          queryRange(ws.result, q),
+          queryRange(js.result, q),
+          `quadtree-range n=${n}`,
+        );
+      }
+
+      for (const { px, py, k } of [
+        { px: 500, py: 500, k: 1 },
+        { px: 500, py: 500, k: 10 },
+        { px: 0, py: 0, k: 5 },
+      ]) {
+        expectSameIndexSet(
+          queryNearest(ws.result, px, py, k),
+          queryNearest(js.result, px, py, k),
+          `quadtree-nearest n=${n} k=${k}`,
+        );
       }
     });
   });
@@ -65,24 +94,35 @@ describe.runIf(wasm !== null)("spatial JS ≡ WASM parity", () => {
       { xMin: 5000, xMax: 6000, yMin: 5000, yMax: 6000 }, // empty
     ];
 
-    test.each(sizes)("n=$n", ({ n }) => {
+    test.each(sizes)("n=$n", async ({ n }) => {
       const { x, y } = makePoints(n);
-      const jsGrid = buildHashGridCore(x, y, cellSize);
-      const wasmGrid = new (wasm as any).SpatialHashGrid(cellSize);
-      wasmGrid.insert_batch(x, y);
 
-      expect(wasmGrid.count).toBe(jsGrid.xData.length);
-      expect(wasmGrid.cell_count).toBe(jsGrid.cellCount);
+      const js = await spatialKernels.buildHashGrid.withBackend(x, y, cellSize, {
+        backend: "js",
+      });
+      const ws = await spatialKernels.buildHashGrid.withBackend(x, y, cellSize, {
+        backend: "wasm",
+      });
+
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
+
+      expect(ws.result.count).toBe(js.result.count);
+      expect(ws.result.cellCount).toBe(js.result.cellCount);
 
       for (const r of radii) {
-        const js = hashGridQueryRadiusCore(jsGrid, 500, 500, r);
-        const w = wasmGrid.query_radius(500, 500, r) as Uint32Array;
-        expectSameIndexSet(w, js, `hashgrid-radius n=${n} r=${r}`);
+        expectSameIndexSet(
+          hashGridQueryRadius(ws.result, 500, 500, r),
+          hashGridQueryRadius(js.result, 500, 500, r),
+          `hashgrid-radius n=${n} r=${r}`,
+        );
       }
       for (const q of rangeQueries) {
-        const js = hashGridQueryRangeCore(jsGrid, q.xMin, q.xMax, q.yMin, q.yMax);
-        const w = wasmGrid.query_range(q.xMin, q.xMax, q.yMin, q.yMax) as Uint32Array;
-        expectSameIndexSet(w, js, `hashgrid-range n=${n}`);
+        expectSameIndexSet(
+          hashGridQueryRange(ws.result, q.xMin, q.xMax, q.yMin, q.yMax),
+          hashGridQueryRange(js.result, q.xMin, q.xMax, q.yMin, q.yMax),
+          `hashgrid-range n=${n}`,
+        );
       }
     });
   });
@@ -91,27 +131,20 @@ describe.runIf(wasm !== null)("spatial JS ≡ WASM parity", () => {
   // a 16-bit grid; the Rust crate uses a 21-bit grid), so the permutations are
   // not byte-identical. Both must, however, be valid permutations of 0..n.
   describe("morton_order_2d permutation validity", () => {
-    test.each(sizes)("n=$n", ({ n }) => {
+    test.each(sizes)("n=$n", async ({ n }) => {
       const { x, y } = makePoints(n);
-      const js = mortonOrder2dCore(x, y);
-      const w = new Uint32Array((wasm as any).morton_order_2d(x, y));
-      expect(js.length).toBe(n);
-      expect(w.length).toBe(n);
-      expectSameIndexSet(
-        w,
-        Array.from({ length: n }, (_, i) => i),
-        `morton-wasm-perm n=${n}`,
-      );
-      expectSameIndexSet(
-        js,
-        Array.from({ length: n }, (_, i) => i),
-        `morton-js-perm n=${n}`,
-      );
+
+      const js = await spatialKernels.mortonOrder2d.withBackend(x, y, { backend: "js" });
+      const ws = await spatialKernels.mortonOrder2d.withBackend(x, y, { backend: "wasm" });
+
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
+
+      expect(js.result.length).toBe(n);
+      expect(ws.result.length).toBe(n);
+      const identity = Array.from({ length: n }, (_, i) => i);
+      expectSameIndexSet(ws.result, identity, `morton-wasm-perm n=${n}`);
+      expectSameIndexSet(js.result, identity, `morton-js-perm n=${n}`);
     });
   });
-});
-
-// Guardrail: surface module availability without failing CI when wasm is absent.
-test("spatial wasm module availability is reported", () => {
-  expect(typeof (wasm === null ? "absent" : "present")).toBe("string");
 });
