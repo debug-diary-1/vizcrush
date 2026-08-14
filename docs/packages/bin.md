@@ -82,7 +82,7 @@ const color = viridis(intensity);
 
 **Performance:** runs on the WASM core (with a JS fallback). Force the path per call with the trailing call options: `bin2d(x, y, { xBins, yBins }, { backend: "js" })`.
 
-**WebGPU (opt-in):** `{ backend: "webgpu" }` runs the wired WGSL compute shader, falling back silently to wasm/js whenever the GPU path can't run. It is never auto-selected, and on measured hardware it is ~15× slower than WASM end-to-end (upload + dispatch + readback dominate — see ADR 0004). Inputs are rebased in f64 before the f32 narrowing, so epoch-scale values bin correctly; a handful of edge-adjacent points may land one bin over versus the f64 cores.
+**WebGPU (opt-in):** `{ backend: "webgpu" }` runs the wired WGSL compute shader, falling back silently to wasm/js whenever the GPU path can't run. To know which backend actually produced a result, use `bin2dWithBackend(x, y, opts, callOpts)` — it returns `{ result, backend: "webgpu" | "wasm" | "js" }` reporting the real outcome, not the request. It is never auto-selected, and on measured hardware it is ~15× slower than WASM end-to-end (upload + dispatch + readback dominate — see ADR 0004). Inputs are rebased in f64 before the f32 narrowing, so epoch-scale values bin correctly; a handful of edge-adjacent points may land one bin over versus the f64 cores.
 
 ## `hexbin(x, y, radius)`
 

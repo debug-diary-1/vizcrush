@@ -33,10 +33,25 @@ export interface OctreeHandle {
   id: string;
   pointCount: number;
   bounds: BBox3d;
-  /** Pure-JS core tree, present when the JS adapter ran. */
-  _core?: OctreeCore;
-  /** WASM tree object, present when the WASM adapter ran. */
-  _wasmTree?: any;
+}
+
+/**
+ * Which adapter backs a handle is this module's private knowledge. Handles
+ * stay plain serializable metadata; the adapter object lives here, keyed by
+ * handle identity, so no caller can branch on the backing adapter again.
+ */
+type OctreeBacking = { kind: "js"; core: OctreeCore } | { kind: "wasm"; tree: any };
+const octreeBacking = new WeakMap<OctreeHandle, OctreeBacking>();
+
+function octreeBackingOf(tree: OctreeHandle): OctreeBacking {
+  const b = octreeBacking.get(tree);
+  if (!b) {
+    throw new Error(
+      "Not a live octree handle — build one with buildOctree/buildOctreeSync " +
+        "in this process (handles do not survive serialization)",
+    );
+  }
+  return b;
 }
 
 let treeCounter = 0;
@@ -58,22 +73,24 @@ const buildOctreeKernel = defineKernel<
   wasmFn: (mod, x, y, z) => mod.build_octree(x, y, z),
   jsFallback: (x, y, z) => {
     const core = buildOctreeCore(x, y, z);
-    return {
+    const handle: OctreeHandle = {
       id: `ot_${treeCounter++}`,
       pointCount: core.pointCount,
       bounds: core.bounds,
-      _core: core,
     };
+    octreeBacking.set(handle, { kind: "js", core });
+    return handle;
   },
   marshal: (x, y, z) => [x, y, z],
   unmarshal: (wasmTree, x) => {
     const b = wasmTree.bounds();
-    return {
+    const handle: OctreeHandle = {
       id: `ot_${treeCounter++}`,
       pointCount: x.length,
       bounds: { xMin: b[0], xMax: b[1], yMin: b[2], yMax: b[3], zMin: b[4], zMax: b[5] },
-      _wasmTree: wasmTree,
     };
+    octreeBacking.set(handle, { kind: "wasm", tree: wasmTree });
+    return handle;
   },
   // The wasm build_octree returns an opaque tree object regardless of size;
   // dispatch is purely "wasm available or not", so cross at any size.
@@ -128,20 +145,10 @@ export function buildOctreeSync(x: Float64Array, y: Float64Array, z: Float64Arra
  * Find all points within a 3D bounding box.
  */
 export function queryRange3d(tree: OctreeHandle, bbox: BBox3d): Uint32Array {
-  if (tree._wasmTree) {
-    return tree._wasmTree.query_range(
-      bbox.xMin,
-      bbox.xMax,
-      bbox.yMin,
-      bbox.yMax,
-      bbox.zMin,
-      bbox.zMax,
-    );
-  }
-  if (tree._core) {
-    return queryRange3dCore(tree._core, bbox);
-  }
-  return new Uint32Array(0);
+  const b = octreeBackingOf(tree);
+  return b.kind === "wasm"
+    ? b.tree.query_range(bbox.xMin, bbox.xMax, bbox.yMin, bbox.yMax, bbox.zMin, bbox.zMax)
+    : queryRange3dCore(b.core, bbox);
 }
 
 /**
@@ -154,13 +161,10 @@ export function queryNearest3d(
   pz: number,
   k: number,
 ): Uint32Array {
-  if (tree._wasmTree) {
-    return tree._wasmTree.query_nearest(px, py, pz, k);
-  }
-  if (tree._core) {
-    return queryNearest3dCore(tree._core, px, py, pz, k);
-  }
-  return new Uint32Array(0);
+  const b = octreeBackingOf(tree);
+  return b.kind === "wasm"
+    ? b.tree.query_nearest(px, py, pz, k)
+    : queryNearest3dCore(b.core, px, py, pz, k);
 }
 
 /**

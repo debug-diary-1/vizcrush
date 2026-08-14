@@ -8,8 +8,8 @@
 import { bin3dCore } from "@vizcrush/bin3d";
 import {
   buildOctreeSync,
-  queryRange3dCore,
-  frustumCullCore,
+  queryRange3d,
+  frustumCullSync,
   type OctreeHandle,
 } from "@vizcrush/spatial3d";
 
@@ -61,18 +61,16 @@ export function handleQueryRange3d(input: {
   if (!entry) return { error: `3D index '${input.index_id}' not found` };
 
   const start = performance.now();
-  const indices = entry.handle._core
-    ? Array.from(
-        queryRange3dCore(entry.handle._core, {
-          xMin: input.x_min,
-          xMax: input.x_max,
-          yMin: input.y_min,
-          yMax: input.y_max,
-          zMin: input.z_min,
-          zMax: input.z_max,
-        }),
-      )
-    : [];
+  const indices = Array.from(
+    queryRange3d(entry.handle, {
+      xMin: input.x_min,
+      xMax: input.x_max,
+      yMin: input.y_min,
+      yMax: input.y_max,
+      zMin: input.z_min,
+      zMax: input.z_max,
+    }),
+  );
 
   return {
     indices,
@@ -122,7 +120,7 @@ export function handleFrustumCull(input: {
   // Calls the shared frustum cull core — the same implementation the package's
   // async shell dispatches to.
   const indices = Array.from(
-    frustumCullCore(
+    frustumCullSync(
       new Float64Array(x),
       new Float64Array(y),
       new Float64Array(z),

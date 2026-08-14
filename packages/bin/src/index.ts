@@ -149,14 +149,17 @@ export interface Bin2dCallOptions {
 }
 
 /**
- * 2D density grid binning for heatmaps.
+ * Like `bin2d`, but also reports which backend actually ran — a `"webgpu"`
+ * request that fell back reports the wasm/js path that produced the result,
+ * so callers (and agents echoing `backend_used`) never mistake a request for
+ * an outcome.
  */
-export async function bin2d(
+export async function bin2dWithBackend(
   x: Float64Array,
   y: Float64Array,
   opts: Bin2dOptions = {},
   callOpts?: Bin2dCallOptions,
-): Promise<Bin2dResult> {
+): Promise<{ result: Bin2dResult; backend: "webgpu" | "wasm" | "js" }> {
   const xBins = opts.xBins ?? 256;
   const yBins = opts.yBins ?? 256;
   const xMin = opts.xRange ? opts.xRange[0] : NaN;
@@ -165,10 +168,34 @@ export async function bin2d(
   const yMax = opts.yRange ? opts.yRange[1] : NaN;
   if (callOpts?.backend === "webgpu") {
     const gpu = await bin2dGpu(x, y, xBins, yBins, xMin, xMax, yMin, yMax);
-    if (gpu) return gpu;
-    return bin2dKernel(x, y, xBins, yBins, xMin, xMax, yMin, yMax, { backend: "auto" });
+    if (gpu) return { result: gpu, backend: "webgpu" };
+    return bin2dKernel.withBackend(x, y, xBins, yBins, xMin, xMax, yMin, yMax, {
+      backend: "auto",
+    });
   }
-  return bin2dKernel(x, y, xBins, yBins, xMin, xMax, yMin, yMax, callOpts as KernelCallOptions);
+  return bin2dKernel.withBackend(
+    x,
+    y,
+    xBins,
+    yBins,
+    xMin,
+    xMax,
+    yMin,
+    yMax,
+    callOpts as KernelCallOptions,
+  );
+}
+
+/**
+ * 2D density grid binning for heatmaps.
+ */
+export async function bin2d(
+  x: Float64Array,
+  y: Float64Array,
+  opts: Bin2dOptions = {},
+  callOpts?: Bin2dCallOptions,
+): Promise<Bin2dResult> {
+  return (await bin2dWithBackend(x, y, opts, callOpts)).result;
 }
 
 /**
