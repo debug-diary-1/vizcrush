@@ -69,8 +69,11 @@ jobs:
         run: cargo install wasm-bindgen-cli --version 0.2.115 # must match wasm-bindgen pin in Cargo.toml
       # Parity tests verify JS ≡ WASM through the kernel seam and REQUIRE the
       # real wasm build — without it they used to skip silently, meaning CI
-      # never actually verified parity.
+      # never actually verified parity. wasm-opt is skipped: parity semantics
+      # don't depend on binaryen's optimization pass (release builds run it).
       - name: Build WASM
+        env:
+          SKIP_WASM_OPT: "1"
         run: bash scripts/build-wasm.sh
       - run: pnpm install
       - run: pnpm turbo build
