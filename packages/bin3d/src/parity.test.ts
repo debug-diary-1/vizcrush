@@ -1,10 +1,21 @@
 import { describe, test, expect } from "vitest";
-import { loadWasmForParity, expectFloatArraysClose, PARITY_EPSILON } from "@vizcrush/core/parity";
-import { bin3dCore } from "./cores.js";
+import {
+  loadWasmForParity,
+  parityMode,
+  injectWasmModuleForTesting,
+  expectFloatArraysClose,
+  PARITY_EPSILON,
+} from "@vizcrush/core/parity";
+import { bin3dKernels } from "./index.js";
 
-// Load the REAL wasm-bindgen module once. If the build is absent, the parity
-// tests skip rather than fail (CI builds wasm; local runs may not).
+// Load the REAL wasm-bindgen module from disk (Node can't run bindgen's
+// import.meta fetch) and register it as the loaders' module transport. From
+// here on, everything — marshal, dispatch, unmarshal, fallback — is the same
+// production kernel path callers use. Missing wasm fails under
+// VIZCRUSH_REQUIRE_WASM (CI), and skips loudly otherwise.
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_bin3d");
+const mode = parityMode(wasm, "vizcrush_bin3d");
+if (wasm) injectWasmModuleForTesting("vizcrush_bin3d", wasm);
 
 function makeXYZ(n: number): { x: Float64Array; y: Float64Array; z: Float64Array } {
   const x = new Float64Array(n);
@@ -18,14 +29,14 @@ function makeXYZ(n: number): { x: Float64Array; y: Float64Array; z: Float64Array
   return { x, y, z };
 }
 
-describe.runIf(wasm !== null)("bin3d JS ≡ WASM parity", () => {
+describe.runIf(mode === "run")("bin3d JS ≡ WASM parity (kernel seam)", () => {
   // Explicit ranges chosen wide enough that no point lands on a bin edge, so
   // the mul-vs-div reciprocal difference between cores cannot flip a bin.
   test.each([
     { n: 1000, xb: 4, yb: 4, zb: 4 },
     { n: 2000, xb: 8, yb: 8, zb: 8 },
     { n: 512, xb: 5, yb: 5, zb: 5 },
-  ])("n=$n grid=$xbx$ybx$zb", ({ n, xb, yb, zb }) => {
+  ])("n=$n grid=$xb×$yb×$zb", async ({ n, xb, yb, zb }) => {
     const { x, y, z } = makeXYZ(n);
     const opts = {
       xBins: xb,
@@ -36,34 +47,18 @@ describe.runIf(wasm !== null)("bin3d JS ≡ WASM parity", () => {
       zRange: [0, 200] as [number, number],
     };
 
-    const js = bin3dCore(x, y, z, opts);
-    const wasmRaw = (wasm as any).bin3d(
-      x,
-      y,
-      z,
-      xb,
-      yb,
-      zb,
-      0,
-      200,
-      0,
-      200,
-      0,
-      200,
-    ) as Float64Array;
+    const js = await bin3dKernels.bin3d.withBackend(x, y, z, opts, { backend: "js" });
+    const ws = await bin3dKernels.bin3d.withBackend(x, y, z, opts, { backend: "wasm" });
 
-    const gridSize = xb * yb * zb;
-    const jsPacked = new Float64Array(gridSize + (xb + 1) + (yb + 1) + (zb + 1));
-    for (let i = 0; i < gridSize; i++) jsPacked[i] = js.grid[i];
-    for (let i = 0; i <= xb; i++) jsPacked[gridSize + i] = js.xEdges[i];
-    for (let i = 0; i <= yb; i++) jsPacked[gridSize + xb + 1 + i] = js.yEdges[i];
-    for (let i = 0; i <= zb; i++) jsPacked[gridSize + xb + 1 + yb + 1 + i] = js.zEdges[i];
+    // The seam must report what actually ran — a silent JS fallback here
+    // would mean "parity" compared JS against itself.
+    expect(js.backend).toBe("js");
+    expect(ws.backend).toBe("wasm");
 
-    expectFloatArraysClose(wasmRaw, jsPacked, PARITY_EPSILON, "bin3d");
+    expect(ws.result.grid).toEqual(js.result.grid);
+    expect(ws.result.maxCount).toBe(js.result.maxCount);
+    expectFloatArraysClose(ws.result.xEdges, js.result.xEdges, PARITY_EPSILON, "bin3d xEdges");
+    expectFloatArraysClose(ws.result.yEdges, js.result.yEdges, PARITY_EPSILON, "bin3d yEdges");
+    expectFloatArraysClose(ws.result.zEdges, js.result.zEdges, PARITY_EPSILON, "bin3d zEdges");
   });
-});
-
-// Guardrail: surface module availability without failing CI when wasm is absent.
-test("bin3d wasm module availability is reported", () => {
-  expect(typeof (wasm === null ? "absent" : "present")).toBe("string");
 });

@@ -19,11 +19,11 @@ const z = new Float64Array(/* … */);
 
 const tree = await buildOctree(x, y, z);
 // {
-//   id: number,
+//   id: string,
 //   pointCount: number,
 //   bounds: { xMin, xMax, yMin, yMax, zMin, zMax },
-//   _tree, _wasmTree
 // }
+// Adapter identity is private to the package; handles are process-local.
 ```
 
 **Configuration:** same as quadtree — `MAX_POINTS = 64` per leaf, `MAX_DEPTH = 12`. Each split creates 8 octants.
