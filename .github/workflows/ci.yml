@@ -66,7 +66,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --version 0.2.115 # must match wasm-bindgen pin in Cargo.toml
       # Parity tests verify JS ≡ WASM through the kernel seam and REQUIRE the
       # real wasm build — without it they used to skip silently, meaning CI
       # never actually verified parity.

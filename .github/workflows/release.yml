@@ -27,7 +27,7 @@ jobs:
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
       - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --version 0.2.115 # must match wasm-bindgen pin in Cargo.toml
       - name: Build WASM
         run: bash scripts/build-wasm.sh
       - run: pnpm install
