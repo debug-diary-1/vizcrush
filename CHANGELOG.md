@@ -1,5 +1,31 @@
 # Changelog
 
+## Architecture pass (2026-08-13)
+
+### Deep-module cleanup — findings 1, 2, and 5-lite of the August architecture review
+
+- **Parity tests now run through the kernel seam.** Every package's JS ≡ WASM
+  parity suite exercises the production `defineKernel` path (marshal →
+  dispatch → unmarshal) via `withBackend`, asserting which backend actually
+  ran, instead of calling raw wasm-bindgen exports with bespoke re-packing.
+  A missing WASM build now **fails** CI (`VIZCRUSH_REQUIRE_WASM=1`) instead
+  of silently skipping — previously CI's TypeScript job never built WASM at
+  all, so parity had never once run in CI. Test seam:
+  `injectWasmModuleForTesting` substitutes only the module transport (Node
+  can't run bindgen's `import.meta` fetch).
+- **Spatial handles are opaque** (breaking, pre-npm-publish):
+  `QuadtreeHandle`, `SpatialHashGridHandle`, and the spatial3d handles no
+  longer expose `_core` / `_wasmTree` / `_wasmGrid`; adapter identity lives in
+  a module-private WeakMap. Queries on a foreign or deserialized object now
+  throw a descriptive error instead of returning empty results. MCP tools use
+  the public query API rather than reaching into handle internals.
+- **Truthful backend reporting:** new `bin2dWithBackend` reports
+  `"webgpu" | "wasm" | "js"` for what actually ran (a fallen-back `webgpu`
+  request reports the real path). The MCP `vizcrush_capabilities` tool now
+  probes the runtime via `detectCapabilities()` instead of returning a
+  hard-coded all-false table, and `vizcrush_benchmark` measures the real JS
+  cores instead of inline approximations.
+
 ## @vizcrush/bin v1.1.0 (2026-07-31)
 
 ### WebGPU compute path for bin2d — opt-in, measured

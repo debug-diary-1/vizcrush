@@ -1,14 +1,24 @@
+import { detectCapabilities } from "@vizcrush/core";
+import { lttbCore } from "@vizcrush/downsample";
+import { bin2dCore } from "@vizcrush/bin";
 import type { BenchmarkInputType } from "../schemas.js";
 
-export function handleCapabilities() {
+/**
+ * Report the runtime's real capabilities via the same probe the library's
+ * `init()` uses — nothing hard-coded, so the answer is truthful wherever the
+ * server runs (Node today: wasm true, webgpu false).
+ */
+export async function handleCapabilities() {
+  const caps = await detectCapabilities();
   return {
-    webgpu: false,
-    wasm_simd: false,
-    wasm: false,
-    gpu_adapter: null,
-    max_buffer_size: 0,
-    runtime: "node",
-    note: "MCP server runs in Node.js — WASM/WebGPU capabilities reflect browser environment when used via browser bindings",
+    webgpu: caps.webgpu,
+    wasm_simd: caps.wasmSimd,
+    wasm: caps.wasm,
+    shared_array_buffer: caps.sharedArrayBuffer,
+    runtime: typeof process !== "undefined" ? `node ${process.version}` : "unknown",
+    note:
+      "Probed in the MCP server's own runtime. Backends: wasm | js (webgpu is a " +
+      "browser-only opt-in on bin2d — see ADR 0004).",
   };
 }
 
@@ -17,8 +27,8 @@ export function handleBenchmark(input: BenchmarkInputType) {
 
   // Generate test data
   const size = input.data_size;
-  const x: number[] = Array.from({ length: size });
-  const y: number[] = Array.from({ length: size });
+  const x = new Float64Array(size);
+  const y = new Float64Array(size);
   let val = 0;
   for (let i = 0; i < size; i++) {
     x[i] = i;
@@ -32,32 +42,15 @@ export function handleBenchmark(input: BenchmarkInputType) {
 
     for (let r = 0; r < runs; r++) {
       const start = performance.now();
+      // The real JS cores — the same implementations the kernel dispatches to —
+      // not inline approximations.
       switch (algo) {
-        case "lttb": {
-          // Simple LTTB benchmark
-          const threshold = 1000;
-          const bucketSize = (size - 2) / (threshold - 2);
-          for (let i = 0; i < threshold - 2; i++) {
-            const s = Math.floor(i * bucketSize) + 1;
-            const e = Math.min(Math.floor((i + 1) * bucketSize) + 1, size - 1);
-            let maxArea = -1;
-            for (let j = s; j < e; j++) {
-              const area = Math.abs(y[j] - y[s]);
-              if (area > maxArea) maxArea = area;
-            }
-          }
+        case "lttb":
+          lttbCore(x, y, 1000);
           break;
-        }
-        case "bin2d": {
-          const bins = 256;
-          const grid = new Int32Array(bins * bins);
-          for (let i = 0; i < size; i++) {
-            const xi = Math.min(bins - 1, Math.floor((x[i] / size) * bins));
-            const yi = Math.min(bins - 1, Math.max(0, Math.floor(((y[i] + 500) / 1000) * bins)));
-            grid[yi * bins + xi]++;
-          }
+        case "bin2d":
+          bin2dCore(x, y, 256, 256, NaN, NaN, NaN, NaN);
           break;
-        }
         default:
           break;
       }
@@ -74,6 +67,8 @@ export function handleBenchmark(input: BenchmarkInputType) {
   return {
     data_size: size,
     results,
-    note: "Benchmarks run in Node.js. Browser WASM+SIMD/WebGPU results will be significantly faster.",
+    note:
+      "Measured on the pure-JS cores in the MCP server's Node runtime. " +
+      "Relative WASM/JS performance is engine-dependent (ADR 0003).",
   };
 }

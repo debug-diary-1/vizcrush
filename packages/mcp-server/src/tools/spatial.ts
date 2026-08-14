@@ -5,7 +5,7 @@
  * here is deleted.
  */
 
-import { buildQuadtreeSync, queryRangeCore, type QuadtreeHandle } from "@vizcrush/spatial";
+import { buildQuadtreeSync, queryRange, type QuadtreeHandle } from "@vizcrush/spatial";
 
 const spatialIndexes = new Map<
   string,
@@ -49,16 +49,14 @@ export function handleQueryRange(input: {
   }
 
   const start = performance.now();
-  const indices = entry.handle._core
-    ? Array.from(
-        queryRangeCore(entry.handle._core, {
-          xMin: input.x_min,
-          xMax: input.x_max,
-          yMin: input.y_min,
-          yMax: input.y_max,
-        }),
-      )
-    : [];
+  const indices = Array.from(
+    queryRange(entry.handle, {
+      xMin: input.x_min,
+      xMax: input.x_max,
+      yMin: input.y_min,
+      yMax: input.y_max,
+    }),
+  );
   const elapsed = performance.now() - start;
 
   return {

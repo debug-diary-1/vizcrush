@@ -39,7 +39,24 @@ export interface WasmLoader {
  * A single loader instance per module is the rule — the kernel is its only
  * caller, replacing the six copies of this trampoline.
  */
-export function createWasmLoader(_moduleName: string, importer: () => Promise<any>): WasmLoader {
+/**
+ * Test seam: pre-initialized modules keyed by `wasmModuleName`. The dynamic
+ * `import()` transport that loaders use cannot resolve wasm-bindgen's
+ * `import.meta`-relative fetch under Node/Vitest, so parity tests initialize
+ * the real module from disk bytes and register it here — substituting only the
+ * transport while marshal → dispatch → unmarshal stay the production code
+ * paths. Empty in production.
+ */
+const injectedModules = new Map<string, unknown>();
+
+/** Register (or clear, with `null`) a pre-initialized WASM module for a
+ * loader name. Test-only; see `injectedModules`. */
+export function injectWasmModuleForTesting(moduleName: string, mod: unknown | null): void {
+  if (mod === null) injectedModules.delete(moduleName);
+  else injectedModules.set(moduleName, mod);
+}
+
+export function createWasmLoader(moduleName: string, importer: () => Promise<any>): WasmLoader {
   let mod: unknown | null = null;
   let attempted = false;
   let inflight: Promise<unknown | null> | null = null;
@@ -60,6 +77,8 @@ export function createWasmLoader(_moduleName: string, importer: () => Promise<an
 
   return {
     async load() {
+      const injected = injectedModules.get(moduleName);
+      if (injected) return injected;
       if (mod) return mod;
       if (attempted && !inflight) return mod;
       if (!inflight) {
@@ -71,10 +90,10 @@ export function createWasmLoader(_moduleName: string, importer: () => Promise<an
       return inflight;
     },
     get loaded() {
-      return mod !== null;
+      return injectedModules.has(moduleName) || mod !== null;
     },
     get moduleSync() {
-      return mod;
+      return injectedModules.get(moduleName) ?? mod;
     },
   };
 }

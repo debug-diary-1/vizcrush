@@ -168,8 +168,15 @@ describe("buildHashGrid", () => {
     const y = new Float64Array([0, 1, 2]);
     const grid = await buildHashGrid(x, y, 1, { backend: "js" });
     expect(grid.count).toBe(3);
-    expect(grid._core).toBeDefined();
-    expect(grid._wasmGrid).toBeUndefined();
+    // Adapter identity is private — the handle exposes metadata only, and
+    // queries work without callers knowing which adapter ran.
+    expect(Object.keys(grid).sort()).toEqual(["cellCount", "cellSize", "count"]);
+    expect(Array.from(hashGridQueryRadius(grid, 0, 0, 1.5)).sort()).toEqual([0, 1]);
+  });
+
+  test("a foreign object is rejected, not silently empty", () => {
+    const fake = { cellSize: 1, count: 3, cellCount: 3 };
+    expect(() => hashGridQueryRadius(fake, 0, 0, 1)).toThrow(/not a live hash-grid handle/i);
   });
 });
 

@@ -18,12 +18,13 @@ const y = new Float64Array(/* … */);
 
 const tree = await buildQuadtree(x, y);
 // {
-//   id: number,
+//   id: string,
 //   pointCount: number,
 //   bounds: { xMin, xMax, yMin, yMax },
-//   _tree: …,        // internal — don't touch
-//   _wasmTree?: …,   // internal — don't touch
 // }
+// Which adapter (wasm/js) backs the handle is private to the package.
+// Handles are process-local: they don't survive serialization, and query
+// functions throw on objects that didn't come from a build function.
 ```
 
 **Configuration (compile-time):**

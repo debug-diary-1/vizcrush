@@ -1,16 +1,27 @@
 import { describe, test, expect } from "vitest";
-import { loadWasmForParity, expectFloatArraysClose, PARITY_EPSILON } from "@vizcrush/core/parity";
-import { lttbCore, minMaxLttbCore, m4Core, ltobCore } from "./cores.js";
+import {
+  loadWasmForParity,
+  parityMode,
+  injectWasmModuleForTesting,
+  expectFloatArraysClose,
+  PARITY_EPSILON,
+} from "@vizcrush/core/parity";
+import { downsampleKernels } from "./index.js";
 
-// Load the REAL wasm-bindgen module once. If the build is absent, the parity
-// tests skip rather than fail (CI builds wasm; local runs may not).
+// Load the REAL wasm-bindgen module from disk (Node can't run bindgen's
+// import.meta fetch) and register it as the loaders' module transport. From
+// here on, everything — marshal, dispatch, unmarshal, fallback — is the same
+// production kernel path callers use. Missing wasm fails under
+// VIZCRUSH_REQUIRE_WASM (CI), and skips loudly otherwise.
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_downsample");
+const mode = parityMode(wasm, "vizcrush_downsample");
+if (wasm) injectWasmModuleForTesting("vizcrush_downsample", wasm);
 
 const algorithms = [
-  { name: "lttb", core: lttbCore, wasmFn: "lttb" as const },
-  { name: "minmax_lttb", core: minMaxLttbCore, wasmFn: "minmax_lttb" as const },
-  { name: "m4", core: m4Core, wasmFn: "m4" as const },
-  { name: "ltob", core: ltobCore, wasmFn: "ltob" as const },
+  { name: "lttb", kernel: downsampleKernels.lttb },
+  { name: "minMaxLttb", kernel: downsampleKernels.minMaxLttb },
+  { name: "m4", kernel: downsampleKernels.m4 },
+  { name: "ltob", kernel: downsampleKernels.ltob },
 ];
 
 function makeInput(n: number): { x: Float64Array; y: Float64Array } {
@@ -30,28 +41,21 @@ const cases: { n: number; threshold: number }[] = [
   { n: 333, threshold: 40 },
 ];
 
-describe.runIf(wasm !== null)("downsample JS ≡ WASM parity", () => {
-  describe.each(algorithms)("$name", ({ core, wasmFn }) => {
-    test.each(cases)("n=$n threshold=$threshold", ({ n, threshold }) => {
+describe.runIf(mode === "run")("downsample JS ≡ WASM parity (kernel seam)", () => {
+  describe.each(algorithms)("$name", ({ kernel }) => {
+    test.each(cases)("n=$n threshold=$threshold", async ({ n, threshold }) => {
       const { x, y } = makeInput(n);
 
-      const jsResult = core(x, y, threshold);
-      const wasmRaw = (wasm as any)[wasmFn](x, y, threshold) as Float64Array;
+      const js = await kernel.withBackend(x, y, threshold, { backend: "js" });
+      const ws = await kernel.withBackend(x, y, threshold, { backend: "wasm" });
 
-      // Reconstruct the JS interleaved form to compare against wasm's interleaved output.
-      const jsInterleaved = new Float64Array(jsResult.x.length * 2);
-      for (let i = 0; i < jsResult.x.length; i++) {
-        jsInterleaved[i * 2] = jsResult.x[i];
-        jsInterleaved[i * 2 + 1] = jsResult.y[i];
-      }
+      // The seam must report what actually ran — a silent JS fallback here
+      // would mean "parity" compared JS against itself.
+      expect(js.backend).toBe("js");
+      expect(ws.backend).toBe("wasm");
 
-      expectFloatArraysClose(wasmRaw, jsInterleaved, PARITY_EPSILON, wasmFn);
+      expectFloatArraysClose(ws.result.x, js.result.x, PARITY_EPSILON, "x");
+      expectFloatArraysClose(ws.result.y, js.result.y, PARITY_EPSILON, "y");
     });
   });
-});
-
-// Guardrail: if the module failed to load, make that visible (xfail-style note)
-// without failing CI — the suite above is skipped via runIf.
-test("wasm module availability is reported", () => {
-  expect(typeof (wasm === null ? "absent" : "present")).toBe("string");
 });

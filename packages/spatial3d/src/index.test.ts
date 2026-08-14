@@ -50,6 +50,34 @@ describe("buildOctree", () => {
     });
     expect(all.length).toBe(0);
   });
+
+  it("backend: 'js' exposes only public metadata and queries still work", async () => {
+    const { x, y, z } = randomPoints(10);
+    const tree = await buildOctree(x, y, z, { backend: "js" });
+    // Adapter identity is private — the handle exposes metadata only, and
+    // queries work without callers knowing which adapter ran.
+    expect(Object.keys(tree).sort()).toEqual(["bounds", "id", "pointCount"]);
+    const all = queryRange3d(tree, {
+      xMin: -1e9,
+      xMax: 1e9,
+      yMin: -1e9,
+      yMax: 1e9,
+      zMin: -1e9,
+      zMax: 1e9,
+    });
+    expect(all.length).toBe(10);
+  });
+
+  it("a foreign object is rejected, not silently empty", () => {
+    const fake = {
+      id: "ot_fake",
+      pointCount: 3,
+      bounds: { xMin: 0, xMax: 1, yMin: 0, yMax: 1, zMin: 0, zMax: 1 },
+    };
+    expect(() =>
+      queryRange3d(fake, { xMin: 0, xMax: 1, yMin: 0, yMax: 1, zMin: 0, zMax: 1 }),
+    ).toThrow(/not a live octree handle/i);
+  });
 });
 
 describe("queryRange3d", () => {

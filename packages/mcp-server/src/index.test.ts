@@ -196,11 +196,14 @@ describe("MCP stats tools", () => {
 });
 
 describe("MCP utility tools", () => {
-  test("vizcrush_capabilities", () => {
-    const result = handleCapabilities();
-    expect(result).toHaveProperty("webgpu");
+  test("vizcrush_capabilities probes the real runtime", async () => {
+    const result = await handleCapabilities();
+    // Node has WebAssembly and no WebGPU — the probe must say so, not a
+    // hard-coded table.
+    expect(result.wasm).toBe(true);
+    expect(result.webgpu).toBe(false);
     expect(result).toHaveProperty("wasm_simd");
-    expect(result).toHaveProperty("runtime", "node");
+    expect(result.runtime).toMatch(/^node v/);
   });
 
   test("vizcrush_benchmark", () => {

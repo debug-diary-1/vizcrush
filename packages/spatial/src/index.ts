@@ -41,10 +41,25 @@ export interface QuadtreeHandle {
   id: string;
   pointCount: number;
   bounds: BBox;
-  /** Pure-JS core tree, present when the JS adapter ran. */
-  _core?: QuadtreeCore;
-  /** WASM tree object, present when the WASM adapter ran. */
-  _wasmTree?: any;
+}
+
+/**
+ * Which adapter backs a handle is this module's private knowledge. Handles
+ * stay plain serializable metadata; the adapter object lives here, keyed by
+ * handle identity, so no caller can branch on `_core` / `_wasmTree` again.
+ */
+type QuadtreeBacking = { kind: "js"; core: QuadtreeCore } | { kind: "wasm"; tree: any };
+const quadtreeBacking = new WeakMap<QuadtreeHandle, QuadtreeBacking>();
+
+function quadtreeBackingOf(tree: QuadtreeHandle): QuadtreeBacking {
+  const b = quadtreeBacking.get(tree);
+  if (!b) {
+    throw new Error(
+      "Not a live quadtree handle — build one with buildQuadtree/buildQuadtreeSync " +
+        "in this process (handles do not survive serialization)",
+    );
+  }
+  return b;
 }
 
 let treeCounter = 0;
@@ -67,22 +82,24 @@ const buildQuadtreeKernel = defineKernel<
   wasmFn: (mod, x, y) => mod.build_quadtree(x, y),
   jsFallback: (x, y) => {
     const core = buildQuadtreeCore(x, y);
-    return {
+    const handle: QuadtreeHandle = {
       id: `qt_${treeCounter++}`,
       pointCount: core.pointCount,
       bounds: core.bounds,
-      _core: core,
     };
+    quadtreeBacking.set(handle, { kind: "js", core });
+    return handle;
   },
   marshal: (x, y) => [x, y],
   unmarshal: (wasmTree, x) => {
     const b = wasmTree.bounds();
-    return {
+    const handle: QuadtreeHandle = {
       id: `qt_${treeCounter++}`,
       pointCount: x.length,
       bounds: { xMin: b[0], xMax: b[1], yMin: b[2], yMax: b[3] },
-      _wasmTree: wasmTree,
     };
+    quadtreeBacking.set(handle, { kind: "wasm", tree: wasmTree });
+    return handle;
   },
   // The wasm build_quadtree returns an opaque tree object regardless of size;
   // dispatch is purely "wasm available or not", so cross at any size.
@@ -131,26 +148,18 @@ export function buildQuadtreeSync(x: Float64Array, y: Float64Array): QuadtreeHan
  * Find all points within a bounding box.
  */
 export function queryRange(tree: QuadtreeHandle, bbox: BBox): Uint32Array {
-  if (tree._wasmTree) {
-    return tree._wasmTree.query_range(bbox.xMin, bbox.xMax, bbox.yMin, bbox.yMax);
-  }
-  if (tree._core) {
-    return queryRangeCore(tree._core, bbox);
-  }
-  return new Uint32Array(0);
+  const b = quadtreeBackingOf(tree);
+  return b.kind === "wasm"
+    ? b.tree.query_range(bbox.xMin, bbox.xMax, bbox.yMin, bbox.yMax)
+    : queryRangeCore(b.core, bbox);
 }
 
 /**
  * k-nearest neighbor search.
  */
 export function queryNearest(tree: QuadtreeHandle, px: number, py: number, k: number): Uint32Array {
-  if (tree._wasmTree) {
-    return tree._wasmTree.query_nearest(px, py, k);
-  }
-  if (tree._core) {
-    return queryNearestCore(tree._core, px, py, k);
-  }
-  return new Uint32Array(0);
+  const b = quadtreeBackingOf(tree);
+  return b.kind === "wasm" ? b.tree.query_nearest(px, py, k) : queryNearestCore(b.core, px, py, k);
 }
 
 /**
@@ -175,10 +184,21 @@ export interface SpatialHashGridHandle {
   cellSize: number;
   count: number;
   cellCount: number;
-  /** Pure-JS core grid, present when the JS adapter ran. */
-  _core?: SpatialHashGridCore;
-  /** WASM grid object, present when the WASM adapter ran. */
-  _wasmGrid?: any;
+}
+
+/** Adapter backing for hash-grid handles; same privacy story as quadtrees. */
+type HashGridBacking = { kind: "js"; core: SpatialHashGridCore } | { kind: "wasm"; grid: any };
+const hashGridBacking = new WeakMap<SpatialHashGridHandle, HashGridBacking>();
+
+function hashGridBackingOf(handle: SpatialHashGridHandle): HashGridBacking {
+  const b = hashGridBacking.get(handle);
+  if (!b) {
+    throw new Error(
+      "Not a live hash-grid handle — build one with buildHashGrid/buildHashGridSync " +
+        "in this process (handles do not survive serialization)",
+    );
+  }
+  return b;
 }
 
 type BuildHashGridArgs = [x: Float64Array, y: Float64Array, cellSize: number];
@@ -198,20 +218,24 @@ const buildHashGridKernel = defineKernel<
   },
   jsFallback: (x, y, cellSize) => {
     const core = buildHashGridCore(x, y, cellSize);
-    return {
+    const handle: SpatialHashGridHandle = {
       cellSize,
       count: core.xData.length,
       cellCount: core.cellCount,
-      _core: core,
     };
+    hashGridBacking.set(handle, { kind: "js", core });
+    return handle;
   },
   marshal: (x, y, cellSize) => [x, y, cellSize],
-  unmarshal: (wasmGrid) => ({
-    cellSize: wasmGrid.cell_size,
-    count: wasmGrid.count,
-    cellCount: wasmGrid.cell_count,
-    _wasmGrid: wasmGrid,
-  }),
+  unmarshal: (wasmGrid) => {
+    const handle: SpatialHashGridHandle = {
+      cellSize: wasmGrid.cell_size,
+      count: wasmGrid.count,
+      cellCount: wasmGrid.cell_count,
+    };
+    hashGridBacking.set(handle, { kind: "wasm", grid: wasmGrid });
+    return handle;
+  },
   // The wasm grid returns an opaque handle regardless of size; dispatch is
   // purely "wasm available or not", same rationale as buildQuadtree.
   sizeOf: () => Number.POSITIVE_INFINITY,
@@ -251,13 +275,10 @@ export function hashGridQueryRadius(
   py: number,
   radius: number,
 ): Uint32Array {
-  if (handle._wasmGrid) {
-    return handle._wasmGrid.query_radius(px, py, radius);
-  }
-  if (handle._core) {
-    return hashGridQueryRadiusCore(handle._core, px, py, radius);
-  }
-  return new Uint32Array(0);
+  const b = hashGridBackingOf(handle);
+  return b.kind === "wasm"
+    ? b.grid.query_radius(px, py, radius)
+    : hashGridQueryRadiusCore(b.core, px, py, radius);
 }
 
 /**
@@ -270,13 +291,10 @@ export function hashGridQueryRange(
   yMin: number,
   yMax: number,
 ): Uint32Array {
-  if (handle._wasmGrid) {
-    return handle._wasmGrid.query_range(xMin, xMax, yMin, yMax);
-  }
-  if (handle._core) {
-    return hashGridQueryRangeCore(handle._core, xMin, xMax, yMin, yMax);
-  }
-  return new Uint32Array(0);
+  const b = hashGridBackingOf(handle);
+  return b.kind === "wasm"
+    ? b.grid.query_range(xMin, xMax, yMin, yMax)
+    : hashGridQueryRangeCore(b.core, xMin, xMax, yMin, yMax);
 }
 
 /** The WASM-backed kernels, exposed for the shared parity harness. */

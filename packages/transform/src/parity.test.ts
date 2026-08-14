@@ -1,16 +1,21 @@
 import { describe, test, expect } from "vitest";
-import { loadWasmForParity, expectFloatArraysClose, PARITY_EPSILON } from "@vizcrush/core/parity";
 import {
-  normalizeCore,
-  sortCore,
-  sortByKeysCore,
-  logTransformCore,
-  powerTransformCore,
-} from "./cores.js";
+  loadWasmForParity,
+  parityMode,
+  injectWasmModuleForTesting,
+  expectFloatArraysClose,
+  PARITY_EPSILON,
+} from "@vizcrush/core/parity";
+import { transformKernels } from "./index.js";
 
-// Load the REAL wasm-bindgen module once. If the build is absent, the parity
-// tests skip rather than fail (CI builds wasm; local runs may not).
+// Load the REAL wasm-bindgen module from disk (Node can't run bindgen's
+// import.meta fetch) and register it as the loaders' module transport. From
+// here on, everything — marshal, dispatch, unmarshal, fallback — is the same
+// production kernel path callers use. Missing wasm fails under
+// VIZCRUSH_REQUIRE_WASM (CI), and skips loudly otherwise.
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_transform");
+const mode = parityMode(wasm, "vizcrush_transform");
+if (wasm) injectWasmModuleForTesting("vizcrush_transform", wasm);
 
 function makeData(n: number): Float64Array {
   const d = new Float64Array(n);
@@ -28,85 +33,102 @@ function makeKeys(n: number): Float64Array {
   return k;
 }
 
-describe.runIf(wasm !== null)("transform JS ≡ WASM parity", () => {
+// Every backend pair must report what actually ran — a silent JS fallback
+// would mean "parity" compared JS against itself.
+function expectBackends(js: { backend: "wasm" | "js" }, ws: { backend: "wasm" | "js" }): void {
+  expect(js.backend).toBe("js");
+  expect(ws.backend).toBe("wasm");
+}
+
+describe.runIf(mode === "run")("transform JS ≡ WASM parity (kernel seam)", () => {
   const sizes = [{ n: 1000 }, { n: 2048 }, { n: 333 }];
 
   describe("normalize", () => {
-    test.each(sizes)("auto range n=$n", ({ n }) => {
+    test.each(sizes)("auto range n=$n", async ({ n }) => {
       const data = makeData(n);
-      const js = normalizeCore(data, NaN, NaN);
-      const wasmRaw = (wasm as any).normalize(data, NaN, NaN) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "normalize");
+      const js = await transformKernels.normalize.withBackend(data, NaN, NaN, { backend: "js" });
+      const ws = await transformKernels.normalize.withBackend(data, NaN, NaN, { backend: "wasm" });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "normalize");
     });
 
-    test.each(sizes)("custom range n=$n", ({ n }) => {
+    test.each(sizes)("custom range n=$n", async ({ n }) => {
       const data = makeData(n);
-      const js = normalizeCore(data, 50, 350);
-      const wasmRaw = (wasm as any).normalize(data, 50, 350) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "normalize-range");
-    });
-  });
-
-  describe("radix_sort", () => {
-    test.each(sizes)("ascending n=$n", ({ n }) => {
-      const data = makeData(n);
-      const js = sortCore(data, false);
-      const wasmRaw = (wasm as any).radix_sort(data, false) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "radix_sort-asc");
-    });
-
-    test.each(sizes)("descending n=$n", ({ n }) => {
-      const data = makeData(n);
-      const js = sortCore(data, true);
-      const wasmRaw = (wasm as any).radix_sort(data, true) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "radix_sort-desc");
+      const js = await transformKernels.normalize.withBackend(data, 50, 350, { backend: "js" });
+      const ws = await transformKernels.normalize.withBackend(data, 50, 350, { backend: "wasm" });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "normalize-range");
     });
   });
 
-  describe("sort_by_keys", () => {
-    test.each(sizes)("n=$n", ({ n }) => {
+  describe("sort (radix_sort)", () => {
+    test.each(sizes)("ascending n=$n", async ({ n }) => {
+      const data = makeData(n);
+      const js = await transformKernels.sort.withBackend(data, false, { backend: "js" });
+      const ws = await transformKernels.sort.withBackend(data, false, { backend: "wasm" });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "radix_sort-asc");
+    });
+
+    test.each(sizes)("descending n=$n", async ({ n }) => {
+      const data = makeData(n);
+      const js = await transformKernels.sort.withBackend(data, true, { backend: "js" });
+      const ws = await transformKernels.sort.withBackend(data, true, { backend: "wasm" });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "radix_sort-desc");
+    });
+  });
+
+  describe("sortByKeys", () => {
+    test.each(sizes)("n=$n", async ({ n }) => {
       const data = makeData(n);
       const keys = makeKeys(n);
-      const js = sortByKeysCore(data, keys, false);
-      const wasmRaw = (wasm as any).sort_by_keys(data, keys) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "sort_by_keys");
+      const js = await transformKernels.sortByKeys.withBackend(data, keys, false, {
+        backend: "js",
+      });
+      const ws = await transformKernels.sortByKeys.withBackend(data, keys, false, {
+        backend: "wasm",
+      });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "sort_by_keys");
     });
   });
 
-  describe("log_transform", () => {
-    test.each(sizes)("base e n=$n", ({ n }) => {
+  describe("logTransform", () => {
+    test.each(sizes)("base e n=$n", async ({ n }) => {
       const data = makeData(n);
-      const js = logTransformCore(data, Math.E);
-      const wasmRaw = (wasm as any).log_transform(data, Math.E) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "log_transform");
+      const js = await transformKernels.logTransform.withBackend(data, Math.E, { backend: "js" });
+      const ws = await transformKernels.logTransform.withBackend(data, Math.E, {
+        backend: "wasm",
+      });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "log_transform");
     });
 
-    test.each(sizes)("base 10 n=$n", ({ n }) => {
+    test.each(sizes)("base 10 n=$n", async ({ n }) => {
       const data = makeData(n);
-      const js = logTransformCore(data, 10);
-      const wasmRaw = (wasm as any).log_transform(data, 10) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "log_transform-10");
-    });
-  });
-
-  describe("power_transform", () => {
-    test.each(sizes)("square n=$n", ({ n }) => {
-      const data = makeData(n);
-      const js = powerTransformCore(data, 2);
-      const wasmRaw = (wasm as any).power_transform(data, 2) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "power_transform-sq");
-    });
-
-    test.each(sizes)("sqrt n=$n", ({ n }) => {
-      const data = makeData(n);
-      const js = powerTransformCore(data, 0.5);
-      const wasmRaw = (wasm as any).power_transform(data, 0.5) as Float64Array;
-      expectFloatArraysClose(wasmRaw, js, PARITY_EPSILON, "power_transform-sqrt");
+      const js = await transformKernels.logTransform.withBackend(data, 10, { backend: "js" });
+      const ws = await transformKernels.logTransform.withBackend(data, 10, { backend: "wasm" });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "log_transform-10");
     });
   });
-});
 
-// Guardrail: surface module availability without failing CI when wasm is absent.
-test("transform wasm module availability is reported", () => {
-  expect(typeof (wasm === null ? "absent" : "present")).toBe("string");
+  describe("powerTransform", () => {
+    test.each(sizes)("square n=$n", async ({ n }) => {
+      const data = makeData(n);
+      const js = await transformKernels.powerTransform.withBackend(data, 2, { backend: "js" });
+      const ws = await transformKernels.powerTransform.withBackend(data, 2, { backend: "wasm" });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "power_transform-sq");
+    });
+
+    test.each(sizes)("sqrt n=$n", async ({ n }) => {
+      const data = makeData(n);
+      const js = await transformKernels.powerTransform.withBackend(data, 0.5, { backend: "js" });
+      const ws = await transformKernels.powerTransform.withBackend(data, 0.5, { backend: "wasm" });
+      expectBackends(js, ws);
+      expectFloatArraysClose(ws.result, js.result, PARITY_EPSILON, "power_transform-sqrt");
+    });
+  });
 });
