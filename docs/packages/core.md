@@ -65,7 +65,7 @@ For convenience, `@vizcrush/core` re-exports the result types used by other pack
 import type {
   Backend,
   Capabilities,
-  GpuComputeContext,
+  VizcrushContext,
   DownsampleResult,
   BinResult,
   Bin2dResult,
@@ -78,10 +78,10 @@ Each of those is just a typed-array shape (e.g. `DownsampleResult = Float64Array
 ## When to call `init()`
 
 - **In a top-level module** for vanilla apps: `await init()` once at startup, then call algorithm packages without worrying about backend.
-- **In a React app**: use the [`useGpuCompute` hook](../user-guide/react.md) — it caches the context across renders.
+- **In a React app**: use the [`useVizcrush` hook](../user-guide/react.md) — it caches the context across renders.
 - **In a Node script**: same as vanilla apps — Node supports WebAssembly, so the backend will be `wasm`.
 
 ## See also
 
 - **[Backends & Capabilities](../user-guide/backends.md)** — selection rules and how to override per call
-- **[useGpuCompute hook](../user-guide/react.md#usegpucompute)** — React wrapper
+- **[useVizcrush hook](../user-guide/react.md#usegpucompute)** — React wrapper

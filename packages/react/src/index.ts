@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type {
-  GpuComputeContext,
+  VizcrushContext,
   DownsampleResult,
   Bin2dResult,
   Bin2dOptions,
@@ -13,8 +13,8 @@ import { stats, percentile } from "@vizcrush/aggregate";
 
 // ── Context Hook ──
 
-export function useGpuCompute(): GpuComputeContext | null {
-  const [ctx, setCtx] = useState<GpuComputeContext | null>(null);
+export function useVizcrush(): VizcrushContext | null {
+  const [ctx, setCtx] = useState<VizcrushContext | null>(null);
 
   useEffect(() => {
     let cancelled = false;
