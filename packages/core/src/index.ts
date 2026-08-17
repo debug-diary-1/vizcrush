@@ -4,7 +4,7 @@ export type { Kernel, KernelSpec, KernelBackend, KernelCallOptions, WasmLoader }
 export type {
   Backend,
   Capabilities,
-  GpuComputeContext,
+  VizcrushContext,
   DownsampleResult,
   BinResult,
   Bin2dResult,
@@ -14,7 +14,7 @@ export type {
 } from "./types.js";
 
 import { detectCapabilities, selectBackend } from "./backend.js";
-import type { GpuComputeContext } from "./types.js";
+import type { VizcrushContext } from "./types.js";
 
 /**
  * Initialize vizcrush. Probes capabilities and returns a context whose
@@ -25,7 +25,7 @@ import type { GpuComputeContext } from "./types.js";
  * console.log(gpu.backend); // 'wasm' | 'js'
  * ```
  */
-export async function init(): Promise<GpuComputeContext> {
+export async function init(): Promise<VizcrushContext> {
   const capabilities = await detectCapabilities();
   const backend = selectBackend(capabilities);
   return { backend, capabilities };

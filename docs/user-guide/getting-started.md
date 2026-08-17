@@ -42,7 +42,7 @@ There are nine TypeScript packages — see the **[Packages overview](../packages
 
 There are also two integration packages:
 
-- **[@vizcrush/react](react.md)** — Hooks (`useDownsample`, `useBin2d`, `useStats`, `useStreamingStats`, `useGpuCompute`)
+- **[@vizcrush/react](react.md)** — Hooks (`useDownsample`, `useBin2d`, `useStats`, `useStreamingStats`, `useVizcrush`)
 - **[@vizcrush/mcp-server](mcp.md)** — MCP server that exposes the full toolkit to Claude, Cursor, and other AI agents
 
 ## A word on backends
