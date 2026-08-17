@@ -17,7 +17,7 @@ If you're on macOS with Volta installed, the repo's `package.json` pins Node 24 
 ## First-time setup
 
 ```bash
-git clone git@github.com:pallavL01/vizcrush.git
+git clone git@github.com:debug-diary-1/vizcrush.git
 cd vizcrush
 pnpm install
 pnpm build

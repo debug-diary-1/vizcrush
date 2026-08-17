@@ -11,7 +11,7 @@ hero:
       link: /user-guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/pallavL01/vizcrush
+      link: https://github.com/debug-diary-1/vizcrush
 
 features:
   - title: Downsampling
