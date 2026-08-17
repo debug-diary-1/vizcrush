@@ -238,12 +238,16 @@ export const TOOLS: ToolDescriptor[] = [
   },
 ];
 
+/**
+ * The package's real version — read at runtime so it can't drift from
+ * package.json (works from both src/ under vitest and dist/ at runtime).
+ */
+const PACKAGE_VERSION: string = createRequire(import.meta.url)("../package.json").version;
+
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "vizcrush",
-    // The package's real version — read at runtime so it can't drift from
-    // package.json (works from both src/ under vitest and dist/ at runtime).
-    version: createRequire(import.meta.url)("../package.json").version,
+    version: PACKAGE_VERSION,
   });
 
   for (const tool of TOOLS) {
@@ -473,7 +477,7 @@ async function main() {
         await httpTransport.handleRequest(req, res);
       } else if (url.pathname === "/health") {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ status: "ok", version: "0.2.0" }));
+        res.end(JSON.stringify({ status: "ok", version: PACKAGE_VERSION }));
       } else {
         res.writeHead(404);
         res.end("Not found");
