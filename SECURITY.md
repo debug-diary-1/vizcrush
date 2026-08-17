@@ -2,9 +2,10 @@
 
 ## Supported Versions
 
-| Version | Supported |
-| ------- | --------- |
-| 0.x     | ✅        |
+| Version                                      | Supported |
+| -------------------------------------------- | --------- |
+| Latest release of each `@vizcrush/*` package | ✅        |
+| Older releases                               | ❌        |
 
 ## Reporting a Vulnerability
 

@@ -124,7 +124,7 @@ jobs:
           cache: pnpm
       - run: pnpm install
       - name: npm audit
-        run: pnpm audit --audit-level=high || true
+        run: pnpm audit --audit-level=high
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
       - name: cargo audit
         run: |
