@@ -97,10 +97,10 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [{ icon: "github", link: "https://github.com/pallavL01/vizcrush" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/debug-diary-1/vizcrush" }],
 
     editLink: {
-      pattern: "https://github.com/pallavL01/vizcrush/edit/main/docs/:path",
+      pattern: "https://github.com/debug-diary-1/vizcrush/edit/main/docs/:path",
       text: "Edit this page on GitHub",
     },
 

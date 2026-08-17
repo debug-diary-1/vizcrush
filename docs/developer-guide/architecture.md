@@ -151,4 +151,4 @@ Plus `.github/workflows/docs-deploy.yml` deploys this site to GitHub Pages when 
 
 - **[Building from Source](building.md)** — full local build setup
 - **[Packages Layout](packages.md)** — file structure inside a package
-- **[VIZCRUSH_SPEC.md](https://github.com/pallavL01/vizcrush/blob/main/VIZCRUSH_SPEC.md)** — full functional spec
+- **[VIZCRUSH_SPEC.md](https://github.com/debug-diary-1/vizcrush/blob/main/VIZCRUSH_SPEC.md)** — full functional spec
