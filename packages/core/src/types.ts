@@ -15,7 +15,7 @@ export interface Capabilities {
   sharedArrayBuffer: boolean;
 }
 
-export interface GpuComputeContext {
+export interface VizcrushContext {
   backend: Backend;
   capabilities: Capabilities;
 }

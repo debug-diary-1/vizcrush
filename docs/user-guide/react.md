@@ -5,24 +5,18 @@
 ## Install
 
 ```typescript
-import {
-  useGpuCompute,
-  useDownsample,
-  useBin2d,
-  useStats,
-  useStreamingStats,
-} from "@vizcrush/react";
+import { useVizcrush, useDownsample, useBin2d, useStats, useStreamingStats } from "@vizcrush/react";
 ```
 
-## `useGpuCompute()`
+## `useVizcrush()`
 
 Initialize vizcrush once per app and share the context.
 
 ```tsx
-import { useGpuCompute } from "@vizcrush/react";
+import { useVizcrush } from "@vizcrush/react";
 
 function App() {
-  const ctx = useGpuCompute();
+  const ctx = useVizcrush();
 
   if (!ctx) return <div>Initializing vizcrush…</div>;
 
