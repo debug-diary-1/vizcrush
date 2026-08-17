@@ -43,7 +43,7 @@ const { x, y } = await lttb(timestamps, values, 1000);
 | `@vizcrush/bin3d`      | 3D voxel grid binning                                 |
 | `@vizcrush/aggregate`  | Streaming stats, quantile sketches, append+downsample |
 | `@vizcrush/transform`  | Radix sort, normalize, filter on typed arrays         |
-| `@vizcrush/spatial`    | Quadtree, kd-tree, hash grid, range + kNN queries     |
+| `@vizcrush/spatial`    | Quadtree, hash grid, range + kNN queries              |
 | `@vizcrush/spatial3d`  | Octree, 3D kNN, frustum culling                       |
 | `@vizcrush/ai`         | Anomaly detection, auto-config, LLM summaries         |
 | `@vizcrush/react`      | React hooks for downsample, bin, stats                |

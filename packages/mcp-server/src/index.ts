@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -240,7 +241,9 @@ export const TOOLS: ToolDescriptor[] = [
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "vizcrush",
-    version: "0.2.0",
+    // The package's real version — read at runtime so it can't drift from
+    // package.json (works from both src/ under vitest and dist/ at runtime).
+    version: createRequire(import.meta.url)("../package.json").version,
   });
 
   for (const tool of TOOLS) {

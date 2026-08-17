@@ -20,7 +20,7 @@ vizcrush/
 │   ├── vizcrush-bin/         # Histogram, bin2d, hexbin
 │   ├── vizcrush-bin3d/       # 3D voxel grid binning
 │   ├── vizcrush-aggregate/   # Stats, streaming, quantile sketches
-│   ├── vizcrush-spatial/     # Quadtree, kd-tree, hash grid, Morton
+│   ├── vizcrush-spatial/     # Quadtree, hash grid, Morton (kd-tree: unwired)
 │   ├── vizcrush-spatial3d/   # Octree, frustum culling
 │   ├── vizcrush-transform/   # Sort, normalize, filter
 │   └── vizcrush-ai/          # Anomaly, changepoint, shape, summarize
@@ -93,7 +93,7 @@ npx vitest run packages/downsample/
 
 ## Performance
 
-All PRs are checked against the benchmark baseline. A >10% regression fails CI.
+All PRs are checked against the benchmark baseline. CI fails on a >100% regression (anything that doubles a hot path) — the loose threshold absorbs CI-runner noise; run locally for precise numbers.
 
 ```bash
 # Run benchmarks

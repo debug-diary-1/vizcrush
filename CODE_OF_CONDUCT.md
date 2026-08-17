@@ -52,7 +52,8 @@ spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the project maintainers at **[INSERT CONTACT METHOD]**. All
+reported privately to the maintainer, **[@debug-diary-1](https://github.com/debug-diary-1)**,
+via the contact options on their GitHub profile. All
 complaints will be reviewed and investigated promptly and fairly.
 
 All project maintainers are obligated to respect the privacy and security of
