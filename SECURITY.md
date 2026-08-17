@@ -11,7 +11,7 @@
 **Do not open a public issue for security vulnerabilities.**
 
 Please report security issues privately via GitHub's vulnerability reporting:
-[github.com/pallavL01/vizcrush/security/advisories/new](https://github.com/pallavL01/vizcrush/security/advisories/new)
+[github.com/debug-diary-1/vizcrush/security/advisories/new](https://github.com/debug-diary-1/vizcrush/security/advisories/new)
 (repository **Security** tab → **Report a vulnerability**). Include:
 
 1. Description of the vulnerability

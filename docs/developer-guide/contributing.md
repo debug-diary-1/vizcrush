@@ -1,6 +1,6 @@
 # Contributing
 
-We welcome contributions! See the repo's **[CONTRIBUTING.md](https://github.com/pallavL01/vizcrush/blob/main/CONTRIBUTING.md)** for the canonical guide; this page is a quick orientation.
+We welcome contributions! See the repo's **[CONTRIBUTING.md](https://github.com/debug-diary-1/vizcrush/blob/main/CONTRIBUTING.md)** for the canonical guide; this page is a quick orientation.
 
 ## Before you start
 
@@ -94,4 +94,4 @@ Be kind. Be patient. Assume good intent. Help others.
 - **[Architecture](architecture.md)**
 - **[Building from Source](building.md)**
 - **[Packages Layout](packages.md)**
-- **Repo [CONTRIBUTING.md](https://github.com/pallavL01/vizcrush/blob/main/CONTRIBUTING.md)** for the long form
+- **Repo [CONTRIBUTING.md](https://github.com/debug-diary-1/vizcrush/blob/main/CONTRIBUTING.md)** for the long form

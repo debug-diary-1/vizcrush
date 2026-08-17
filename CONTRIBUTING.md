@@ -45,7 +45,7 @@ vizcrush/
 
 ```bash
 # Clone and install
-git clone https://github.com/pallavL01/vizcrush.git
+git clone https://github.com/debug-diary-1/vizcrush.git
 cd vizcrush
 pnpm install
 

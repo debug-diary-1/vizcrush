@@ -5,7 +5,7 @@ vizcrush packages aren't published to npm yet. For now, you consume them directl
 ## From the monorepo
 
 ```bash
-git clone git@github.com:pallavL01/vizcrush.git
+git clone git@github.com:debug-diary-1/vizcrush.git
 cd vizcrush
 pnpm install
 pnpm build
