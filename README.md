@@ -79,7 +79,7 @@ AI coding agents can invoke vizcrush tools directly:
 
 ## The Book
 
-The companion book — 16 chapters explaining every algorithm inside vizcrush, why it works, and when to pick which one — is free to read at **[github.com/pallavL01/vizcrush-book](https://github.com/pallavL01/vizcrush-book)** (going public alongside this repo).
+The companion book — 16 chapters explaining every algorithm inside vizcrush, why it works, and when to pick which one — is free to read at **[github.com/debug-diary-1/vizcrush-book](https://github.com/debug-diary-1/vizcrush-book)** (going public alongside this repo).
 
 ## Development
 

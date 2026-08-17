@@ -10,15 +10,15 @@
     "point-cloud",
     "spatial"
   ],
-  "homepage": "https://github.com/pallavL01/vizcrush#readme",
+  "homepage": "https://github.com/debug-diary-1/vizcrush#readme",
   "bugs": {
-    "url": "https://github.com/pallavL01/vizcrush/issues"
+    "url": "https://github.com/debug-diary-1/vizcrush/issues"
   },
   "license": "MIT",
   "author": "vizcrush contributors",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pallavL01/vizcrush.git",
+    "url": "git+https://github.com/debug-diary-1/vizcrush.git",
     "directory": "packages/spatial3d"
   },
   "files": [
