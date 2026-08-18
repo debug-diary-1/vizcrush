@@ -34,9 +34,28 @@ jobs:
         run: bash scripts/build-wasm.sh
       - run: pnpm install
       - run: pnpm turbo build
+      # Publishing authenticates with npm Trusted Publishing (OIDC); there is no
+      # long-lived npm token in this repo. `pnpm publish` packs the package
+      # (rewriting `workspace:*` deps to real versions) and shells out to the
+      # system `npm publish`, which exchanges this job's GitHub OIDC token
+      # (`id-token: write` above) for a short-lived npm token. Every
+      # @vizcrush/* package on npmjs.com lists this exact publisher:
+      # GitHub Actions, owner debug-diary-1, repo vizcrush, workflow release.yml.
+      # The `registry-url` above writes a placeholder `_authToken` to .npmrc;
+      # npm >= 11.5.1 overrides it once the OIDC exchange succeeds.
+      - name: Assert npm supports trusted publishing (>= 11.5.1)
+        run: |
+          v="$(npm --version)"
+          node -e '
+            const [maj, min, pat] = process.argv[1].split(".").map(Number);
+            const ok = maj > 11 || (maj === 11 && (min > 5 || (min === 5 && pat >= 1)));
+            if (!ok) {
+              console.error(`npm ${process.argv[1]} is older than 11.5.1; trusted publishing (OIDC) needs 11.5.1+`);
+              process.exit(1);
+            }
+            console.log(`npm ${process.argv[1]} supports trusted publishing`);
+          ' "$v"
       - name: Publish packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for pkg in core downsample bin bin3d aggregate transform spatial spatial3d ai react mcp-server; do
             cd packages/$pkg
