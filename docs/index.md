@@ -36,10 +36,6 @@ features:
 
 ## Quick taste
 
-> **Not yet on npm.** The `@vizcrush/*` packages have not been published yet —
-> until the first release lands, build from source (see
-> [Installation](/user-guide/installation)).
-
 ```typescript
 import { init } from "@vizcrush/core";
 import { lttb } from "@vizcrush/downsample";
