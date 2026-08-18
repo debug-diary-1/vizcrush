@@ -14,10 +14,6 @@ Libraries like ChartGPU, deck.gl, and Plotly handle **rendering**. Libraries lik
 
 ## Quick Start
 
-> **Not yet on npm.** The `@vizcrush/*` packages have not been published yet.
-> Until the first release lands, build from source — see
-> [Development](#development).
-
 ```bash
 npm install @vizcrush/core @vizcrush/downsample
 ```
@@ -79,7 +75,7 @@ AI coding agents can invoke vizcrush tools directly:
 
 ## The Book
 
-The companion book — 16 chapters explaining every algorithm inside vizcrush, why it works, and when to pick which one — is free to read at **[github.com/debug-diary-1/vizcrush-book](https://github.com/debug-diary-1/vizcrush-book)** (going public alongside this repo).
+The companion book — 16 chapters explaining every algorithm inside vizcrush, why it works, and when to pick which one — is free to read at **[debug-diary-1.github.io/vizcrush-book](https://debug-diary-1.github.io/vizcrush-book/)**.
 
 ## Development
 
