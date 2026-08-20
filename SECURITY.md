@@ -38,6 +38,7 @@ The following components are in scope:
 
 - GitHub Actions are SHA-pinned (not tag-based)
 - npm packages are published with SLSA provenance attestation
+- npm publishing uses [trusted publishing](https://docs.npmjs.com/trusted-publishers) (GitHub Actions OIDC); no long-lived npm tokens are stored in the repository
 - WASM artifacts are checksummed via `.supplychainshield/wasm-manifest.json`
 - MCP HTTP server supports bearer token authentication
 - File access in MCP tools is restricted to allowed directories
