@@ -118,7 +118,7 @@ function instead of the old `DownsampleOptions.backend`.
 - 9 Rust crates compiled to WebAssembly, with a pure-JS fallback core
 - Automatic backend selection: WASM → JS fallback
 - 5 WGSL shader drafts (never wired to a compute path; see ADR 0002)
-- 435 tests (158 Rust + 277 TypeScript)
+- 435 tests (158 Rust + 277 TypeScript), counted at the 2026-07-30 honesty pass rather than at this release
 
 **Performance**
 
