@@ -31,11 +31,11 @@ catalogs:
       specifier: 1.4.0
       version: 1.4.0
     fast-check:
-      specifier: 4.6.0
-      version: 4.6.0
+      specifier: 4.9.0
+      version: 4.9.0
     kdbush:
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.1.0
+      version: 4.1.0
     oxfmt:
       specifier: 0.44.0
       version: 0.44.0
@@ -46,17 +46,17 @@ catalogs:
       specifier: 4.0.1
       version: 4.0.1
     simple-statistics:
-      specifier: 7.8.9
-      version: 7.8.9
+      specifier: 7.10.1
+      version: 7.10.1
     sparse-octree:
-      specifier: 7.1.8
-      version: 7.1.8
+      specifier: 7.2.0
+      version: 7.2.0
     three:
       specifier: 0.172.0
       version: 0.172.0
     turbo:
-      specifier: 2.10.7
-      version: 2.10.7
+      specifier: 2.10.10
+      version: 2.10.10
     typescript:
       specifier: 5.9.3
       version: 5.9.3
@@ -98,10 +98,10 @@ importers:
         version: 1.4.0
       fast-check:
         specifier: 'catalog:'
-        version: 4.6.0
+        version: 4.9.0
       kdbush:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.1.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.44.0
@@ -113,10 +113,10 @@ importers:
         version: 4.0.1
       simple-statistics:
         specifier: 'catalog:'
-        version: 7.8.9
+        version: 7.10.1
       turbo:
         specifier: 'catalog:'
-        version: 2.10.7
+        version: 2.10.10
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -161,16 +161,16 @@ importers:
         version: 1.4.0
       kdbush:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.1.0
       rbush:
         specifier: 'catalog:'
         version: 4.0.1
       simple-statistics:
         specifier: 'catalog:'
-        version: 7.8.9
+        version: 7.10.1
       sparse-octree:
         specifier: 'catalog:'
-        version: 7.1.8(three@0.172.0)
+        version: 7.2.0(three@0.172.0)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1855,33 +1855,33 @@ packages:
       '@types/react-dom':
         optional: true
 
-  '@turbo/darwin-64@2.10.7':
-    resolution: {integrity: sha512-/c9cSBRermWDv85oufLhoH6XRLOVbvzJLRd+WLyfJCP+i0HFLQj4PVNDrHcY17/ve5l8X0Oua4bJBqJUgJPnZA==}
+  '@turbo/darwin-64@2.10.10':
+    resolution: {integrity: sha512-gFDD+wRP5hWxBRghGyEbjpbLOY7aIU/wvsnKdMM7odQcp/wHMrnI83p0FyxxMRZnFH9ZD+S59MvcpOC5b+nrCA==}
     cpu: [x64]
     os: [darwin]
 
-  '@turbo/darwin-arm64@2.10.7':
-    resolution: {integrity: sha512-8lpCCGWZBl9PIF8w8f2iEWrLMbHBWIfJeV6l2UEGqysD6HRIM4ySj/8R7HGEzbECJ4r/gnJcHmxEoG8yjFe64A==}
+  '@turbo/darwin-arm64@2.10.10':
+    resolution: {integrity: sha512-VZYsxZ6yjyDosUqtiroAVSXPLmx/qBxdHJgIxdMH9RyNmLdOLOWtJnYMnI4qckwCgQMK85G3fu94/xk5+iBCgw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@turbo/linux-64@2.10.7':
-    resolution: {integrity: sha512-Midw9Ed00yw9rqkWN82fY3LmLNFQ6yiL1GXB56DJKUEjWaEd27zh7ohCxzzrjfjQVrEeVWd3UPytTAV16XDQlA==}
+  '@turbo/linux-64@2.10.10':
+    resolution: {integrity: sha512-lAvW+yEnmsCKMEIwNugjozawvYytHKPhU0kfLBizu83MIs8OUb9KobYvkZ56L5akSM6K7+gBFLEIfQkaceh90g==}
     cpu: [x64]
-    os: [linux]
+    os: [android, linux]
 
-  '@turbo/linux-arm64@2.10.7':
-    resolution: {integrity: sha512-UVEy+MW/xn4BcsiV3v3uv0/oObyaQgVtRT+Jj4WE53rNH05VEYEc1Z13q3zV6276wCZR4Yxc4hiTTcjw7PjSpg==}
+  '@turbo/linux-arm64@2.10.10':
+    resolution: {integrity: sha512-MSJ+NkRTd79Z9+YEZpUV9VOWVOOigFhE+v/ETNYJEuTJp3r00y9YgFvDXrmM+DP8Kal6tk3U6xSugD2/Ojh+Jg==}
     cpu: [arm64]
-    os: [linux]
+    os: [android, linux]
 
-  '@turbo/windows-64@2.10.7':
-    resolution: {integrity: sha512-l2nH9KGLV46SWjcXvyc2+xo5gdf5J0NVADknQk9OCJhzJBpiNl/byd26yIfwZBjLupdqT6UOdPhPxcpUPxRykQ==}
+  '@turbo/windows-64@2.10.10':
+    resolution: {integrity: sha512-ycWpXDkUfnDFDY9d+4Qna/UZotDB0wj+s9agrlmNt0Q7a3XHORhK8GPKJdzgzeutXu9EW5P/jyabTEHlohuDXw==}
     cpu: [x64]
     os: [win32]
 
-  '@turbo/windows-arm64@2.10.7':
-    resolution: {integrity: sha512-qjE1apG6RThuX49vUJd5ks2dV2ndXC2qktDChQonFMvUzrMrEnZMQzO+IgxBiYq1j+NbXQcRwj84nGnk1TBw1g==}
+  '@turbo/windows-arm64@2.10.10':
+    resolution: {integrity: sha512-PMk6zQN0csUFklLe+1hz/5G9uU1YmV0cEIey2R/bSeA6o69qcBTlN4A3jOqkgenOO5dOpMHmq2sEUZo8r1+Ssg==}
     cpu: [arm64]
     os: [win32]
 
@@ -2531,8 +2531,8 @@ packages:
     resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
     engines: {node: '>= 18'}
 
-  fast-check@4.6.0:
-    resolution: {integrity: sha512-h7H6Dm0Fy+H4ciQYFxFjXnXkzR2kr9Fb22c0UBpHnm59K2zpr2t13aPTHlltFiNT6zuxp6HMPAVVvgur4BLdpA==}
+  fast-check@4.9.0:
+    resolution: {integrity: sha512-7ms6T7SybUev/PQITciI0yLM2pOSFy5zpG8Ty7tQofcVaQUvrMXp6CBwqF6fThLCLOrfBtuHAtwq6Yu4XPCllg==}
     engines: {node: '>=12.17.0'}
 
   fast-deep-equal@3.1.3:
@@ -2677,8 +2677,8 @@ packages:
   json-schema-typed@8.0.2:
     resolution: {integrity: sha512-fQhoXdcvc3V28x7C7BMs4P5+kNlgUURe2jmUT1T//oBRMDrqy1QPelJimwZGo7Hg9VPV3EQV5Bnq4hbFy2vetA==}
 
-  kdbush@4.0.2:
-    resolution: {integrity: sha512-WbCVYJ27Sz8zi9Q7Q0xHC+05iwkm3Znipc2XTlrnJbsHMYktW4hPhXUE8Ys1engBrvffoSCqbil1JQAa7clRpA==}
+  kdbush@4.1.0:
+    resolution: {integrity: sha512-e9vurzrXJQrFX6ckpHP3bvj5l+9CnYzkxDNnNQ1h2QTqdWsUAJgXiKdGNcOa1EY85dU8KbQ+z/FdQdB7P+9yfQ==}
 
   lru-cache@11.5.2:
     resolution: {integrity: sha512-4pfM1Ff0x50o0tQwb5ucw/RzNyD0/YJME6IVcStalZuMWxdt3sR3huStTtxz4PUmvZfRguvDejasvQ2kifR11g==}
@@ -2963,8 +2963,8 @@ packages:
   siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
 
-  simple-statistics@7.8.9:
-    resolution: {integrity: sha512-YT6MLqYsz7y1rQZOLFlOCCgSRpCi6bqY417yhoOLI7aVoBi29dD39EPrOE03W9DY25H0J0jizVsHZnkLzyGJFg==}
+  simple-statistics@7.10.1:
+    resolution: {integrity: sha512-Ao1uRUD8K18irQdAymQH8fDa3Tw8EfdxdNKOM2khG3AU5xnKZMS5WzgDmXze0bUAoNmsjsyknPHxyaq9UKMRzQ==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -2973,9 +2973,8 @@ packages:
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
-  sparse-octree@7.1.8:
-    resolution: {integrity: sha512-U6ofl/n48VKqvAKwS8YCtgU67PoUZaDZkaT1Or0KD6scFz6EqEE0rC6wjHaTDh3PG9NarnwctGnZL+Z/k3lbuA==}
-    engines: {node: '>= 0.14.0'}
+  sparse-octree@7.2.0:
+    resolution: {integrity: sha512-p7pqHKT8xOAjC8Ax5A8BcTFriBFl4sZKI7wvYjIkOfv8m0tfY5QrfAsrQs8Yw4MwwmksPeSH4GLEU5ZEgGUB0g==}
     peerDependencies:
       three: 0.x.x
 
@@ -3050,8 +3049,8 @@ packages:
   trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
 
-  turbo@2.10.7:
-    resolution: {integrity: sha512-GHx6WExIFSKNJ5qMlzDpXBXlu9ApxaMjqxAVrCNcW94xf/+uqgIz41SAuRUMbXva2ExNAaY/h8V0q90SWSzmRw==}
+  turbo@2.10.10:
+    resolution: {integrity: sha512-/90KTW+USzvYOPmafRZHVKLBsHXQ5810Ao/HdtJYAqguIhZ+XruS6eIUjqJUDtrSxaZYynNFht68qckGKAOWTA==}
     hasBin: true
 
   type-is@2.0.1:
@@ -3826,22 +3825,22 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
 
-  '@turbo/darwin-64@2.10.7':
+  '@turbo/darwin-64@2.10.10':
     optional: true
 
-  '@turbo/darwin-arm64@2.10.7':
+  '@turbo/darwin-arm64@2.10.10':
     optional: true
 
-  '@turbo/linux-64@2.10.7':
+  '@turbo/linux-64@2.10.10':
     optional: true
 
-  '@turbo/linux-arm64@2.10.7':
+  '@turbo/linux-arm64@2.10.10':
     optional: true
 
-  '@turbo/windows-64@2.10.7':
+  '@turbo/windows-64@2.10.10':
     optional: true
 
-  '@turbo/windows-arm64@2.10.7':
+  '@turbo/windows-arm64@2.10.10':
     optional: true
 
   '@tweenjs/tween.js@23.1.3': {}
@@ -4593,7 +4592,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  fast-check@4.6.0:
+  fast-check@4.9.0:
     dependencies:
       pure-rand: 8.4.0
 
@@ -4753,7 +4752,7 @@ snapshots:
 
   json-schema-typed@8.0.2: {}
 
-  kdbush@4.0.2: {}
+  kdbush@4.1.0: {}
 
   lru-cache@11.5.2: {}
 
@@ -5102,13 +5101,13 @@ snapshots:
 
   siginfo@2.0.0: {}
 
-  simple-statistics@7.8.9: {}
+  simple-statistics@7.10.1: {}
 
   source-map-js@1.2.1: {}
 
   space-separated-tokens@2.0.2: {}
 
-  sparse-octree@7.1.8(three@0.172.0):
+  sparse-octree@7.2.0(three@0.172.0):
     dependencies:
       three: 0.172.0
 
@@ -5166,14 +5165,14 @@ snapshots:
 
   trim-lines@3.0.1: {}
 
-  turbo@2.10.7:
+  turbo@2.10.10:
     optionalDependencies:
-      '@turbo/darwin-64': 2.10.7
-      '@turbo/darwin-arm64': 2.10.7
-      '@turbo/linux-64': 2.10.7
-      '@turbo/linux-arm64': 2.10.7
-      '@turbo/windows-64': 2.10.7
-      '@turbo/windows-arm64': 2.10.7
+      '@turbo/darwin-64': 2.10.10
+      '@turbo/darwin-arm64': 2.10.10
+      '@turbo/linux-64': 2.10.10
+      '@turbo/linux-arm64': 2.10.10
+      '@turbo/windows-64': 2.10.10
+      '@turbo/windows-arm64': 2.10.10
 
   type-is@2.0.1:
     dependencies:
