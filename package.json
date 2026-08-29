@@ -31,6 +31,7 @@
     "simple-statistics": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vitepress": "catalog:",
     "vitest": "catalog:"
   },
