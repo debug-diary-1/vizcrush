@@ -58,10 +58,31 @@ jobs:
             }
             console.log(`npm ${process.argv[1]} supports trusted publishing`);
           ' "$v"
+      # Publishes only versions the registry does not already have. The
+      # packages version independently, so most tags change one or two of them
+      # and the rest are already on npm at the same version. Without the skip,
+      # the first unchanged package fails with EPUBLISHCONFLICT and, because
+      # Actions runs `run:` under `bash -e`, the step aborts before reaching the
+      # package that actually needed releasing.
       - name: Publish packages
         run: |
+          published=0
+          skipped=0
           for pkg in core downsample bin bin3d aggregate transform spatial spatial3d ai react mcp-server; do
-            cd packages/$pkg
-            pnpm publish --access public --no-git-checks --provenance
+            cd "packages/$pkg"
+            name="$(node -p "require('./package.json').name")"
+            version="$(node -p "require('./package.json').version")"
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "skip    $name@$version (already on the registry)"
+              skipped=$((skipped + 1))
+            else
+              echo "publish $name@$version"
+              pnpm publish --access public --no-git-checks --provenance
+              published=$((published + 1))
+            fi
             cd ../..
           done
+          echo "published $published, skipped $skipped"
+          if [ "$published" -eq 0 ]; then
+            echo "::warning::No package versions were new; nothing was published for this tag."
+          fi
