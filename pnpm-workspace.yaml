@@ -2,6 +2,7 @@ packages:
   - "packages/*"
   - "benchmarks"
   - "examples/*"
+  - "test/bundler-fixture"
 
 catalog:
   # ── Runtime deps ──────────────────────────────────────────────
