@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import * as fc from "fast-check";
-import { stats, percentile, streamingStats, StreamingStats } from "./index.js";
+import { stats, percentile, streamingStats, StreamingStats, appendAndDownsample } from "./index.js";
 
 describe("stats", () => {
   test("basic [1,2,3,4,5]", async () => {
@@ -167,6 +167,25 @@ describe("property-based tests", () => {
         },
       ),
       { numRuns: 50 },
+    );
+  });
+});
+
+describe("appendAndDownsample", () => {
+  test("throws instead of returning fabricated data", () => {
+    // It used to return array indices for any input: 500 points of 42.0 with a
+    // spike of 9999 came back as 0, 50, 100 ... 450. That charts as a clean
+    // diagonal, so nobody could see it was wrong. Throwing is the fix.
+    const acc = streamingStats(1000);
+    const data = new Float64Array(500).fill(42);
+    data[250] = 9999;
+    expect(() => appendAndDownsample(acc, data, 10)).toThrow(/never implemented/i);
+  });
+
+  test("names the replacement in the error", () => {
+    const acc = streamingStats(16);
+    expect(() => appendAndDownsample(acc, new Float64Array([1, 2, 3]), 2)).toThrow(
+      /@vizcrush\/downsample/,
     );
   });
 });

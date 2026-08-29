@@ -191,7 +191,7 @@ vizcrush/
 │   │   └── package.json          # @vizcrush/spatial
 │   ├── aggregate/                # TypeScript bindings
 │   │   ├── src/
-│   │   │   └── index.ts          # streamingStats(), appendAndDownsample(), percentile()
+│   │   │   └── index.ts          # streamingStats(), percentile(), sketches
 │   │   └── package.json          # @vizcrush/aggregate
 │   ├── transform/                # TypeScript bindings
 │   │   ├── src/
@@ -221,7 +221,7 @@ vizcrush/
 ├── examples/
 │   ├── chartgpu-integration/     # vizcrush + ChartGPU example
 │   ├── d3-large-scatter/         # vizcrush + D3 for 1M-point scatter
-│   ├── streaming-dashboard/      # Real-time data with appendAndDownsample
+│   ├── streaming-dashboard/      # Real-time data with streamingStats + lttb
 │   └── mcp-demo/                 # Screen recording of AI agent using MCP tools
 ├── scripts/
 │   ├── build-wasm.sh             # Rust → WASM+SIMD compilation
@@ -387,15 +387,17 @@ const nearest = queryNearest(tree, 50, 50, 10); // px=50, py=50, k=10
 ### 5.5 Streaming Aggregation APIs
 
 ```typescript
-import { streamingStats, appendAndDownsample, percentile } from "@vizcrush/aggregate";
+import { streamingStats, percentile } from "@vizcrush/aggregate";
+import { lttb } from "@vizcrush/downsample";
 
 // Rolling stats window
 const acc = streamingStats(1000); // window of 1000
 acc.push(newDataChunk);
 console.log(acc.mean, acc.min, acc.max, acc.stdDev);
 
-// Append new data + downsample in one pass (ideal for real-time feeds)
-const { x, y } = appendAndDownsample(accumulator, newData, 1000);
+// For chart history, keep the series yourself and downsample it directly.
+// appendAndDownsample() throws: it never retained sample history.
+const { x, y } = await lttb(historyX, historyY, 1000);
 
 // Exact percentiles (sorts the input)
 const pcts = percentile(data, [25, 50, 75, 95, 99]); // Float64Array[5]
@@ -404,7 +406,7 @@ const pcts = percentile(data, [25, 50, 75, 95, 99]); // Float64Array[5]
 | Function              | Signature                                                    | Description                                                                                                                                                                                              |
 | --------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `streamingStats`      | `streamingStats(windowSize: number) → StatsAccumulator`      | Rolling min/max/mean/stddev                                                                                                                                                                              |
-| `appendAndDownsample` | `appendAndDownsample(acc, newData, targetN) → { x, y }`      | Append + LTTB in one pass                                                                                                                                                                                |
+| `appendAndDownsample` | `appendAndDownsample(...) → throws`                          | **Removed.** Never implemented: it returned array indices, not data. Keep history in application state and call `lttb()` from `@vizcrush/downsample`.                                                    |
 | `percentile`          | `percentile(data: Float64Array, p: number[]) → Float64Array` | Exact percentiles, via sorting. Approximate t-digest-backed percentiles are v0.4.0 roadmap (§ below), not yet wired to this function — `TDigest` exists in `vizcrush-aggregate` but has no caller today. |
 
 ### 5.6 Transform APIs
@@ -863,7 +865,7 @@ examples/iot-heatmap/
 ### 12.3 Example: Real-Time Streaming Dashboard
 
 **Directory:** `examples/streaming-dashboard/`
-**Demonstrates:** `streamingStats()`, `appendAndDownsample()`, rolling window, 60fps updates
+**Demonstrates:** `streamingStats()`, `lttb()`, rolling window, 60fps updates
 **Target audience:** Observability/monitoring platform developers
 
 **Scenario:** A server monitoring dashboard receives 1,000 metrics data points per second via WebSocket. The chart must stay smooth at 60fps while maintaining a 20K-point rolling buffer, continuously downsampled to 400 display points.
@@ -872,7 +874,7 @@ examples/iot-heatmap/
 
 - Simulated WebSocket feed generating 50 points every 50ms (1,000/sec)
 - Rolling buffer with configurable max size (5K / 10K / 20K / 50K)
-- `appendAndDownsample()` merging new data + LTTB in a single pass
+- `lttb()` over caller-retained history, with `streamingStats()` for the rolling summary
 - `streamingStats()` computing rolling min/max/mean/stddev
 - Live stat pills updating in real-time: buffer size, total ingested, displayed points, ingest rate
 - Start/Stop controls for the stream
@@ -883,7 +885,8 @@ examples/iot-heatmap/
 ```typescript
 // examples/streaming-dashboard/src/main.ts
 import { init } from "@vizcrush/core";
-import { streamingStats, appendAndDownsample } from "@vizcrush/aggregate";
+import { streamingStats } from "@vizcrush/aggregate";
+import { lttb } from "@vizcrush/downsample";
 
 const gpu = await init();
 
@@ -898,9 +901,9 @@ const ws = new WebSocket("wss://metrics.example.com/cpu");
 ws.onmessage = (event) => {
   const batch = new Float64Array(JSON.parse(event.data));
 
-  // Append new data + downsample in one pass
-  // This is the key API: no manual buffer management needed
-  const { x, y } = appendAndDownsample(acc, batch, DISPLAY_POINTS);
+  // Keep the plotted series in application state, then downsample it.
+  history.push(...batch);
+  const { x, y } = await lttb(historyX, history, DISPLAY_POINTS);
 
   // Update chart with downsampled view
   chart.data.labels = Array.from(x);
@@ -1273,15 +1276,15 @@ benchmarks/
 
 ### 12.8 Example Summary Table
 
-| Example               | Primary APIs                            | Chart Library | Key Metric Demonstrated            |
-| --------------------- | --------------------------------------- | ------------- | ---------------------------------- |
-| Financial Time-Series | `lttb`, `minMaxLttb`                    | Chart.js      | 2M → 1,920 pts in 16ms             |
-| IoT Sensor Heatmap    | `bin2d`, `percentile`                   | Canvas 2D     | 500K pts → 256² grid in 4ms        |
-| Streaming Dashboard   | `appendAndDownsample`, `streamingStats` | Chart.js      | 1K pts/sec at 60fps                |
-| ChartGPU Integration  | `lttb`, `bin2d`                         | ChartGPU      | vizcrush as preprocessing layer    |
-| D3 Large Scatter      | `buildQuadtree`, `queryRange`           | D3.js         | 1M pt viewport query in <1ms       |
-| MCP Agent Demo        | MCP tools                               | N/A           | Agent session transcript + configs |
-| Benchmark Suite       | All                                     | N/A           | CI regression testing              |
+| Example               | Primary APIs                  | Chart Library | Key Metric Demonstrated            |
+| --------------------- | ----------------------------- | ------------- | ---------------------------------- |
+| Financial Time-Series | `lttb`, `minMaxLttb`          | Chart.js      | 2M → 1,920 pts in 16ms             |
+| IoT Sensor Heatmap    | `bin2d`, `percentile`         | Canvas 2D     | 500K pts → 256² grid in 4ms        |
+| Streaming Dashboard   | `lttb`, `streamingStats`      | Chart.js      | 1K pts/sec at 60fps                |
+| ChartGPU Integration  | `lttb`, `bin2d`               | ChartGPU      | vizcrush as preprocessing layer    |
+| D3 Large Scatter      | `buildQuadtree`, `queryRange` | D3.js         | 1M pt viewport query in <1ms       |
+| MCP Agent Demo        | MCP tools                     | N/A           | Agent session transcript + configs |
+| Benchmark Suite       | All                           | N/A           | CI regression testing              |
 
 ---
 
