@@ -8,7 +8,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-bash scripts/build-examples.sh
+EXAMPLE_BUILD_OUT="$(mktemp -d "${TMPDIR:-/tmp}/vizcrush-examples.XXXXXX")"
+trap 'rm -rf -- "$EXAMPLE_BUILD_OUT"' EXIT
+
+bash scripts/build-examples.sh "$EXAMPLE_BUILD_OUT"
 
 # Examples must run in a fresh clone without an undeclared global command.
 if grep -R --include=package.json -n '"dev": "portless ' examples; then
