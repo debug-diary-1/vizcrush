@@ -23,7 +23,7 @@ async function main() {
   const { x, y } = await lttb(timestamps, values, 2000);
   const lttbMs = performance.now() - t0;
 
-  // ── Render line chart ──
+  // Chart.js receives only the 2K points that preserve the 1M-point shape.
   const lineContainer = document.getElementById("line-chart")!;
   lineContainer.innerHTML = "";
   renderLineChart(lineContainer, x, y);
@@ -47,7 +47,7 @@ async function main() {
   });
   const binMs = performance.now() - t1;
 
-  // ── Render scatter density heatmap ──
+  // Chart.js receives non-empty density bins instead of all 500K raw points.
   const scatterContainer = document.getElementById("scatter-chart")!;
   scatterContainer.innerHTML = "";
   renderScatterDensity(scatterContainer, grid, 128, 128, maxCount);
@@ -69,6 +69,10 @@ async function main() {
     <div class="stat">
       <div class="stat-label">Max Density</div>
       <div class="stat-value">${maxCount}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Renderer</div>
+      <div class="stat-value">Chart.js</div>
     </div>
   `;
 }

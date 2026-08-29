@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vizcrush + ChartGPU Integration</title>
+    <title>vizcrush + Chart.js Integration</title>
     <style>
       body {
         margin: 0;
@@ -46,12 +46,25 @@
         font-weight: bold;
         color: #3b9ecf;
       }
+      .pipeline {
+        color: #aaa;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        line-height: 1.7;
+      }
+      code {
+        color: #6fc7f0;
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>vizcrush + ChartGPU</h1>
-      <p>vizcrush preprocesses data → ChartGPU renders. Best of both worlds.</p>
+      <h1>vizcrush + Chart.js</h1>
+      <p class="pipeline">
+        Typed arrays → <code>lttb</code> / <code>bin2d</code> → ordinary Chart.js datasets
+      </p>
+      <p>
+        vizcrush reduces the expensive raw data; Chart.js handles axes, interaction, and rendering.
+      </p>
       <div class="stats" id="stats"></div>
       <div class="chart" id="line-chart">
         <p style="padding: 2rem; color: #666">Line chart: LTTB downsampled 1M → 2000 points</p>

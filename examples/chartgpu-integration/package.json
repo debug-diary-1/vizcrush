@@ -1,15 +1,16 @@
 {
-  "name": "vizcrush-chartgpu-example",
+  "name": "vizcrush-chartjs-example",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "portless chartgpu vite"
+    "dev": "vite"
   },
   "dependencies": {
     "@vizcrush/bin": "workspace:*",
     "@vizcrush/core": "workspace:*",
-    "@vizcrush/downsample": "workspace:*"
+    "@vizcrush/downsample": "workspace:*",
+    "chart.js": "catalog:"
   },
   "devDependencies": {
     "typescript": "catalog:",

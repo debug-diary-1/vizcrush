@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "portless financial vite",
+    "dev": "vite",
     "generate-data": "node --loader ts-node/esm data/generate-data.ts"
   },
   "dependencies": {
