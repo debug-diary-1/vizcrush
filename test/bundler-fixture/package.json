@@ -1,0 +1,13 @@
+{
+  "name": "vizcrush-bundler-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Minimal app used by test/bundler-resolution.test.ts to prove the WASM path survives bundling.",
+  "type": "module",
+  "dependencies": {
+    "@vizcrush/downsample": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
+  }
+}
