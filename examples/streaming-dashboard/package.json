@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "portless streaming vite"
+    "dev": "vite"
   },
   "dependencies": {
     "@vizcrush/aggregate": "workspace:*",
-    "@vizcrush/core": "workspace:*"
+    "@vizcrush/core": "workspace:*",
+    "@vizcrush/downsample": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:",

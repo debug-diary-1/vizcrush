@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "portless bench3d vite"
+    "dev": "vite"
   },
   "dependencies": {
     "@vizcrush/bin3d": "workspace:*",

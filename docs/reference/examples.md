@@ -1,6 +1,6 @@
 # Examples Gallery
 
-vizcrush ships with 37 runnable example apps under `examples/`. Each one is a self-contained Vite app that demonstrates a specific integration pattern. Clone the repo, run `pnpm install && pnpm build`, then `pnpm dev` from the example folder.
+vizcrush ships with 37 runnable example apps under `examples/`. Gallery cards distinguish examples that import vizcrush from adjacent graphics demos that teach browser rendering techniques. For a guided route through the collection, start with the [examples README](https://github.com/debug-diary-1/vizcrush/tree/main/examples).
 
 ## Time-Series
 
@@ -14,9 +14,9 @@ MinMax-LTTB stock chart that preserves OHLC spikes when downsampling spiky finan
 
 ### `streaming-dashboard`
 
-WebSocket-driven live dashboard with rolling stats and a real-time downsampled chart.
+Simulated live dashboard with rolling stats and a real-time downsampled chart. The in-browser generator can be replaced by a WebSocket handler in an application.
 
-**vizcrush algorithms:** `StreamingStats`
+**vizcrush algorithms:** `streamingStats`, `lttbSync`
 
 **Folder:** `examples/streaming-dashboard/`
 
@@ -46,9 +46,9 @@ GPS sensor density heatmap with viridis colormap and percentile stats panel.
 
 **Folder:** `examples/iot-heatmap/`
 
-### `chartgpu-integration`
+### `chartgpu-integration` (Chart.js)
 
-Integration scaffold with vizcrush preprocessing, a Canvas 2D renderer, and notes showing where ChartGPU can be connected.
+Real Chart.js integration that renders LTTB output and non-empty `bin2d` density bins. The historical directory name is retained so existing gallery URLs do not break.
 
 **vizcrush algorithms:** `lttb`, `bin2d`
 
@@ -264,7 +264,7 @@ Side-by-side WebGPU vs Canvas 2D benchmark for binning and rendering.
 
 50K particles streaming through a velocity field with fading trails.
 
-**vizcrush algorithms:** Particle physics, velocity field
+**vizcrush algorithms:** none — a standalone graphics demo with its own particle simulation
 
 **Folder:** `examples/flow-field/`
 
@@ -272,7 +272,7 @@ Side-by-side WebGPU vs Canvas 2D benchmark for binning and rendering.
 
 Live Voronoi diagram with glowing edges and draggable seed points.
 
-**vizcrush algorithms:** Voronoi computation
+**vizcrush algorithms:** none — a standalone graphics demo with its own Voronoi implementation
 
 **Folder:** `examples/gpu-voronoi/`
 
@@ -280,7 +280,7 @@ Live Voronoi diagram with glowing edges and draggable seed points.
 
 3D volumetric nebula raymarched per-pixel with lighting and absorption.
 
-**vizcrush algorithms:** Raymarching, trilinear interpolation
+**vizcrush algorithms:** none — a standalone graphics demo with its own raymarcher
 
 **Folder:** `examples/volume-raymarcher/`
 
@@ -288,7 +288,7 @@ Live Voronoi diagram with glowing edges and draggable seed points.
 
 1M-star spiral galaxy rendered with ImageData projection and orbit camera.
 
-**vizcrush algorithms:** ImageData rendering, projection
+**vizcrush algorithms:** none — a standalone graphics demo with its own projection and renderer
 
 **Folder:** `examples/million-galaxy/`
 
@@ -323,13 +323,12 @@ MCP server configuration walkthrough with sample CSV files and example prompts f
 From the monorepo root:
 
 ```bash
-pnpm install     # one-time
-pnpm build       # builds WASM + TypeScript packages
-cd examples/streaming-dashboard
-pnpm dev         # starts vite, usually at http://localhost:5173
+pnpm install
+pnpm build:wasm
+pnpm examples
 ```
 
-Each example has its own `package.json` and is wired up via the pnpm workspace, so you don't need separate dependency installs.
+To run one example, use `pnpm --dir examples/streaming-dashboard dev`. Each example has an ordinary Vite development script and is wired through the pnpm workspace, so no global development command or separate install is required.
 
 ## See also
 

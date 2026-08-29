@@ -27,6 +27,8 @@ OUT="${1:-$ROOT/docs/.vitepress/dist/examples}"
 
 cd "$ROOT"
 
+node scripts/check-example-claims.mjs
+
 echo "building examples into $OUT"
 rm -rf "$OUT"
 mkdir -p "$OUT"

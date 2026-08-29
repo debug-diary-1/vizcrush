@@ -1,70 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Test all examples by installing deps and running a type-check build.
-# Does NOT start dev servers — just verifies they can build.
+# Build every runnable Vite example. build-examples.sh discovers directories
+# from the filesystem, so a newly added example cannot be missed by a static
+# allowlist.
 
-EXAMPLES=(
-  financial-timeseries
-  iot-heatmap
-  streaming-dashboard
-  chartgpu-integration
-  d3-large-scatter
-)
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
 
-PASS=0
-FAIL=0
+EXAMPLE_BUILD_OUT="$(mktemp -d "${TMPDIR:-/tmp}/vizcrush-examples.XXXXXX")"
+trap 'rm -rf -- "$EXAMPLE_BUILD_OUT"' EXIT
 
-for example in "${EXAMPLES[@]}"; do
-  dir="examples/${example}"
-  echo ""
-  echo "=== Testing ${example} ==="
+bash scripts/build-examples.sh "$EXAMPLE_BUILD_OUT"
 
-  if [ ! -f "${dir}/package.json" ]; then
-    echo "  SKIP — no package.json"
-    continue
-  fi
-
-  cd "${dir}"
-
-  # Install deps (link workspace packages)
-  if pnpm install --no-frozen-lockfile 2>&1 | tail -1; then
-    echo "  ✓ install"
-  else
-    echo "  ✗ install failed"
-    FAIL=$((FAIL + 1))
-    cd ../..
-    continue
-  fi
-
-  # Build (vite build)
-  if pnpm build 2>&1 | tail -3; then
-    echo "  ✓ build"
-    PASS=$((PASS + 1))
-  else
-    echo "  ✗ build failed"
-    FAIL=$((FAIL + 1))
-  fi
-
-  cd ../..
-done
-
-# MCP demo — no build, just check files exist
-echo ""
-echo "=== Testing mcp-demo ==="
-for f in examples/mcp-demo/README.md examples/mcp-demo/mcp-config-claude.json examples/mcp-demo/scenarios/trading-dashboard.md; do
-  if [ -f "$f" ]; then
-    echo "  ✓ ${f}"
-  else
-    echo "  ✗ ${f} missing"
-    FAIL=$((FAIL + 1))
-  fi
-done
-PASS=$((PASS + 1))
-
-echo ""
-echo "==================================="
-echo "Results: ${PASS} passed, ${FAIL} failed"
-if [ ${FAIL} -gt 0 ]; then
+# Examples must run in a fresh clone without an undeclared global command.
+if grep -R --include=package.json -n '"dev": "portless ' examples; then
+  echo "example dev scripts must invoke vite directly"
   exit 1
 fi
+
+# The MCP walkthrough is documentation rather than a Vite application.
+required_mcp_files=(
+  examples/mcp-demo/README.md
+  examples/mcp-demo/mcp-config-claude.json
+  examples/mcp-demo/scenarios/trading-dashboard.md
+)
+
+for file in "${required_mcp_files[@]}"; do
+  if [ ! -f "$file" ]; then
+    echo "missing $file"
+    exit 1
+  fi
+done
+
+echo "all runnable examples and MCP walkthrough files passed"

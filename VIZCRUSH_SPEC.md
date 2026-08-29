@@ -219,7 +219,7 @@ vizcrush/
 │   ├── quadtree.bench.ts         # Quadtree build + query benchmarks
 │   └── runner.ts                 # Benchmark harness with Playwright + Chrome
 ├── examples/
-│   ├── chartgpu-integration/     # vizcrush + ChartGPU example
+│   ├── chartgpu-integration/     # vizcrush + Chart.js (legacy URL retained)
 │   ├── d3-large-scatter/         # vizcrush + D3 for 1M-point scatter
 │   ├── streaming-dashboard/      # Real-time data with streamingStats + lttb
 │   └── mcp-demo/                 # Screen recording of AI agent using MCP tools
@@ -862,23 +862,22 @@ examples/iot-heatmap/
 
 ---
 
-### 12.3 Example: Real-Time Streaming Dashboard
+### 12.3 Example: Streaming Dashboard
 
 **Directory:** `examples/streaming-dashboard/`
-**Demonstrates:** `streamingStats()`, `lttb()`, rolling window, 60fps updates
+**Demonstrates:** `streamingStats()`, `lttbSync()`, and a bounded rolling view
 **Target audience:** Observability/monitoring platform developers
 
-**Scenario:** A server monitoring dashboard receives 1,000 metrics data points per second via WebSocket. The chart must stay smooth at 60fps while maintaining a 20K-point rolling buffer, continuously downsampled to 400 display points.
+**Scenario:** A monitoring dashboard ingests 1,000 simulated metrics per second. It maintains a 20K-point rolling buffer and continuously downsamples that history to 400 display points. Applications can replace the generator with a WebSocket handler without changing the accumulator or downsampling seam.
 
 **What the example shows:**
 
-- Simulated WebSocket feed generating 50 points every 50ms (1,000/sec)
-- Rolling buffer with configurable max size (5K / 10K / 20K / 50K)
-- `lttb()` over caller-retained history, with `streamingStats()` for the rolling summary
+- In-browser generator producing 50 points every 50ms (1,000/sec)
+- Fixed 20K rolling buffer
+- `lttbSync()` over caller-retained history, with `streamingStats()` for the rolling summary
 - `streamingStats()` computing rolling min/max/mean/stddev
-- Live stat pills updating in real-time: buffer size, total ingested, displayed points, ingest rate
+- Live stat pills for buffer size, total ingested, displayed points, and rolling statistics
 - Start/Stop controls for the stream
-- Visual: smooth line chart that never stutters despite continuous data ingestion
 
 **Key code pattern:**
 
@@ -886,7 +885,7 @@ examples/iot-heatmap/
 // examples/streaming-dashboard/src/main.ts
 import { init } from "@vizcrush/core";
 import { streamingStats } from "@vizcrush/aggregate";
-import { lttb } from "@vizcrush/downsample";
+import { lttbSync } from "@vizcrush/downsample";
 
 const gpu = await init();
 
@@ -895,30 +894,20 @@ const BUFFER_SIZE = 20_000;
 const DISPLAY_POINTS = 400;
 const acc = streamingStats(BUFFER_SIZE);
 
-// Simulated WebSocket (replace with real ws.on('message', ...) in production)
-const ws = new WebSocket("wss://metrics.example.com/cpu");
+function renderHistory(history: number[], firstTimestamp: number) {
+  const rawY = Float64Array.from(history);
+  const rawX = Float64Array.from(rawY, (_, index) => firstTimestamp + index);
+  const sampled =
+    rawY.length > DISPLAY_POINTS ? lttbSync(rawX, rawY, DISPLAY_POINTS) : { x: rawX, y: rawY };
+  renderChart(sampled.x, sampled.y);
+}
 
-ws.onmessage = (event) => {
-  const batch = new Float64Array(JSON.parse(event.data));
-
-  // Keep the plotted series in application state, then downsample it.
-  history.push(...batch);
-  const { x, y } = await lttb(historyX, history, DISPLAY_POINTS);
-
-  // Update chart with downsampled view
-  chart.data.labels = Array.from(x);
-  chart.data.datasets[0].data = Array.from(y);
-  chart.update("none");
-
-  // Update live stats
-  statsDisplay.update({
-    bufferSize: acc.length,
-    mean: acc.mean.toFixed(2),
-    min: acc.min.toFixed(2),
-    max: acc.max.toFixed(2),
-    stdDev: acc.stdDev.toFixed(2),
-  });
-};
+setInterval(() => {
+  const batch = generateMetrics(50);
+  acc.pushBatch(batch);
+  appendToRollingHistory(batch, BUFFER_SIZE);
+  renderHistory(history, totalIngested - history.length);
+}, 50);
 ```
 
 **File structure:**
@@ -927,24 +916,21 @@ ws.onmessage = (event) => {
 examples/streaming-dashboard/
 ├── index.html
 ├── src/
-│   ├── main.ts              # WebSocket → accumulator → chart
-│   ├── mock-websocket.ts     # Simulated data feed for demos
-│   ├── chart.ts              # Chart.js with requestAnimationFrame throttle
-│   ├── stats-display.ts      # Live stat pills
-│   └── controls.ts           # Buffer size selector, start/stop
+│   └── main.ts              # generator → rolling stats/LTTB → Canvas 2D
+├── README.md
 ├── package.json
 └── vite.config.ts
 ```
 
 ---
 
-### 12.4 Example: ChartGPU Integration
+### 12.4 Example: Chart.js Integration
 
 **Directory:** `examples/chartgpu-integration/`
-**Demonstrates:** Using vizcrush as a preprocessing layer for ChartGPU rendering
-**Target audience:** ChartGPU users who need better downsampling
+**Demonstrates:** Using vizcrush as a preprocessing layer for Chart.js rendering
+**Target audience:** Chart.js users who need to render datasets larger than the chart should receive directly
 
-**Scenario:** A developer is already using ChartGPU for WebGPU-powered charting but wants smarter downsampling than ChartGPU's built-in approach. vizcrush handles the data reduction, ChartGPU handles the rendering.
+**Scenario:** A developer is already using Chart.js for interaction and axes but has too much raw data to render efficiently. vizcrush handles the data reduction, and Chart.js handles the chart.
 
 **Key code pattern:**
 
@@ -953,7 +939,7 @@ examples/streaming-dashboard/
 import { init } from "@vizcrush/core";
 import { lttb } from "@vizcrush/downsample";
 import { bin2d } from "@vizcrush/bin";
-import ChartGPU from "chartgpu";
+import Chart from "chart.js/auto";
 
 const gpu = await init();
 
@@ -961,16 +947,20 @@ const gpu = await init();
 const rawTimestamps = new Float64Array(/* 1M points */);
 const rawValues = new Float64Array(/* 1M points */);
 
-const { x, y } = lttb(rawTimestamps, rawValues, 2000);
+const { x, y } = await lttb(rawTimestamps, rawValues, 2000);
 
-const lineChart = await ChartGPU.create(document.getElementById("line-chart"), {
-  series: [
-    {
-      type: "line",
-      name: "CPU Usage",
-      data: Array.from(x).map((xi, i) => [xi, y[i]]),
-    },
-  ],
+new Chart(document.querySelector("#line-chart canvas"), {
+  type: "line",
+  data: {
+    datasets: [
+      {
+        label: "CPU usage",
+        data: Array.from(x, (xi, i) => ({ x: xi, y: y[i] })),
+        pointRadius: 0,
+      },
+    ],
+  },
+  options: { parsing: false, animation: false },
 });
 
 // ── Scatter density with bin2d preprocessing ──
@@ -982,29 +972,21 @@ const { grid, xEdges, yEdges, maxCount } = await bin2d(scatterX, scatterY, {
   yBins: 128,
 });
 
-// Convert density grid to ChartGPU scatter with size encoding
+// Convert density grid to a much smaller Chart.js scatter dataset
 const densityPoints = [];
 for (let yi = 0; yi < 128; yi++) {
   for (let xi = 0; xi < 128; xi++) {
     const count = grid[yi * 128 + xi];
     if (count > 0) {
-      densityPoints.push([
-        xEdges[xi],
-        yEdges[yi],
-        count / maxCount, // normalized intensity
-      ]);
+      densityPoints.push({ x: xEdges[xi], y: yEdges[yi], count });
     }
   }
 }
 
-const scatterChart = await ChartGPU.create(document.getElementById("scatter-chart"), {
-  series: [
-    {
-      type: "scatter",
-      mode: "density",
-      data: densityPoints,
-    },
-  ],
+new Chart(document.querySelector("#scatter-chart canvas"), {
+  type: "scatter",
+  data: { datasets: [{ data: densityPoints }] },
+  options: { parsing: false, animation: false },
 });
 ```
 
@@ -1014,10 +996,10 @@ const scatterChart = await ChartGPU.create(document.getElementById("scatter-char
 examples/chartgpu-integration/
 ├── index.html
 ├── src/
-│   ├── main.ts              # vizcrush preprocessing → ChartGPU rendering
+│   ├── main.ts              # vizcrush preprocessing → Chart.js rendering
 │   ├── line-chart.ts         # LTTB → line chart
 │   └── scatter-density.ts    # bin2d → scatter density
-├── package.json             # depends on both vizcrush + chartgpu
+├── package.json             # depends on both vizcrush + Chart.js
 └── vite.config.ts
 ```
 
@@ -1280,8 +1262,8 @@ benchmarks/
 | --------------------- | ----------------------------- | ------------- | ---------------------------------- |
 | Financial Time-Series | `lttb`, `minMaxLttb`          | Chart.js      | 2M → 1,920 pts in 16ms             |
 | IoT Sensor Heatmap    | `bin2d`, `percentile`         | Canvas 2D     | 500K pts → 256² grid in 4ms        |
-| Streaming Dashboard   | `lttb`, `streamingStats`      | Chart.js      | 1K pts/sec at 60fps                |
-| ChartGPU Integration  | `lttb`, `bin2d`               | ChartGPU      | vizcrush as preprocessing layer    |
+| Streaming Dashboard   | `lttbSync`, `streamingStats`  | Canvas 2D     | 20K rolling points → 400 displayed |
+| Chart.js Integration  | `lttb`, `bin2d`               | Chart.js      | vizcrush as preprocessing layer    |
 | D3 Large Scatter      | `buildQuadtree`, `queryRange` | D3.js         | 1M pt viewport query in <1ms       |
 | MCP Agent Demo        | MCP tools                     | N/A           | Agent session transcript + configs |
 | Benchmark Suite       | All                           | N/A           | CI regression testing              |

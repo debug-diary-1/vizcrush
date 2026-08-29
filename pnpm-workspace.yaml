@@ -7,6 +7,7 @@ packages:
 catalog:
   # ── Runtime deps ──────────────────────────────────────────────
   "@modelcontextprotocol/sdk": "1.30.0"
+  chart.js: "4.5.1"
   d3: "7.9.0"
   d3-array: "3.2.4"
   downsample: "1.4.0"
