@@ -183,35 +183,35 @@ export function streamingStats(windowSize: number): StreamingStats {
 }
 
 /**
- * Preview helper retained for API compatibility.
+ * @deprecated Throws. This never worked, and the shape of its output hid that.
  *
- * @deprecated This implementation does not yet retain and downsample the
- * accumulator's real sample history. Keep chart history in application state
- * and pass it to `@vizcrush/downsample` instead.
+ * The implementation returned array indices rather than data: for any input it
+ * produced `y = [0, step, 2*step, ...]`, a straight diagonal containing none of
+ * the caller's values. Feeding it 500 points of `42.0` with a spike of `9999`
+ * returned `0, 50, 100, ... 450`. Charted, that looks like a plausible series,
+ * which is the reason this throws rather than staying deprecated: a silent wrong
+ * answer is worse than a loud failure, and a JSDoc tag is invisible at runtime
+ * and to JavaScript callers.
+ *
+ * There is no drop-in replacement because `StreamingStats` is a fixed-size
+ * rolling window over *values*; it never retained the x/y history a downsampler
+ * needs. Keep that history in application state and downsample it directly:
+ *
+ * ```ts
+ * import { lttb } from "@vizcrush/downsample";
+ * const { x, y } = await lttb(historyX, historyY, 1000);
+ * ```
  */
 export function appendAndDownsample(
-  acc: StreamingStats,
-  newData: Float64Array,
-  targetN: number,
+  _acc: StreamingStats,
+  _newData: Float64Array,
+  _targetN: number,
 ): DownsampleResult {
-  // Push new data into the accumulator
-  acc.pushBatch(newData);
-
-  // For MVP, generate x as indices and y from the internal state
-  // In a real implementation, this would operate on the internal buffer
-  const n = acc.length;
-  const x = new Float64Array(Math.min(n, targetN));
-  const y = new Float64Array(Math.min(n, targetN));
-
-  // Simple uniform sampling as a placeholder — LTTB integration in v0.2
-  const step = Math.max(1, Math.floor(n / targetN));
-  const outLen = Math.min(n, targetN);
-  for (let i = 0; i < outLen; i++) {
-    x[i] = i * step;
-    y[i] = i * step; // placeholder
-  }
-
-  return { x, y };
+  throw new Error(
+    "appendAndDownsample() was never implemented: it returned array indices, not your data. " +
+      "Keep chart history in application state and call lttb() from @vizcrush/downsample instead. " +
+      "See https://github.com/debug-diary-1/vizcrush/blob/main/docs/user-guide/streaming.md",
+  );
 }
 
 // ---------------------------------------------------------------------------

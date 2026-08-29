@@ -14,7 +14,7 @@ re-rendering is too slow. Help?"
 
 🧠 Agent reasoning:
 The key issue is re-downsampling the full buffer on every update.
-appendAndDownsample merges new data + LTTB in a single pass.
+Keep the plotted history in app state and downsample it with lttb.
 streamingStats provides live min/max/mean without re-scanning.
 
 ⚡ MCP Tool Call: vizcrush_capabilities()
@@ -27,8 +27,7 @@ streamingStats provides live min/max/mean without re-scanning.
 🤖 Agent response:
 "Here's the fix using vizcrush's streaming primitives:
 
-1. **appendAndDownsample**: Replaces your manual buffer + re-downsample
-   - Appends new batch + runs LTTB in one pass
+1. **lttb**: Downsample the history you already keep
    - 20K → 400 display points in 0.04ms (400x under frame budget)
 
 2. **streamingStats**: Rolling min/max/mean/stddev
