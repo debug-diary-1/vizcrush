@@ -27,6 +27,9 @@ export default defineConfig({
       { text: "Guide", link: "/user-guide/getting-started" },
       { text: "Packages", link: "/packages/" },
       { text: "Reference", link: "/reference/algorithms" },
+      // Built by scripts/build-examples.sh into dist/examples, so it is a
+      // plain link rather than a VitePress route.
+      { text: "Examples", link: "/examples/" },
     ],
 
     sidebar: {
