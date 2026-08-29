@@ -5,12 +5,30 @@ import { lttbCore, minMaxLttbCore, m4Core, ltobCore, deinterleave } from "./core
 export { lttbCore, minMaxLttbCore, m4Core, ltobCore } from "./cores.js";
 
 /**
- * Single WASM loader for the downsample crate. The dynamic import is authored
- * here so the `../wasm/...` specifier resolves against this package's `dist/`.
+ * Single WASM loader for the downsample crate.
+ *
+ * The specifier is the package's own name rather than a relative path, and it
+ * is a plain `import()` rather than a hidden one, because both properties are
+ * load-bearing for bundled consumers.
+ *
+ * A relative `../wasm/...` resolves correctly only while this file still lives
+ * in the package's `dist/`. Once a bundler inlines it into an application
+ * chunk, the same path resolves against that chunk's URL instead and 404s, and
+ * because the loader swallows failures the app silently drops to the JS core
+ * with no error. Self-referencing through the `./wasm/*` export keeps the
+ * specifier meaningful wherever the module ends up.
+ *
+ * Keeping it statically analysable is the other half: bundlers then treat the
+ * wasm-bindgen glue as a module, so its internal
+ * `new URL('..._bg.wasm', import.meta.url)` gets rewritten and the binary is
+ * emitted as an asset. It stays a dynamic `import()`, so it remains a separate
+ * lazily-fetched chunk rather than bloating the main bundle.
+ *
  * The core kernel/loader owns caching, init, and null-on-failure.
  */
-const loader = createWasmLoader("vizcrush_downsample", () =>
-  new Function("p", "return import(p)")(["..", "wasm", "vizcrush_downsample.js"].join("/")),
+const loader = createWasmLoader(
+  "vizcrush_downsample",
+  () => import("@vizcrush/downsample/wasm/vizcrush_downsample.js"),
 );
 
 // Inputs cross the boundary as typed arrays directly (no Array.from boxing);

@@ -6,12 +6,22 @@ export { bin3dCore } from "./cores.js";
 export type { Bin3dResult, Bin3dOptions } from "./cores.js";
 
 /**
- * Single WASM loader for the bin3d crate. The dynamic import is authored here so
- * the `../wasm/...` specifier resolves against this package's `dist/`. The core
- * kernel/loader owns caching, init, and null-on-failure.
+ * Single WASM loader for the vizcrush_bin3d crate.
+ *
+ * The specifier is the package's own name rather than a relative path, and it
+ * is a plain `import()` rather than a hidden one, because both properties are
+ * load-bearing for bundled consumers. A relative `../wasm/...` resolves
+ * correctly only while this file lives in the package's `dist/`; once a bundler
+ * inlines it, the same path resolves against the application chunk and 404s,
+ * and the loader's swallow-failures contract turns that into a silent drop to
+ * the JS core. Keeping it statically analysable lets bundlers treat the
+ * wasm-bindgen glue as a module, rewrite its internal
+ * `new URL('..._bg.wasm', import.meta.url)`, and emit the binary as an asset.
+ * It stays a dynamic `import()`, so it remains a lazily-fetched chunk.
  */
-const loader = createWasmLoader("vizcrush_bin3d", () =>
-  new Function("p", "return import(p)")(["..", "wasm", "vizcrush_bin3d.js"].join("/")),
+const loader = createWasmLoader(
+  "vizcrush_bin3d",
+  () => import("@vizcrush/bin3d/wasm/vizcrush_bin3d.js"),
 );
 
 // Inputs cross the boundary as typed arrays directly (no Array.from boxing);
