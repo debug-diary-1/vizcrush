@@ -1,11 +1,11 @@
 # @vizcrush/aggregate
 
-Streaming statistics, exact percentiles, rolling windows, and append-and-downsample for real-time pipelines. Stats are **single-pass** (Welford's algorithm) so memory stays bounded even on multi-million-point inputs.
+Streaming statistics, exact percentiles, rolling windows, and bounded-memory sketches for real-time pipelines. Stats are **single-pass** (Welford's algorithm) so memory stays bounded even on multi-million-point inputs.
 
 ## Import
 
 ```typescript
-import { stats, percentile, StreamingStats, appendAndDownsample } from "@vizcrush/aggregate";
+import { stats, percentile, StreamingStats, DDSketch, KllSketch } from "@vizcrush/aggregate";
 ```
 
 ## `stats(data)`
@@ -79,25 +79,6 @@ console.log(win.mean, win.stdDev, win.min, win.max, win.length);
 
 **Memory:** O(windowSize). The class keeps the raw samples in a ring buffer so eviction is O(1).
 
-## `appendAndDownsample(acc, newData, targetN)`
-
-Stream new samples into a downsampled accumulator. Combines the work of "append to buffer" + "downsample to N points" in a single pass — meant for real-time charts that need to keep their X-axis history bounded.
-
-```typescript
-import { appendAndDownsample } from "@vizcrush/aggregate";
-import { StreamingStats } from "@vizcrush/aggregate";
-
-const acc = new StreamingStats(50_000); // backing buffer
-let displayed: Float64Array = new Float64Array(); // current chart points
-
-// Every time new data arrives:
-const newSamples = receiveFromWebSocket();
-displayed = await appendAndDownsample(acc, newSamples, /* targetN */ 1920);
-chart.update(displayed);
-```
-
-The result is the same interleaved `[x0, y0, x1, y1, …]` format as `lttb()` so it drops straight into a chart.
-
 ## Performance reference
 
 | Operation                    | 100K   | 500K   | 1M     |
@@ -114,11 +95,10 @@ The result is the same interleaved `[x0, y0, x1, y1, …]` format as `lttb()` so
 | One-shot stats over a fixed dataset     | `stats()`                  |
 | Multiple specific percentiles           | `percentile([10, 50, 90])` |
 | Rolling window in a live dashboard      | `StreamingStats`           |
-| Real-time chart with bounded history    | `appendAndDownsample`      |
 | Approximate percentiles on huge streams | `DDSketch` / `KllSketch`   |
 
 ## See also
 
 - **[Streaming Data guide](../user-guide/streaming.md)** — end-to-end streaming dashboard pattern
-- **[@vizcrush/downsample](downsample.md)** — algorithms used by `appendAndDownsample`
+- **[@vizcrush/downsample](downsample.md)** — reduce a retained chart window to display size
 - **[Algorithms reference / Aggregation](../reference/algorithms.md#aggregation--statistics)**

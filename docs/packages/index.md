@@ -1,6 +1,6 @@
 # Packages
 
-vizcrush is split into **nine independent packages** so you only install (and ship) what you actually use. Every package has the same shape: a small async TypeScript API that delegates to a WebAssembly core, with a synchronous JavaScript fallback for environments without WebAssembly.
+vizcrush has **nine core and algorithm packages** plus two integration packages, so you only install what you use. Algorithm packages expose small TypeScript APIs backed by WebAssembly and JavaScript implementations.
 
 ## At a glance
 
@@ -8,7 +8,7 @@ vizcrush is split into **nine independent packages** so you only install (and sh
 | ----------------------------------------- | --------------------------------------------------------------- | -------- |
 | **[@vizcrush/core](core.md)**             | Initialize the library, detect capabilities, select the backend | JS       |
 | **[@vizcrush/downsample](downsample.md)** | LTTB, MinMax-LTTB, M4, LTOB time-series downsampling            | WASM, JS |
-| **[@vizcrush/aggregate](aggregate.md)**   | Welford stats, exact + t-digest percentiles, streaming windows  | WASM, JS |
+| **[@vizcrush/aggregate](aggregate.md)**   | Welford stats, exact percentiles, sketches, streaming windows   | WASM, JS |
 | **[@vizcrush/transform](transform.md)**   | Radix sort, min-max normalize, range filter on typed arrays     | WASM, JS |
 | **[@vizcrush/bin](bin.md)**               | 1D histograms, 2D density grids, hexagonal binning              | WASM, JS |
 | **[@vizcrush/bin3d](bin3d.md)**           | 3D voxel grids for volumetric heatmaps                          | WASM, JS |
@@ -23,11 +23,11 @@ There are also **two integration packages** (covered in the User Guide):
 
 ## Common conventions
 
-**Inputs and outputs are typed arrays.** Almost everything takes `Float64Array` (data) or `Uint32Array` (indices). This is intentional — typed arrays are zero-copy across the JS↔WASM boundary, while plain `number[]` requires a per-element conversion that dominates runtime for any non-trivial input.
+**Inputs and outputs are typed arrays.** Almost everything takes `Float64Array` (data) or `Uint32Array` (indices). The WASM path bulk-copies typed-array input into linear memory; typed arrays avoid per-element boxing and keep the boundary cost predictable.
 
 **APIs are async by default.** WASM module loading is inherently async. Sync variants exist where they're trivially safe — e.g. `lttbSync()` runs the JS fallback inline.
 
-**Results are interleaved when paired.** XY-pair functions return `[x0, y0, x1, y1, …]` in a single `Float64Array`, not `{ x: Float64Array, y: Float64Array }`. This matches what most charting libraries consume directly.
+**Paired results use separate arrays.** Downsampling and range-filter APIs return `{ x: Float64Array, y: Float64Array }`. Adapt those arrays to the input shape expected by your renderer.
 
 **Backend can be overridden per call.** Most functions accept an `options.backend` of `"auto" | "wasm" | "js"`. The default is `"auto"` (use whatever `init()` selected).
 

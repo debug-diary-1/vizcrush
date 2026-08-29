@@ -1,144 +1,88 @@
 # Streaming Data
 
-Live dashboards, real-time plots, and append-only data streams are first-class use cases for vizcrush. The pattern centers on **two primitives**:
+vizcrush separates two concerns in a live dashboard:
 
-- **`StreamingStats`** (`@vizcrush/aggregate`) — rolling-window statistics with O(1) updates
-- **`appendAndDownsample`** (`@vizcrush/aggregate`) — merge new samples and re-downsample in one pass
+- `StreamingStats` maintains rolling mean, variance, minimum, and maximum values.
+- `@vizcrush/downsample` reduces the history your application retains before rendering.
 
-Together they let you render a live chart of millions of historical points + new samples at 60 fps without ever holding the full raw history in memory.
-
-## The streaming-dashboard pattern
+## Rolling statistics
 
 ```typescript
-import { StreamingStats, appendAndDownsample } from "@vizcrush/aggregate";
+import { StreamingStats } from "@vizcrush/aggregate";
 
-// 1. Create a bounded buffer for the raw history
-const buffer = new StreamingStats(/* windowSize */ 50_000);
+const stats = new StreamingStats(50_000);
 
-// 2. Track the currently-displayed downsampled view
-let displayed: Float64Array = new Float64Array();
-const TARGET_POINTS = 1920; // typically your canvas width
+socket.onmessage = (event) => {
+  const batch = new Float64Array(JSON.parse(event.data));
+  stats.pushBatch(batch);
 
-// 3. Each time new data arrives, push + redraw
-async function onNewSamples(newSamples: Float64Array) {
-  displayed = await appendAndDownsample(buffer, newSamples, TARGET_POINTS);
-  chart.update(displayed); // re-renders the chart with new points
-}
-
-// Wire to a websocket / EventSource / SSE / polling loop
-const ws = new WebSocket("wss://example.com/stream");
-ws.onmessage = (e) => {
-  const samples = new Float64Array(JSON.parse(e.data));
-  onNewSamples(samples);
+  renderStats({
+    mean: stats.mean,
+    standardDeviation: stats.stdDev,
+    min: stats.min,
+    max: stats.max,
+    count: stats.length,
+  });
 };
 ```
 
-This gives you:
+The window is bounded: after 50,000 samples, pushing a value evicts the oldest value from the statistics window.
 
-- **Bounded memory** — `StreamingStats` keeps a ring buffer of the last 50K samples; older data is automatically dropped
-- **Bounded render cost** — `appendAndDownsample` always returns ~1920 points regardless of how much data has flowed through
-- **Live stats** — `buffer.mean`, `buffer.stdDev`, `buffer.min`, `buffer.max` are always current
+## A bounded chart history
 
-## Showing rolling stats alongside the chart
+Keep chart history in application state, convert it to typed arrays, and downsample at redraw time:
 
 ```typescript
-function renderStatsPanel() {
-  document.getElementById("mean")!.textContent = buffer.mean.toFixed(2);
-  document.getElementById("stddev")!.textContent = buffer.stdDev.toFixed(2);
-  document.getElementById("min")!.textContent = buffer.min.toFixed(2);
-  document.getElementById("max")!.textContent = buffer.max.toFixed(2);
-}
+import { lttb } from "@vizcrush/downsample";
 
-async function onNewSamples(newSamples: Float64Array) {
-  displayed = await appendAndDownsample(buffer, newSamples, TARGET_POINTS);
-  chart.update(displayed);
-  renderStatsPanel();
-}
-```
+const maxHistory = 50_000;
+const targetPoints = 1_920;
+const history: number[] = [];
+let nextIndex = 0;
 
-The Welford-updated stats are always exact for the **current window** — they're not approximations.
-
-## High-frequency input
-
-If samples arrive faster than ~60 Hz, batch them and only redraw on the next animation frame:
-
-```typescript
-let pending: number[] = [];
-let scheduled = false;
-
-ws.onmessage = (e) => {
-  pending.push(JSON.parse(e.data));
-  if (!scheduled) {
-    scheduled = true;
-    requestAnimationFrame(async () => {
-      const batch = new Float64Array(pending);
-      pending = [];
-      scheduled = false;
-      displayed = await appendAndDownsample(buffer, batch, TARGET_POINTS);
-      chart.update(displayed);
-    });
-  }
-};
-```
-
-This caps redraws at 60/sec while still keeping `StreamingStats` 100% up to date.
-
-## Anomaly detection on the live stream
-
-Combine with `@vizcrush/ai` to flag anomalies as they arrive:
-
-```typescript
-import { detectAnomalies } from "@vizcrush/ai";
-
-async function onNewSamples(newSamples: Float64Array) {
-  displayed = await appendAndDownsample(buffer, newSamples, TARGET_POINTS);
-
-  // Run anomaly detection on the latest batch only
-  const anomalies = detectAnomalies(newSamples, /* sensitivity */ 3.5);
-  for (const a of anomalies) {
-    showAlert(`Anomaly at index ${a.index}: ${a.value} (z=${a.zScore.toFixed(2)})`);
+async function onSamples(batch: number[]) {
+  history.push(...batch);
+  nextIndex += batch.length;
+  if (history.length > maxHistory) {
+    history.splice(0, history.length - maxHistory);
   }
 
-  chart.update(displayed);
+  const y = Float64Array.from(history);
+  const x = Float64Array.from(
+    { length: history.length },
+    (_, index) => nextIndex - history.length + index,
+  );
+
+  const visible = await lttb(x, y, targetPoints);
+  renderLine(visible.x, visible.y);
 }
 ```
 
-You can also run anomaly detection over the **full window** by feeding `buffer` into a typed-array view periodically.
+For a high-frequency stream, batch incoming samples and redraw at most once per animation frame. The statistics accumulator can still accept every batch.
 
-## React version
+## Approximate distribution metrics
 
-If you're in React, `useStreamingStats` from `@vizcrush/react` wraps the same primitives in a hook:
+For streams that need percentiles, distinct counts, or frequencies without retaining every value, use the bounded-memory sketches in `@vizcrush/aggregate`:
+
+- `DDSketch` or `KllSketch` for approximate quantiles
+- `HyperLogLog` for distinct counts
+- `CountMinSketch` for approximate frequencies
+- `ReservoirSampler` for a representative sample
+
+See [@vizcrush/aggregate](../packages/aggregate.md) for the APIs.
+
+## React
+
+`useStreamingStats(windowSize)` wraps `StreamingStats` and returns `stats`, `push`, `pushBatch`, and `reset`.
 
 ```tsx
-import { useStreamingStats } from "@vizcrush/react";
-
-function LiveDashboard() {
-  const { stats, push, pushBatch } = useStreamingStats(50_000);
-
-  useEffect(() => {
-    const ws = new WebSocket("wss://example.com/stream");
-    ws.onmessage = (e) => pushBatch(new Float64Array(JSON.parse(e.data)));
-    return () => ws.close();
-  }, [pushBatch]);
-
-  return (
-    <div>
-      <StatsPanel stats={stats} />
-      <Chart /* … */ />
-    </div>
-  );
-}
+const { stats, pushBatch } = useStreamingStats(50_000);
 ```
 
-## Performance notes
-
-- `StreamingStats.push` is sub-microsecond. `pushBatch` runs at ~250 M samples/sec on a modern CPU.
-- `appendAndDownsample` runs in **a single pass** over the new samples + the existing buffer — total cost is dominated by the downsample step (~3 ms for a 1M-point buffer at 1920 target points).
-- Don't store the raw history in component state. Keep it in the `StreamingStats` instance and only put the **downsampled output** in React state.
+The hook manages statistics only; keep the chart history separately and pass its downsampled result to your renderer.
 
 ## See also
 
-- **[@vizcrush/aggregate / StreamingStats](../packages/aggregate.md#streamingstats--rolling-window)** — full API
-- **[@vizcrush/aggregate / appendAndDownsample](../packages/aggregate.md#appendanddownsampleacc-newdata-targetn)**
-- **[@vizcrush/react / useStreamingStats](react.md#usestreamingstatswindowsize)**
-- **[Examples / streaming-dashboard](../reference/examples.md)** — full WebSocket-driven demo
+- [@vizcrush/aggregate](../packages/aggregate.md)
+- [@vizcrush/downsample](../packages/downsample.md)
+- [React Integration](react.md)

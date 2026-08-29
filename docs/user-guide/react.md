@@ -49,8 +49,8 @@ function MyChart({ x, y }: { x: Float64Array; y: Float64Array }) {
 
   return (
     <>
-      <ChartGPU data={data!} />
-      <small>Downsampled in {elapsed.toFixed(1)}ms</small>
+      <Chart x={data!.x} y={data!.y} />
+      <small>Downsampled in {elapsed!.toFixed(1)}ms</small>
     </>
   );
 }
@@ -67,10 +67,10 @@ function MyChart({ x, y }: { x: Float64Array; y: Float64Array }) {
 
 ```typescript
 {
-  data: Float64Array | null; // interleaved [x, y] pairs
+  data: DownsampleResult | null; // { x: Float64Array; y: Float64Array }
   loading: boolean;
   error: Error | null;
-  elapsed: number; // ms for the most recent run
+  elapsed: number | null; // ms for the most recent run
 }
 ```
 

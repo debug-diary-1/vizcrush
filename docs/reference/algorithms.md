@@ -13,16 +13,16 @@ Reduce a paired `(x, y)` series to a smaller, visually-equivalent set.
 | **M4** (Min-Max-Min-Max)                  | `m4()`         | [`@vizcrush/downsample`](../packages/downsample.md) | Per-pixel rendering, max fidelity  |
 | **LTOB** (Largest-Triangle-One-Bucket)    | `ltob()`       | [`@vizcrush/downsample`](../packages/downsample.md) | Faster simpler variant of LTTB     |
 
-All four return interleaved `[x0, y0, x1, y1, …]` `Float64Array`s. Reference paper: Steinarsson, _"Downsampling Time Series for Visual Representation"_ (2013).
+All four return `{ x: Float64Array, y: Float64Array }`. Reference paper: Steinarsson, _"Downsampling Time Series for Visual Representation"_ (2013).
 
 ## Aggregation & statistics
 
-| Algorithm                              | Function / Class              | Package                                           | Notes                               |
-| -------------------------------------- | ----------------------------- | ------------------------------------------------- | ----------------------------------- |
-| **Welford's online stats**             | `stats()`, `StreamingStats`   | [`@vizcrush/aggregate`](../packages/aggregate.md) | One-pass, numerically stable        |
-| **Exact percentiles**                  | `percentile()`                | [`@vizcrush/aggregate`](../packages/aggregate.md) | Sort + linear interpolation         |
-| **t-digest** (approximate percentiles) | `vizcrush-aggregate::tdigest` | (Rust crate)                                      | Approximate, sub-linear memory      |
-| **Append-and-downsample**              | `appendAndDownsample()`       | [`@vizcrush/aggregate`](../packages/aggregate.md) | Streaming append + LTTB in one pass |
+| Algorithm                              | Function / Class              | Package                                           | Notes                                |
+| -------------------------------------- | ----------------------------- | ------------------------------------------------- | ------------------------------------ |
+| **Welford's online stats**             | `stats()`, `StreamingStats`   | [`@vizcrush/aggregate`](../packages/aggregate.md) | One-pass, numerically stable         |
+| **Exact percentiles**                  | `percentile()`                | [`@vizcrush/aggregate`](../packages/aggregate.md) | Sort + linear interpolation          |
+| **t-digest** (approximate percentiles) | `vizcrush-aggregate::tdigest` | (Rust crate)                                      | Approximate, sub-linear memory       |
+| **DDSketch / KLL**                     | `DDSketch`, `KllSketch`       | [`@vizcrush/aggregate`](../packages/aggregate.md) | Bounded-memory approximate quantiles |
 
 ## Transforms
 

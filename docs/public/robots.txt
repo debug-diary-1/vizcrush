@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://debug-diary-1.github.io/vizcrush/sitemap.xml

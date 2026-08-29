@@ -58,11 +58,11 @@ Useful for:
 
 ## `filterRange(x, y, xMin, xMax)`
 
-Extract the subset of `(x, y)` pairs where `x` falls within `[xMin, xMax]`. Returns a new interleaved `Float64Array` ready to drop into another algorithm.
+Extract the subset of `(x, y)` pairs where `x` falls within `[xMin, xMax]`. Returns separate `x` and `y` typed arrays.
 
 ```typescript
 const result = await filterRange(x, y, /* xMin */ 1000, /* xMax */ 2000);
-// Float64Array [x0, y0, x1, y1, …] for points with 1000 ≤ x ≤ 2000
+// { x: Float64Array, y: Float64Array } for points with 1000 ≤ x ≤ 2000
 ```
 
 **Use case: viewport zoom.** When a user zooms a time-series chart, you don't want to downsample the entire dataset every frame. Filter first, then downsample the filtered slice:
@@ -70,20 +70,10 @@ const result = await filterRange(x, y, /* xMin */ 1000, /* xMax */ 2000);
 ```typescript
 async function onZoom(visibleMin: number, visibleMax: number) {
   const sliced = await filterRange(x, y, visibleMin, visibleMax);
-  // sliced is interleaved — split if needed for the next call
-  // (or use a typed-array view trick)
-  const slicedX = new Float64Array(sliced.length / 2);
-  const slicedY = new Float64Array(sliced.length / 2);
-  for (let i = 0; i < sliced.length; i += 2) {
-    slicedX[i >> 1] = sliced[i];
-    slicedY[i >> 1] = sliced[i + 1];
-  }
-  const display = await lttb(slicedX, slicedY, canvas.width);
-  chart.update(display);
+  const display = await lttb(sliced.x, sliced.y, canvas.width);
+  chart.update(display.x, display.y);
 }
 ```
-
-For a tighter pipeline that avoids the manual deinterleave, build a small wrapper that keeps `x` and `y` contiguous internally — see the [d3-large-scatter example](../reference/examples.md).
 
 ## Performance reference
 

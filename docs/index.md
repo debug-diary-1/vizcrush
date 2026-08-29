@@ -3,12 +3,15 @@ layout: home
 
 hero:
   name: vizcrush
-  text: High-performance data primitives
-  tagline: Rust + WASM — downsample, bin, index, and aggregate millions of points at 60fps
+  text: Make large browser datasets small enough to visualize
+  tagline: Renderer-agnostic downsampling, binning, spatial indexing, and streaming aggregation in Rust, WASM, and JavaScript
   actions:
     - theme: brand
       text: Get Started
       link: /user-guide/getting-started
+    - theme: alt
+      text: Try Live Examples
+      link: /examples/
     - theme: alt
       text: View on GitHub
       link: https://github.com/debug-diary-1/vizcrush
@@ -37,14 +40,9 @@ features:
 ## Quick taste
 
 ```typescript
-import { init } from "@vizcrush/core";
 import { lttb } from "@vizcrush/downsample";
 
-// Auto-detect the compute backend (wasm / js)
-const ctx = await init();
-console.log(`Running on: ${ctx.backend}`);
-
-// Downsample 1M points to 1000 in ~2ms
+// Downsample 1M points to 1K before handing them to your renderer.
 const x = new Float64Array(1_000_000);
 const y = new Float64Array(1_000_000);
 // ... fill x, y with your data ...

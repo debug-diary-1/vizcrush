@@ -50,23 +50,19 @@ If you're adding to an existing package:
 2. Add `#[wasm_bindgen]` exports for any function called from JS
 3. Add a TypeScript wrapper in `packages/<package>/src/index.ts` with a JS fallback
 4. Add tests on both sides (`*_test.rs` in Rust, `index.test.ts` in TS)
-5. Update the relevant docs page under `docs/site/docs/packages/`
+5. Update the relevant docs page under `docs/packages/`
 
 If you're adding a whole new package, see **[Packages Layout / Adding a new package](packages.md#adding-a-new-package)**.
 
 ## Adding to the docs
 
-The docs site lives in `docs/site/docs/`. Pages are plain Markdown processed by [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
+The docs site lives in `docs/`. Pages are Markdown processed by [VitePress](https://vitepress.dev/).
 
 ```bash
-cd docs/site
-python3 -m venv .venv
-source .venv/bin/activate.fish
-pip install -r requirements.txt
-mkdocs serve     # http://127.0.0.1:8000
+pnpm docs:dev
 ```
 
-When adding a new page, also update `mkdocs.yml`'s `nav:` section so it shows up in the sidebar.
+When adding a new page, update `docs/.vitepress/config.mts` if it should appear in the navigation or sidebar.
 
 The docs site is auto-deployed to GitHub Pages on push to `main` via `.github/workflows/docs-deploy.yml`.
 

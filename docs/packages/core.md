@@ -53,9 +53,9 @@ const backend = selectBackend(caps);
 
 You rarely need this directly — `init()` does it for you. It's exported so you can audit the selection.
 
-## Typed arrays cross WASM with no copy
+## Typed arrays at the WASM boundary
 
-vizcrush APIs operate on `Float64Array` (and `Uint32Array` for indices). `wasm-bindgen` passes these as direct memory views, so there is no per-element marshaling at the JS↔WASM boundary — that is the zero-copy story, and it requires no special API. Just pass typed arrays (not plain `number[]`, which forces a per-element conversion).
+vizcrush APIs operate on `Float64Array` (and `Uint32Array` for indices). `wasm-bindgen` performs one bulk copy into WebAssembly linear memory. Typed arrays avoid per-element boxing; they do not make a one-shot call zero-copy. See [ADR 0001](../adr/0001-no-wasm-heap-marshalling-optimization.md).
 
 ## Type re-exports
 
@@ -73,7 +73,7 @@ import type {
 } from "@vizcrush/core";
 ```
 
-Each of those is just a typed-array shape (e.g. `DownsampleResult = Float64Array`, `BinResult = { counts: Uint32Array; edges: Float64Array }`).
+Each describes a typed-array result shape (for example, `DownsampleResult = { x: Float64Array; y: Float64Array }`).
 
 ## When to call `init()`
 
@@ -84,4 +84,4 @@ Each of those is just a typed-array shape (e.g. `DownsampleResult = Float64Array
 ## See also
 
 - **[Backends & Capabilities](../user-guide/backends.md)** — selection rules and how to override per call
-- **[useVizcrush hook](../user-guide/react.md#usegpucompute)** — React wrapper
+- **[useVizcrush hook](../user-guide/react.md#usevizcrush)** — React wrapper

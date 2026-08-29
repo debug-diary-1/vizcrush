@@ -1,78 +1,74 @@
 # Installation
 
-vizcrush packages aren't published to npm yet. For now, you consume them directly from the monorepo.
+Install only the packages your application needs. Each algorithm package declares `@vizcrush/core` as a dependency.
 
-## From the monorepo
+## From npm
+
+For time-series downsampling:
 
 ```bash
-git clone git@github.com:debug-diary-1/vizcrush.git
-cd vizcrush
-pnpm install
-pnpm build
+npm install @vizcrush/downsample
 ```
 
-`pnpm build` runs `pnpm build:wasm` (which compiles the Rust crates to WebAssembly via `cargo build --target wasm32-unknown-unknown --release` plus `wasm-bindgen`) and then `pnpm turbo build` (which compiles all the TypeScript packages with `tsc`).
+For a 2D density view:
 
-After this, the packages are usable as workspace dependencies. In any other workspace package or example app, you can `import` them directly:
+```bash
+npm install @vizcrush/bin
+```
+
+Then import the operation directly:
 
 ```typescript
-import { init } from "@vizcrush/core";
-import { lttb, minMaxLttb } from "@vizcrush/downsample";
-import { bin2d, hexbin } from "@vizcrush/bin";
-import { buildQuadtree, queryRange } from "@vizcrush/spatial";
+import { lttb } from "@vizcrush/downsample";
+
+const result = await lttb(x, y, 1_000);
 ```
 
-## Prerequisites
+The packages ship ESM, TypeScript declarations, WebAssembly artifacts, and a pure-JavaScript fallback. You do not need Rust to use them.
 
-| Tool               | Version                                  | How to install                                                                    |
-| ------------------ | ---------------------------------------- | --------------------------------------------------------------------------------- |
-| Node.js            | 24+                                      | [nodejs.org](https://nodejs.org/) or `volta install node@24`                      |
-| pnpm               | 10+                                      | `corepack enable` (uses the version from `package.json`'s `packageManager` field) |
-| Rust               | stable + `wasm32-unknown-unknown` target | `rustup target add wasm32-unknown-unknown`                                        |
-| `wasm-bindgen-cli` | matching `wasm-bindgen` version          | `cargo install wasm-bindgen-cli` (only if rebuilding WASM)                        |
+See the [packages overview](../packages/index.md) to choose a package.
 
-If you have [Volta](https://volta.sh/) installed, the repo's `package.json` already pins Node 24, so `cd`'ing in switches automatically.
+## Browser and runtime requirements
 
-## Per-package installation (future)
+- A modern browser with WebAssembly support
+- Node.js 24+ when using vizcrush from Node
+- An ESM-aware bundler such as Vite, Rollup, webpack, or Turbopack for browser applications
 
-Once vizcrush is published to npm, you'll install only the packages you need:
+The JavaScript fallback is used if a WASM module cannot load. Use [Backend Lab](https://debug-diary-1.github.io/vizcrush/examples/backend-lab/) to verify the path that runs in your browser.
+
+## Building from source
+
+Contributors need Rust, the `wasm32-unknown-unknown` target, Node.js 24+, and pnpm 10+:
 
 ```bash
-# Future — not yet published
-pnpm add @vizcrush/core @vizcrush/downsample
+git clone https://github.com/debug-diary-1/vizcrush.git
+cd vizcrush
+corepack enable
+pnpm install
+pnpm build
+pnpm test:all
 ```
 
-The package set is intentionally granular so you can pull in only what you use.
+`pnpm build` compiles the Rust crates to WebAssembly and then builds the TypeScript packages.
 
-## Verifying your install
-
-After `pnpm build`, run the test suites:
-
-```bash
-pnpm test           # vitest + cargo tests via Turbo
-pnpm test:rust      # cargo tests only
-pnpm test:vitest    # JS tests only
-pnpm bench          # quick benchmark sanity check
-```
-
-If everything passes, you're set. Head to the **[Quickstart](quickstart.md)**.
+For the full contributor setup, see [Building from Source](../developer-guide/building.md).
 
 ## Troubleshooting
 
-??? note "`pnpm install` warns about engines"
+### The app runs on the JavaScript backend
 
-    `engines.node` requires Node 24 — if you're on 22 or older, install Node 24 (`volta install node@24` or `nvm install 24`). The warning is non-fatal but pnpm and several deps may behave unexpectedly on older versions.
+Open the browser console and network panel first. A missing or blocked `.wasm` asset usually means the bundler did not emit the package's dynamically imported WASM module. The JavaScript fallback keeps the call working, so this can otherwise be easy to miss.
 
-??? note "`Ignored build scripts: esbuild`"
+The [Backends & Capabilities](backends.md) guide explains how to inspect and force a backend while debugging.
 
-    pnpm 10 sandboxes postinstall scripts by default. The repo's `package.json` already includes:
-    ```json
-    "pnpm": {
-      "onlyBuiltDependencies": ["esbuild"]
-    }
-    ```
-    so a fresh `pnpm install` should not warn. If you see it, run `pnpm approve-builds` once.
+### Node reports an engine mismatch
 
-??? note "`cargo build --target wasm32-unknown-unknown` fails"
+The repository's development toolchain requires Node.js 24. Use the version pinned in the root `package.json`, for example with Volta or another version manager.
 
-    Make sure you've added the WASM target: `rustup target add wasm32-unknown-unknown`. SIMD intrinsics also require a recent stable toolchain (1.78+).
+### A source build cannot find the WASM target
+
+```bash
+rustup target add wasm32-unknown-unknown
+```
+
+Then rerun `pnpm build`.
