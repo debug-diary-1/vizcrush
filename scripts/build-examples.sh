@@ -13,15 +13,12 @@
 #    WASM can run top-level await, so raising the target is correct rather than
 #    a workaround.
 #
-# 2. The wasm copy. Each package loads its WASM through a runtime specifier
-#    (`new Function("p", "return import(p)")("../wasm/<crate>.js")`) that is
-#    deliberately opaque to bundlers, so the module keeps resolving against the
-#    package's own `dist/` when consumed from node_modules. Once the code is
-#    bundled, that path resolves against the emitted chunk instead. Chunks land
-#    in `<example>/assets/`, so `../wasm/` means `<example>/wasm/` and the files
-#    have to be there or every WASM path silently falls back to the JS core.
-#    Silently is the problem: nothing errors, the examples just quietly stop
-#    demonstrating the thing they exist to demonstrate.
+# 2. No wasm copying. The packages self-reference their own `./wasm/*` export
+#    with a plain `import()`, so bundlers resolve the wasm-bindgen glue as a
+#    module and emit the `.wasm` themselves as a hashed asset. This script used
+#    to copy `packages/*/wasm/` into every example because the old loader hid
+#    its specifier from bundlers and the WASM path silently fell back to the JS
+#    core without it.
 #
 set -euo pipefail
 
@@ -46,14 +43,6 @@ for dir in examples/*/; do
   if (cd "$dir" && npx vite build --base=./ --target=esnext --logLevel=error) >/tmp/vizcrush-example-build.log 2>&1; then
     mkdir -p "$OUT/$name"
     cp -R "$dir/dist/." "$OUT/$name/"
-
-    # See note 2 above: put every crate's wasm where the bundled runtime
-    # import will look for it. Copying all of them costs a little space and
-    # removes a per-example dependency list that would rot.
-    mkdir -p "$OUT/$name/wasm"
-    for wasmdir in packages/*/wasm; do
-      [ -d "$wasmdir" ] && cp -R "$wasmdir/." "$OUT/$name/wasm/"
-    done
 
     built=$((built + 1))
     printf '  ok   %s\n' "$name"
