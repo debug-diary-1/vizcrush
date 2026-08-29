@@ -16,7 +16,7 @@ npm install @vizcrush/downsample
 ```typescript
 import { lttb } from "@vizcrush/downsample";
 
-// 1M points -> 1,920 while preserving visual shape (~2ms)
+// Reduce 1M points to 1,920 while preserving visual shape.
 const { x, y } = await lttb(timestamps, values, 1920);
 ```
 

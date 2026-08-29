@@ -183,8 +183,11 @@ export function streamingStats(windowSize: number): StreamingStats {
 }
 
 /**
- * Append new data to an accumulator and downsample in one pass.
- * Uses LTTB on the combined buffer.
+ * Preview helper retained for API compatibility.
+ *
+ * @deprecated This implementation does not yet retain and downsample the
+ * accumulator's real sample history. Keep chart history in application state
+ * and pass it to `@vizcrush/downsample` instead.
  */
 export function appendAndDownsample(
   acc: StreamingStats,

@@ -1,6 +1,6 @@
 # @vizcrush/aggregate
 
-> Streaming statistics, quantile sketches (DDSketch, KLL, HyperLogLog, CountMin), and append+downsample.
+> Streaming statistics and bounded-memory sketches (DDSketch, KLL, HyperLogLog, CountMin).
 
 Part of [vizcrush](https://github.com/debug-diary-1/vizcrush) — high-performance data primitives for browser visualization,
 written in Rust, compiled to WebAssembly, with a pure-JS fallback.

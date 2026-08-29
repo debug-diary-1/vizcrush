@@ -1,7 +1,7 @@
 {
   "name": "@vizcrush/aggregate",
   "version": "1.0.0",
-  "description": "Streaming statistics, percentiles, and append+downsample",
+  "description": "Streaming statistics, percentiles, and bounded-memory sketches",
   "keywords": [
     "countmin",
     "ddsketch",
