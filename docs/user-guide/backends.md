@@ -66,9 +66,9 @@ const result = await bin2d(x, y, { xBins: 256, yBins: 256 }, { backend: "js" });
 
 Valid values: `"auto"` (default — run the JS core below a small size threshold, otherwise WASM), `"wasm"` (force WASM, falling back to JS only if the module is genuinely absent), `"js"` (force the pure-JS core).
 
-## Typed arrays cross WASM with no copy
+## Typed arrays at the WASM boundary
 
-vizcrush APIs operate on `Float64Array` (and `Uint32Array` for indices). `wasm-bindgen` passes these as direct memory views, so there is no per-element marshaling at the JS↔WASM boundary. That's the zero-copy story, and it needs no special API — just pass typed arrays rather than plain `number[]`.
+vizcrush APIs operate on `Float64Array` (and `Uint32Array` for indices). `wasm-bindgen` bulk-copies input into WebAssembly linear memory. Typed arrays avoid per-element boxing, but a one-shot call still crosses a copying boundary. See [ADR 0001](../adr/0001-no-wasm-heap-marshalling-optimization.md).
 
 ## Browser support matrix
 

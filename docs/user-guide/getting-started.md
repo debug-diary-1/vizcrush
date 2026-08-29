@@ -15,8 +15,8 @@ You don't need Rust if you just want to use vizcrush — the WASM artifacts are 
 
 ## Three-step intro
 
-1. **[Install](installation.md)** vizcrush from the monorepo (npm publishing is on the roadmap).
-2. **[Run the quickstart](quickstart.md)** — a minimal end-to-end example: initialize a backend, downsample a million points, render the result.
+1. **[Install](installation.md)** only the `@vizcrush/*` packages your application needs from npm.
+2. **[Run the quickstart](quickstart.md)** — a minimal end-to-end example: downsample a million points and pass the result to a renderer.
 3. **[Browse the example apps](../reference/examples.md)** — 37 runnable demos covering financial time-series, IoT heatmaps, point clouds, volumetric medical data, MCP integration, and more.
 
 ## How vizcrush is organized
@@ -26,13 +26,13 @@ vizcrush is a monorepo. The two layers you'll interact with are:
 - **TypeScript packages** under `packages/` — what you actually `import` from. Each package is published independently and wraps a thin async API around the WASM core, with a JavaScript fallback for environments without WebAssembly.
 - **Rust crates** under `crates/` — the algorithms themselves, compiled to WebAssembly with `wasm-bindgen`. You only touch these if you're contributing or rebuilding from source.
 
-There are nine TypeScript packages — see the **[Packages overview](../packages/index.md)** for a one-line summary of each, or jump straight to a specific one:
+There are nine core and algorithm packages — see the **[Packages overview](../packages/index.md)** for a one-line summary of each, or jump straight to a specific one:
 
 | Package                                               | Use it for                                                      |
 | ----------------------------------------------------- | --------------------------------------------------------------- |
 | **[@vizcrush/core](../packages/core.md)**             | Initialize the library, detect capabilities, select the backend |
 | **[@vizcrush/downsample](../packages/downsample.md)** | Reduce 1M+ point time series to display-friendly counts         |
-| **[@vizcrush/aggregate](../packages/aggregate.md)**   | Min/max/mean/stddev, percentiles, t-digest, streaming windows   |
+| **[@vizcrush/aggregate](../packages/aggregate.md)**   | Min/max/mean/stddev, percentiles, sketches, streaming windows   |
 | **[@vizcrush/transform](../packages/transform.md)**   | Sort, normalize, filter typed arrays                            |
 | **[@vizcrush/bin](../packages/bin.md)**               | 1D histograms, 2D density grids, hexagonal binning              |
 | **[@vizcrush/bin3d](../packages/bin3d.md)**           | 3D voxel grids for volumetric heatmaps                          |

@@ -1,53 +1,85 @@
 # vizcrush
 
-> High-performance data primitives for browser visualization
+> Make large browser datasets small enough to visualize.
 
-**vizcrush** is an open-source library that provides data processing primitives purpose-built for browser-based data visualization. Written in Rust and compiled to WebAssembly, with a pure-JS fallback so the same API runs everywhere.
+[![CI](https://github.com/debug-diary-1/vizcrush/actions/workflows/ci.yml/badge.svg)](https://github.com/debug-diary-1/vizcrush/actions/workflows/ci.yml)
+[![npm: @vizcrush/core](https://img.shields.io/npm/v/%40vizcrush%2Fcore?label=%40vizcrush%2Fcore)](https://www.npmjs.com/package/@vizcrush/core)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **Performance note:** WASM vs the JS fallback is **engine-dependent** (measured, see [ADR 0003](docs/adr/0003-wasm-vs-js-is-engine-dependent.md)): WASM is ~4× faster in Chromium/V8 (the dominant engine), but comparable-to-slower in Firefox and Safari, and slower on a cold first call everywhere. The `+simd128` flag does not autovectorize these branch-heavy loops, so there is no SIMD speedup ([ADR 0002](docs/adr/0002-wasm-simd-not-engaged.md)). Net: WASM wins the common case; the JS fallback keeps the same API working everywhere. There is also an opt-in WebGPU compute path for `bin2d` (`{ backend: "webgpu" }`) — measured ~15× slower than WASM end-to-end, so it is never auto-selected ([ADR 0004](docs/adr/0004-webgpu-bin2d-wired-but-loses.md)).
+**vizcrush** is a renderer-agnostic toolkit for processing visualization data in the browser. Downsample time series, build density bins, query 2D and 3D spatial indexes, and compute streaming statistics before the data reaches your chart.
 
-## The Gap
+The algorithms are written in Rust and compiled to WebAssembly, with the same asynchronous API backed by a pure-JavaScript fallback. The output is typed-array data you can pass to D3, Canvas, WebGL, Three.js, or your own renderer.
 
-Libraries like ChartGPU, deck.gl, and Plotly handle **rendering**. Libraries like TypeGPU handle **GPU buffer management**. Nobody has built the optimized **data algorithms layer** in between — the downsampling, binning, spatial indexing, and streaming aggregation that every large-dataset visualization needs.
+**[Live examples](https://debug-diary-1.github.io/vizcrush/examples/)** · **[Documentation](https://debug-diary-1.github.io/vizcrush/)** · **[Algorithm book](https://debug-diary-1.github.io/vizcrush-book/)**
 
-**vizcrush fills that gap.** It draws nothing. It takes data in and returns optimized data out — ready for any renderer.
-
-## Quick Start
+## Quick start
 
 ```bash
-npm install @vizcrush/core @vizcrush/downsample
+npm install @vizcrush/downsample
 ```
 
 ```typescript
-import { init } from "@vizcrush/core";
 import { lttb } from "@vizcrush/downsample";
 
-const vc = await init();
-console.log(vc.backend); // 'wasm' | 'js'
-
-// Downsample 1M points to 1K — preserves visual shape
-const { x, y } = await lttb(timestamps, values, 1000);
+// Preserve the visual shape of 1M points in a 1K-point result.
+const result = await lttb(timestamps, values, 1_000);
+renderChart(result.x, result.y);
 ```
+
+Try **[Backend Lab](https://debug-diary-1.github.io/vizcrush/examples/backend-lab/)** to compare the JavaScript and WASM implementations in your own browser.
+
+## Pick the primitive for your problem
+
+| You are building                  | Start with                                                                                                                                      | What it does                                          |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| A dense time-series chart         | [`@vizcrush/downsample`](https://www.npmjs.com/package/@vizcrush/downsample)                                                                    | Reduces point count while preserving visual shape     |
+| A heatmap or scatter-density view | [`@vizcrush/bin`](https://www.npmjs.com/package/@vizcrush/bin)                                                                                  | Produces histograms, 2D grids, and hexagonal bins     |
+| A pan-and-zoom 2D explorer        | [`@vizcrush/spatial`](https://www.npmjs.com/package/@vizcrush/spatial)                                                                          | Provides quadtree, hash-grid, range, and k-NN queries |
+| A point cloud or volume viewer    | [`@vizcrush/spatial3d`](https://www.npmjs.com/package/@vizcrush/spatial3d) + [`@vizcrush/bin3d`](https://www.npmjs.com/package/@vizcrush/bin3d) | Adds octrees, frustum culling, and voxel grids        |
+| A live telemetry dashboard        | [`@vizcrush/aggregate`](https://www.npmjs.com/package/@vizcrush/aggregate)                                                                      | Computes one-pass stats and bounded-memory sketches   |
+| A React visualization             | [`@vizcrush/react`](https://www.npmjs.com/package/@vizcrush/react)                                                                              | Wraps common operations in React hooks                |
+| An AI-assisted data workflow      | [`@vizcrush/mcp-server`](https://www.npmjs.com/package/@vizcrush/mcp-server)                                                                    | Exposes vizcrush operations as MCP tools              |
+
+See the **[quickstart](https://debug-diary-1.github.io/vizcrush/user-guide/quickstart)** and **[37 runnable examples](https://debug-diary-1.github.io/vizcrush/examples/)** for complete browser integrations.
+
+## Why vizcrush exists
+
+Rendering libraries solve the final drawing step. Large browser visualizations also need an algorithms layer between raw data and the renderer:
+
+```text
+API / file / stream → vizcrush → chart / canvas / WebGL renderer
+                       ├─ downsample
+                       ├─ bin and aggregate
+                       └─ index and query
+```
+
+vizcrush deliberately draws nothing. Its small, composable packages let you keep your renderer and only add the data operation you need.
 
 ## Packages
 
-| Package                | Description                                           |
-| ---------------------- | ----------------------------------------------------- |
-| `@vizcrush/core`       | Device detection, backend selection, types            |
-| `@vizcrush/downsample` | LTTB, MinMaxLTTB, M4, LTOB algorithms                 |
-| `@vizcrush/bin`        | 1D/2D histogram binning, hexagonal binning            |
-| `@vizcrush/bin3d`      | 3D voxel grid binning                                 |
-| `@vizcrush/aggregate`  | Streaming stats, quantile sketches, append+downsample |
-| `@vizcrush/transform`  | Radix sort, normalize, filter on typed arrays         |
-| `@vizcrush/spatial`    | Quadtree, hash grid, range + kNN queries              |
-| `@vizcrush/spatial3d`  | Octree, 3D kNN, frustum culling                       |
-| `@vizcrush/ai`         | Anomaly detection, auto-config, LLM summaries         |
-| `@vizcrush/react`      | React hooks for downsample, bin, stats                |
-| `@vizcrush/mcp-server` | MCP server for AI agent access                        |
+| Package                                                                      | Description                                               |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [`@vizcrush/core`](https://www.npmjs.com/package/@vizcrush/core)             | Runtime capability detection and WASM/JS dispatch         |
+| [`@vizcrush/downsample`](https://www.npmjs.com/package/@vizcrush/downsample) | LTTB, MinMaxLTTB, M4, and LTOB downsampling               |
+| [`@vizcrush/bin`](https://www.npmjs.com/package/@vizcrush/bin)               | 1D/2D histograms and hexagonal binning                    |
+| [`@vizcrush/bin3d`](https://www.npmjs.com/package/@vizcrush/bin3d)           | 3D voxel-grid binning                                     |
+| [`@vizcrush/aggregate`](https://www.npmjs.com/package/@vizcrush/aggregate)   | Streaming stats and bounded-memory sketches               |
+| [`@vizcrush/transform`](https://www.npmjs.com/package/@vizcrush/transform)   | Sort, normalize, and filter typed arrays                  |
+| [`@vizcrush/spatial`](https://www.npmjs.com/package/@vizcrush/spatial)       | Quadtree, hash-grid, range, and k-NN queries              |
+| [`@vizcrush/spatial3d`](https://www.npmjs.com/package/@vizcrush/spatial3d)   | Octree, 3D k-NN, and frustum culling                      |
+| [`@vizcrush/ai`](https://www.npmjs.com/package/@vizcrush/ai)                 | Anomaly detection, auto-configuration, and data summaries |
+| [`@vizcrush/react`](https://www.npmjs.com/package/@vizcrush/react)           | React hooks for common vizcrush operations                |
+| [`@vizcrush/mcp-server`](https://www.npmjs.com/package/@vizcrush/mcp-server) | MCP server for AI-agent access                            |
 
-## MCP Server
+## Performance, without magic
 
-AI coding agents can invoke vizcrush tools directly:
+WASM performance is engine-dependent. In the project's browser benchmarks it is about 4× faster than the JavaScript core in Chromium/V8, but comparable to or slower than JavaScript in Firefox and Safari. Cold first calls are slower everywhere. The JavaScript fallback keeps the API available across environments.
+
+The opt-in WebGPU path for `bin2d` is currently slower end to end than WASM because transfer costs dominate, so vizcrush never auto-selects it. The measurements, limitations, and rejected optimizations are documented in [ADR 0002](docs/adr/0002-wasm-simd-not-engaged.md), [ADR 0003](docs/adr/0003-wasm-vs-js-is-engine-dependent.md), and [ADR 0004](docs/adr/0004-webgpu-bin2d-wired-but-loses.md).
+
+## MCP server
+
+AI coding agents can invoke 23 vizcrush tools over MCP:
 
 ```json
 {
@@ -60,44 +92,23 @@ AI coding agents can invoke vizcrush tools directly:
 }
 ```
 
-### Available Tools
+Tools cover downsampling, binning, spatial queries, statistics, transforms, file inspection, capability detection, benchmarking, anomaly detection, and summaries. See the **[MCP guide](https://debug-diary-1.github.io/vizcrush/user-guide/mcp)** for configuration and security options.
 
-- `vizcrush_lttb` — LTTB downsampling
-- `vizcrush_minmax_lttb` — MinMax + LTTB (spiky data)
-- `vizcrush_auto_downsample` — Auto-select best algorithm
-- `vizcrush_histogram` — 1D histogram
-- `vizcrush_bin2d` — 2D density grid
-- `vizcrush_stats` — Summary statistics + percentiles
-- `vizcrush_normalize` — Min-max normalization
-- `vizcrush_sort` — Radix sort
-- `vizcrush_capabilities` — Environment detection
-- `vizcrush_benchmark` — Performance comparison
+## Contributing
 
-## Examples
+Bug reports, focused feature proposals, documentation improvements, new examples, and algorithm work are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, or [open an issue](https://github.com/debug-diary-1/vizcrush/issues/new/choose) to start a discussion.
 
-37 runnable examples, live at **[debug-diary-1.github.io/vizcrush/examples](https://debug-diary-1.github.io/vizcrush/examples/)** — no clone required.
-
-Start with **[Backend Lab](https://debug-diary-1.github.io/vizcrush/examples/backend-lab/)**, which measures the JS core against WASM on your own machine and reports what it finds, including when the honest answer is "no meaningful difference". The rest cover downsampling, binning, spatial indexing, streaming sketches, 3D and WebGPU.
-
-## The Book
-
-The companion book — 16 chapters explaining every algorithm inside vizcrush, why it works, and when to pick which one — is free to read at **[debug-diary-1.github.io/vizcrush-book](https://debug-diary-1.github.io/vizcrush-book/)**.
+For vulnerabilities, follow the private reporting process in [SECURITY.md](SECURITY.md).
 
 ## Development
 
 ```bash
-# Prerequisites: Rust, Node.js 24+, pnpm
-
-# Run Rust tests
-cargo test --workspace
-
-# Build WASM
-bash scripts/build-wasm.sh
-
-# Build TypeScript
-pnpm install && pnpm turbo build
+# Prerequisites: Rust, Node.js 24+, pnpm 10+
+pnpm install
+pnpm build
+pnpm test:all
 ```
 
 ## License
 
-MIT
+[MIT](LICENSE) © vizcrush contributors

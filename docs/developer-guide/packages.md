@@ -35,7 +35,7 @@ crates/vizcrush-<name>/
 | ---------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@vizcrush/core`       | `vizcrush-core` _(unrelated content)_ | `init`, `detectCapabilities`, `selectBackend`, `defineKernel`/`createWasmLoader` (the WASM/JS dispatch kernel every other package builds on). The Rust crate of the same name is a separate, internal-only utility (shared bounds-finding for `vizcrush-bin`/`bin3d`/`spatial`/`spatial3d`) — nothing in this row is implemented there. |
 | `@vizcrush/downsample` | `vizcrush-downsample`                 | `lttb`, `lttbSync`, `minMaxLttb`, `m4`, `ltob`                                                                                                                                                                                                                                                                                          |
-| `@vizcrush/aggregate`  | `vizcrush-aggregate`                  | `stats`, `percentile`, `StreamingStats`, `appendAndDownsample`                                                                                                                                                                                                                                                                          |
+| `@vizcrush/aggregate`  | `vizcrush-aggregate`                  | `stats`, `percentile`, `StreamingStats`, bounded-memory sketches                                                                                                                                                                                                                                                                        |
 | `@vizcrush/transform`  | `vizcrush-transform`                  | `sortBy`, `normalize`, `filterRange`                                                                                                                                                                                                                                                                                                    |
 | `@vizcrush/bin`        | `vizcrush-bin`                        | `bin1d`, `bin2d` (incl. opt-in WebGPU path), `hexbin`                                                                                                                                                                                                                                                                                   |
 | `@vizcrush/bin3d`      | `vizcrush-bin3d`                      | `bin3d`                                                                                                                                                                                                                                                                                                                                 |
@@ -88,11 +88,11 @@ The packages form a small DAG:
 The full sequence:
 
 1. Create `crates/vizcrush-<name>/` with a minimal `Cargo.toml` that inherits workspace settings
-2. Create `packages/<name>/` with a `package.json`, `tsconfig.json`, `src/index.ts`, and a `src/wasm.ts` loader
+2. Create `packages/<name>/` with a `package.json`, `tsconfig.json`, and `src/index.ts`; follow an existing algorithm package for the shared WASM loader pattern
 3. Add the new package name to `pnpm-workspace.yaml` (it's already a wildcard, so this is automatic) and to the workspace `Cargo.toml`'s `members` array
 4. Add a `lint`, `typecheck`, and `build` script in the new `package.json` matching the existing packages
 5. Run `pnpm install` to wire workspace deps, then `pnpm build` to verify
-6. Add a docs page under `docs/site/docs/packages/<name>.md` and update `mkdocs.yml`'s nav
+6. Add a docs page under `docs/packages/<name>.md` and update `docs/.vitepress/config.mts`
 
 ## See also
 

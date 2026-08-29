@@ -108,11 +108,11 @@ See the [Backends & Capabilities](../user-guide/backends.md) user guide for the 
 
 Every public API takes and returns `Float64Array` (data) or `Uint32Array` (indices). This is intentional:
 
-- **Zero-copy across JS↔WASM** — `wasm-bindgen` passes typed arrays as direct memory views, no per-element marshaling
+- **One bulk boundary copy** — `wasm-bindgen` copies typed arrays into linear memory without per-element boxing
 - **Cache-friendly inner loops** — contiguous memory keeps the Rust inner loops tight
 - **Drop-in friendly** — most charting libraries (ChartGPU, Chart.js, D3, Three.js) already consume typed arrays
 
-The cost is that you can't pass plain `number[]`. The benefit is that vizcrush avoids per-element marshaling and keeps the inner loops cache-friendly. This trade-off shows up everywhere — interleaved `[x, y]` results, `Uint32Array` index returns, etc.
+The cost is that you can't pass plain `number[]`. The benefit is predictable bulk transfer and cache-friendly inner loops. Public paired-data results use separate `x` and `y` typed arrays; index results use `Uint32Array`.
 
 ## Why a separate Rust crate per package
 
@@ -143,9 +143,9 @@ A `vizcrush-ai` Rust crate exists in `crates/` as a placeholder for future Rust/
 | **Rust Tests**                | `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`, build WASM with `+simd128` |
 | **Lint + Format + Typecheck** | `pnpm lint` (oxlint `--deny-warnings`), `pnpm format:check` (oxfmt), `pnpm typecheck`     |
 | **TypeScript Build + Test**   | `pnpm turbo build`, `vitest run`                                                          |
-| **Performance Regression**    | Run benchmarks, compare to `benchmarks/benchmark-baseline.json` (50% threshold)           |
+| **Performance Regression**    | Run benchmarks, compare to `benchmarks/benchmark-baseline.json` (100% CI-noise threshold) |
 
-Plus `.github/workflows/docs-deploy.yml` deploys this site to GitHub Pages when `docs/site/**` changes on `main`.
+Plus `.github/workflows/docs-deploy.yml` deploys the docs and examples gallery to GitHub Pages when their source changes on `main`.
 
 ## See also
 

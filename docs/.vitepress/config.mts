@@ -7,6 +7,9 @@ export default defineConfig({
   base: "/vizcrush/",
   cleanUrls: true,
   lastUpdated: true,
+  sitemap: {
+    hostname: "https://debug-diary-1.github.io/vizcrush/",
+  },
   srcExclude: ["**/ARCHITECTURE.md", "**/site/**"],
 
   head: [
@@ -27,6 +30,7 @@ export default defineConfig({
       { text: "Guide", link: "/user-guide/getting-started" },
       { text: "Packages", link: "/packages/" },
       { text: "Reference", link: "/reference/algorithms" },
+      { text: "Book", link: "https://debug-diary-1.github.io/vizcrush-book/" },
       // Built by scripts/build-examples.sh into dist/examples, so it is a
       // plain link rather than a VitePress route.
       { text: "Examples", link: "/examples/" },

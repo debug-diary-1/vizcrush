@@ -16,7 +16,7 @@ MinMax-LTTB stock chart that preserves OHLC spikes when downsampling spiky finan
 
 WebSocket-driven live dashboard with rolling stats and a real-time downsampled chart.
 
-**vizcrush algorithms:** `StreamingStats`, `appendAndDownsample`
+**vizcrush algorithms:** `StreamingStats`
 
 **Folder:** `examples/streaming-dashboard/`
 
@@ -48,7 +48,7 @@ GPS sensor density heatmap with viridis colormap and percentile stats panel.
 
 ### `chartgpu-integration`
 
-vizcrush preprocessing piped into ChartGPU rendering via zero-copy interleaved handoff.
+Integration scaffold with vizcrush preprocessing, a Canvas 2D renderer, and notes showing where ChartGPU can be connected.
 
 **vizcrush algorithms:** `lttb`, `bin2d`
 
