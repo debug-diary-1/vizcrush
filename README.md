@@ -73,6 +73,12 @@ AI coding agents can invoke vizcrush tools directly:
 - `vizcrush_capabilities` — Environment detection
 - `vizcrush_benchmark` — Performance comparison
 
+## Examples
+
+37 runnable examples, live at **[debug-diary-1.github.io/vizcrush/examples](https://debug-diary-1.github.io/vizcrush/examples/)** — no clone required.
+
+Start with **[Backend Lab](https://debug-diary-1.github.io/vizcrush/examples/backend-lab/)**, which measures the JS core against WASM on your own machine and reports what it finds, including when the honest answer is "no meaningful difference". The rest cover downsampling, binning, spatial indexing, streaming sketches, 3D and WebGPU.
+
 ## The Book
 
 The companion book — 16 chapters explaining every algorithm inside vizcrush, why it works, and when to pick which one — is free to read at **[debug-diary-1.github.io/vizcrush-book](https://debug-diary-1.github.io/vizcrush-book/)**.

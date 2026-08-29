@@ -17,6 +17,7 @@
     "examples": "portless examples npx vite examples",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
+    "examples:build": "bash scripts/build-examples.sh",
     "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
