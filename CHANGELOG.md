@@ -1,5 +1,29 @@
 # Changelog
 
+## @vizcrush/aggregate v1.1.0 (2026-08-29)
+
+### `appendAndDownsample` now throws
+
+- **It never worked.** The function returned array indices rather than data:
+  for any input it produced `y = [0, step, 2*step, ...]`. Given 500 points of
+  `42.0` with a spike of `9999` it returned `0, 50, 100 ... 450`, containing
+  none of the caller's values. The source said as much
+  (`y[i] = i * step; // placeholder`). It shipped in 1.0.0.
+- Charted, that output is a clean diagonal, which is why it went unnoticed: it
+  looks like a plausible series. It now **throws**, and the error names the
+  replacement. Nothing that worked breaks, because nothing worked — every
+  caller was already receiving fabricated numbers. A `@deprecated` tag was not
+  enough: it is invisible at runtime and to JavaScript callers.
+- **No drop-in replacement, deliberately.** `StreamingStats` is a fixed-size
+  rolling window over _values_ and never retained the x/y history a
+  downsampler needs. Keep chart history in application state and downsample it:
+  `lttb(historyX, historyY, 1000)` from `@vizcrush/downsample`.
+- The claim is also removed from `VIZCRUSH_SPEC.md`, the MCP observability
+  scenario, `site/index.html`, and the streaming-dashboard card in the examples
+  gallery, all of which still advertised it.
+- Two tests now cover the behaviour; the function previously had none, which is
+  how a stub reached npm.
+
 ## Architecture pass (2026-08-13)
 
 ### Deep-module cleanup — findings 1, 2, and 5-lite of the August architecture review
