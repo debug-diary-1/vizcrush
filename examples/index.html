@@ -69,6 +69,10 @@
       body.light .card-title {
         color: #2a5fa8;
       }
+      body.light .kind-badge {
+        border-color: #ddd;
+        color: #777;
+      }
       body.light .card-desc {
         color: #666;
       }
@@ -307,6 +311,26 @@
         color: #4a7fd4;
         line-height: 1.3;
       }
+      .card-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .kind-badge {
+        flex: none;
+        padding: 1px 5px;
+        border: 1px solid #3a3a3a;
+        border-radius: 2px;
+        color: #888;
+        font-size: 8px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .kind-badge.graphics {
+        border-color: #0e7490;
+        color: #22d3ee;
+      }
       .card-desc {
         color: #888;
         font-size: 11px;
@@ -410,7 +434,6 @@
       const examples = [
         {
           name: "backend-lab",
-          portless: "backend-lab",
           title: "Backend Lab",
           desc: "Measure the JS core against WASM on your own machine, honestly",
           category: "Time-Series",
@@ -419,7 +442,6 @@
         },
         {
           name: "financial-timeseries",
-          portless: "financial",
           title: "Financial Time-Series",
           desc: "Million-candle stock chart with MinMax-LTTB spike preservation",
           category: "Time-Series",
@@ -428,16 +450,14 @@
         },
         {
           name: "streaming-dashboard",
-          portless: "streaming",
           title: "Streaming Dashboard",
-          desc: "WebSocket live dashboard with rolling stats and append-downsample",
+          desc: "Simulated live stream with rolling stats and LTTB downsampling",
           category: "Time-Series",
-          algorithms: ["StreamingStats", "lttb"],
+          algorithms: ["streamingStats", "lttbSync"],
           complexity: 2,
         },
         {
           name: "neon-timeseries",
-          portless: "neonts",
           title: "Neon Time-Series",
           desc: "Glowing neon tube charts with 4-pass bloom effect and LTTB streaming",
           category: "Showcase",
@@ -446,7 +466,6 @@
         },
         {
           name: "d3-large-scatter",
-          portless: "d3scatter",
           title: "D3 Large Scatter",
           desc: "D3 + vizcrush for 1M-point scatter with quadtree hover detection",
           category: "Scatter",
@@ -455,7 +474,6 @@
         },
         {
           name: "iot-heatmap",
-          portless: "heatmap",
           title: "IoT Sensor Heatmap",
           desc: "GPS coordinate density heatmap with viridis colormap",
           category: "Scatter",
@@ -464,16 +482,14 @@
         },
         {
           name: "chartgpu-integration",
-          portless: "chartgpu",
-          title: "ChartGPU Integration",
-          desc: "vizcrush preprocessing layer for ChartGPU rendering",
+          title: "Chart.js Integration",
+          desc: "LTTB and density preprocessing feeding real Chart.js datasets",
           category: "Scatter",
           algorithms: ["lttb", "bin2d"],
           complexity: 1,
         },
         {
           name: "point-cloud-3d",
-          portless: "pointcloud",
           title: "3D Point Cloud",
           desc: "Million-point cloud with octree frustum culling and k-NN hover",
           category: "3D",
@@ -482,7 +498,6 @@
         },
         {
           name: "threejs-integration",
-          portless: "threejs",
           title: "Three.js Integration",
           desc: "Three.js + vizcrush frustum culling render pipeline",
           category: "3D",
@@ -491,7 +506,6 @@
         },
         {
           name: "globe-3d",
-          portless: "globe",
           title: "3D Globe",
           desc: "Spherical coordinates on rotating globe with octree queries",
           category: "3D",
@@ -500,7 +514,6 @@
         },
         {
           name: "lidar-terrain",
-          portless: "lidar",
           title: "LiDAR Terrain",
           desc: "LiDAR point cloud voxelized for terrain rendering",
           category: "3D",
@@ -509,7 +522,6 @@
         },
         {
           name: "medical-volume",
-          portless: "medical",
           title: "Medical Volume",
           desc: "Volumetric CT data with 2D slice extraction and colormaps",
           category: "3D",
@@ -518,7 +530,6 @@
         },
         {
           name: "voxel-heatmap-3d",
-          portless: "voxel",
           title: "Voxel Heatmap 3D",
           desc: "3D density voxels rendered as colored cubes",
           category: "3D",
@@ -527,7 +538,6 @@
         },
         {
           name: "benchmark-3d",
-          portless: "bench3d",
           title: "3D Benchmark",
           desc: "Performance comparison of 3D operations vs pure JS",
           category: "3D",
@@ -536,7 +546,6 @@
         },
         {
           name: "reservoir-sampling",
-          portless: "reservoir",
           title: "Reservoir Sampling",
           desc: "Sample size k vs representativeness with chi-squared goodness test",
           category: "Sketches",
@@ -545,7 +554,6 @@
         },
         {
           name: "ddsketch",
-          portless: "ddsketch",
           title: "DDSketch",
           desc: "CDF overlay exact vs sketch, relative accuracy alpha tradeoff",
           category: "Sketches",
@@ -554,7 +562,6 @@
         },
         {
           name: "kll-sketch",
-          portless: "kll",
           title: "KLL Sketch",
           desc: "CDF comparison, k vs compression ratio and rank error",
           category: "Sketches",
@@ -563,7 +570,6 @@
         },
         {
           name: "hyperloglog",
-          portless: "hll",
           title: "HyperLogLog++",
           desc: "Animated streaming cardinality counter with register heatmap",
           category: "Sketches",
@@ -572,7 +578,6 @@
         },
         {
           name: "countmin-sketch",
-          portless: "countmin",
           title: "Count-Min Sketch",
           desc: "Top-20 frequency bars with over-estimation highlighting",
           category: "Sketches",
@@ -581,7 +586,6 @@
         },
         {
           name: "latency-percentiles",
-          portless: "latency",
           title: "Latency Percentiles",
           desc: "Real-time p50/p90/p95/p99 gauges \u2014 DDSketch vs KLL live comparison",
           category: "Sketches",
@@ -590,7 +594,6 @@
         },
         {
           name: "stream-analytics",
-          portless: "streamana",
           title: "Stream Analytics",
           desc: "HLL unique counting + Count-Min heavy hitters + reservoir scatter overlay",
           category: "Sketches",
@@ -599,7 +602,6 @@
         },
         {
           name: "sketch-comparison",
-          portless: "sketchcmp",
           title: "Sketch Comparison",
           desc: "DDSketch vs KLL vs exact \u2014 triple CDF overlay with memory comparison",
           category: "Sketches",
@@ -608,7 +610,6 @@
         },
         {
           name: "data-transforms",
-          portless: "datatx",
           title: "Data Transforms",
           desc: "Log/power transform + quantile normalization before/after histograms",
           category: "Transforms",
@@ -617,7 +618,6 @@
         },
         {
           name: "log-transform",
-          portless: "logtx",
           title: "Log Transform",
           desc: "Interactive base selector with 4 distributions, skewness/kurtosis stats",
           category: "Transforms",
@@ -626,7 +626,6 @@
         },
         {
           name: "quantile-normalization",
-          portless: "qnorm",
           title: "Quantile Normalization",
           desc: "2-4 series distribution alignment with overlaid histograms",
           category: "Transforms",
@@ -635,7 +634,6 @@
         },
         {
           name: "spatial-hashgrid",
-          portless: "hashgrid",
           title: "Spatial Hash Grid",
           desc: "Interactive hover neighbor search \u2014 hash grid vs quadtree timing",
           category: "Spatial",
@@ -644,7 +642,6 @@
         },
         {
           name: "morton-renderer",
-          portless: "morton",
           title: "Morton Z-Order",
           desc: "Animated Z-curve vs random rendering order with cache locality scoring",
           category: "Spatial",
@@ -653,79 +650,78 @@
         },
         {
           name: "reservoir-scatter",
-          portless: "rsscatter",
           title: "Reservoir Scatter",
           desc: "Full vs sample scatter overlay with KS test and quadrant density",
           category: "Spatial",
           algorithms: ["ReservoirSampler"],
           complexity: 2,
+          kind: "vizcrush",
         },
         {
           name: "webgpu-heatmap",
-          portless: "gpuheat",
           title: "WebGPU Heatmap",
           desc: "Compute shader bins 1M points \u2192 viridis fragment shader on GPU",
           category: "GPU",
-          algorithms: ["bin2d"],
+          algorithms: ["compute shader", "density grid"],
           complexity: 3,
+          kind: "graphics",
         },
         {
           name: "gpu-particles",
-          portless: "gpupart",
           title: "GPU Particles",
           desc: "WebGPU compute physics + render pipeline particle system",
           category: "GPU",
-          algorithms: ["prefixSum", "streamCompact"],
+          algorithms: ["compute shader", "render pipeline"],
           complexity: 3,
+          kind: "graphics",
         },
         {
           name: "gpu-vs-canvas",
-          portless: "gpuvscvs",
           title: "GPU vs Canvas 2D",
           desc: "Side-by-side density plot benchmark \u2014 WebGPU vs Canvas speedup",
           category: "GPU",
           algorithms: ["bin2d"],
           complexity: 2,
+          kind: "vizcrush",
         },
         {
           name: "flow-field",
-          portless: "flowfield",
           title: "Flow Field",
           desc: "50K particles streaming through velocity field with fading trails",
           category: "Showcase",
           algorithms: ["particlePhysics"],
           complexity: 2,
+          kind: "graphics",
         },
         {
           name: "gpu-voronoi",
-          portless: "voronoi",
           title: "GPU Voronoi",
           desc: "Live Voronoi diagram with glowing cyan edges and draggable seeds",
           category: "Showcase",
           algorithms: ["voronoi"],
           complexity: 2,
+          kind: "graphics",
         },
         {
           name: "volume-raymarcher",
-          portless: "volray",
           title: "Volume Raymarcher",
           desc: "3D volumetric nebula raymarched per-pixel with diffuse lighting",
           category: "Showcase",
           algorithms: ["raymarching"],
           complexity: 3,
+          kind: "graphics",
         },
         {
           name: "million-galaxy",
-          portless: "galaxy",
           title: "Million-Star Galaxy",
           desc: "1M-star spiral galaxy with ImageData additive rendering",
           category: "Showcase",
           algorithms: ["projection"],
           complexity: 2,
+          kind: "graphics",
         },
         {
           name: "threejs-nature",
-          portless: "nature",
           title: "Three.js + vizcrush",
           desc: "Nature scene: terrain (bin2d), bird flock (hashGrid Boids), waterfall",
           category: "3D",
@@ -734,7 +730,6 @@
         },
         {
           name: "ai-playground",
-          portless: "aiplay",
           title: "AI Playground",
           desc: "Interactive anomaly detection, auto-optimization, shape similarity",
           category: "AI",
@@ -743,7 +738,6 @@
         },
         {
           name: "mcp-demo",
-          portless: "mcpdemo",
           title: "MCP Demo",
           desc: "MCP server configuration walkthrough with example agent prompts",
           category: "AI",
@@ -810,6 +804,8 @@
         grid.innerHTML = examples
           .map((ex) => {
             const color = catColors[ex.category] || "#4a7fd4";
+            const isGraphicsDemo = ex.kind === "graphics";
+            const kindLabel = isGraphicsDemo ? "graphics demo" : "uses vizcrush";
             const tags = ex.algorithms
               .map((a) => '<span class="tag" data-algo="' + a + '">' + a + "</span>")
               .join("");
@@ -827,9 +823,13 @@
               'data-name="' +
               ex.name +
               '">' +
-              '<div class="card-title">' +
+              '<div class="card-heading"><div class="card-title">' +
               ex.title +
-              "</div>" +
+              '</div><span class="kind-badge' +
+              (isGraphicsDemo ? " graphics" : "") +
+              '">' +
+              kindLabel +
+              "</span></div>" +
               '<div class="card-desc">' +
               ex.desc +
               "</div>" +

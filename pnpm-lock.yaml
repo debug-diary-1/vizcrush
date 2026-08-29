@@ -21,6 +21,9 @@ catalogs:
     '@types/three':
       specifier: 0.172.0
       version: 0.172.0
+    chart.js:
+      specifier: 4.5.1
+      version: 4.5.1
     d3:
       specifier: 7.9.0
       version: 7.9.0
@@ -247,6 +250,9 @@ importers:
       '@vizcrush/downsample':
         specifier: workspace:*
         version: link:../../packages/downsample
+      chart.js:
+        specifier: 'catalog:'
+        version: 4.5.1
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -770,6 +776,9 @@ importers:
       '@vizcrush/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@vizcrush/downsample':
+        specifier: workspace:*
+        version: link:../../packages/downsample
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -1445,6 +1454,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@kurkle/color@0.3.4':
+    resolution: {integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==}
 
   '@modelcontextprotocol/sdk@1.30.0':
     resolution: {integrity: sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA==}
@@ -2270,6 +2282,10 @@ packages:
 
   character-entities-legacy@3.0.0:
     resolution: {integrity: sha512-RpPp0asT/6ufRm//AJVwpViZbGM/MkjQFxJccQRHmISF/22NBtsHqAWmL+/pmkPWoIUJdWyeVleTl1wydHATVQ==}
+
+  chart.js@4.5.1:
+    resolution: {integrity: sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==}
+    engines: {pnpm: '>=8'}
 
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
@@ -3580,6 +3596,8 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
+  '@kurkle/color@0.3.4': {}
+
   '@modelcontextprotocol/sdk@1.30.0(zod@3.25.76)':
     dependencies:
       '@hono/node-server': 2.0.12(hono@4.12.34)
@@ -4290,6 +4308,10 @@ snapshots:
   character-entities-html4@2.1.0: {}
 
   character-entities-legacy@3.0.0: {}
+
+  chart.js@4.5.1:
+    dependencies:
+      '@kurkle/color': 0.3.4
 
   comma-separated-tokens@2.0.3: {}
 

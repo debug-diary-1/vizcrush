@@ -1,9 +1,6 @@
-/**
- * Renders a heatmap visualisation of bin2d output onto a canvas.
- *
- * Each cell in the `grid` (row-major, xBins * yBins) maps to a colour
- * intensity proportional to its count relative to `maxCount`.
- */
+import Chart from "chart.js/auto";
+
+/** Render non-empty vizcrush density bins as a Chart.js scatter dataset. */
 export function renderScatterDensity(
   container: HTMLElement,
   grid: Uint32Array,
@@ -11,46 +8,74 @@ export function renderScatterDensity(
   yBins: number,
   maxCount: number,
 ): void {
-  let canvas = container.querySelector("canvas");
-  if (!canvas) {
-    canvas = document.createElement("canvas");
-    canvas.style.width = "100%";
-    canvas.style.height = "400px";
-    container.appendChild(canvas);
-  }
+  const canvas = document.createElement("canvas");
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute(
+    "aria-label",
+    "Density bins computed from five hundred thousand scatter points",
+  );
+  container.replaceChildren(canvas);
 
-  canvas.width = xBins;
-  canvas.height = yBins;
-
-  // Use nearest-neighbour scaling for crisp bins
-  canvas.style.imageRendering = "pixelated";
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const imageData = ctx.createImageData(xBins, yBins);
-  const data = imageData.data;
+  const points: Array<{ x: number; y: number }> = [];
+  const colors: string[] = [];
+  const radii: number[] = [];
 
   for (let row = 0; row < yBins; row++) {
     for (let col = 0; col < xBins; col++) {
       const count = grid[row * xBins + col];
-      const t = maxCount > 0 ? count / maxCount : 0;
+      if (count === 0) continue;
 
-      // Viridis-inspired colour ramp (dark purple -> teal -> yellow)
+      const t = maxCount > 0 ? count / maxCount : 0;
       const r = Math.round(lerp(13, 253, t));
       const g = Math.round(lerp(8, 231, t));
       const b = Math.round(lerp(135, 37, t));
-      const a = count === 0 ? 0 : 255;
 
-      const idx = (row * xBins + col) * 4;
-      data[idx] = r;
-      data[idx + 1] = g;
-      data[idx + 2] = b;
-      data[idx + 3] = a;
+      points.push({ x: col, y: row });
+      colors.push(`rgb(${r}, ${g}, ${b})`);
+      radii.push(1 + Math.sqrt(t) * 5);
     }
   }
 
-  ctx.putImageData(imageData, 0, 0);
+  new Chart(canvas, {
+    type: "scatter",
+    data: {
+      datasets: [
+        {
+          label: "Non-empty density bins",
+          data: points,
+          pointBackgroundColor: colors,
+          pointBorderWidth: 0,
+          pointRadius: radii,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      parsing: false,
+      normalized: true,
+      scales: {
+        x: {
+          type: "linear",
+          min: 0,
+          max: xBins - 1,
+          grid: { color: "#222" },
+          ticks: { color: "#888" },
+        },
+        y: {
+          type: "linear",
+          min: 0,
+          max: yBins - 1,
+          grid: { color: "#222" },
+          ticks: { color: "#888" },
+        },
+      },
+      plugins: {
+        legend: { labels: { color: "#aaa" } },
+      },
+    },
+  });
 }
 
 function lerp(a: number, b: number, t: number): number {

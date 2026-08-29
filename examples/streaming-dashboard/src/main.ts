@@ -1,5 +1,6 @@
 import { init } from "@vizcrush/core";
 import { streamingStats } from "@vizcrush/aggregate";
+import { lttbSync } from "@vizcrush/downsample";
 
 async function main() {
   const gpu = await init();
@@ -38,23 +39,28 @@ async function main() {
 
     if (displayBuffer.length < 2) return;
 
-    const values = displayBuffer.slice(-DISPLAY_POINTS);
-    const n = values.length;
+    const rawY = Float64Array.from(displayBuffer);
+    const firstTimestamp = totalIngested - rawY.length;
+    const rawX = Float64Array.from(rawY, (_, index) => firstTimestamp + index);
+    const sampled =
+      rawY.length > DISPLAY_POINTS ? lttbSync(rawX, rawY, DISPLAY_POINTS) : { x: rawX, y: rawY };
+    const n = sampled.y.length;
     let min = Infinity,
       max = -Infinity;
-    for (const v of values) {
+    for (const v of sampled.y) {
       if (v < min) min = v;
       if (v > max) max = v;
     }
     const range = max - min || 1;
+    const xRange = sampled.x[n - 1] - sampled.x[0] || 1;
     const padding = 20;
 
     ctx.strokeStyle = "#3b9ecf";
     ctx.lineWidth = 1.5 * devicePixelRatio;
     ctx.beginPath();
     for (let i = 0; i < n; i++) {
-      const x = padding + (i / (n - 1)) * (w - 2 * padding);
-      const y = h - padding - ((values[i] - min) / range) * (h - 2 * padding);
+      const x = padding + ((sampled.x[i] - sampled.x[0]) / xRange) * (w - 2 * padding);
+      const y = h - padding - ((sampled.y[i] - min) / range) * (h - 2 * padding);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
