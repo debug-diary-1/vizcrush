@@ -198,6 +198,22 @@ importers:
         specifier: 'catalog:'
         version: 6.4.3(@types/node@20.19.39)
 
+  examples/backend-lab:
+    dependencies:
+      '@vizcrush/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@vizcrush/downsample':
+        specifier: workspace:*
+        version: link:../../packages/downsample
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 6.4.3(@types/node@20.19.39)
+
   examples/benchmark-3d:
     dependencies:
       '@vizcrush/bin3d':

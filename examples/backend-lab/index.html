@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vizcrush — Backend Lab</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #131210;
+        color: #e8e4df;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 24px 64px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 6px;
+      }
+      .lede {
+        color: #a8a29e;
+        max-width: 68ch;
+        margin-bottom: 22px;
+      }
+      .caps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      .cap {
+        border: 1px solid #2a2926;
+        padding: 2px 8px;
+        color: #8a8580;
+        font-size: 11px;
+      }
+      .cap.on {
+        color: #9ec37d;
+        border-color: #33402c;
+      }
+      .cap.off {
+        color: #6b6660;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: flex-end;
+        margin-bottom: 18px;
+      }
+      label {
+        display: block;
+        color: #8a8580;
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+      select,
+      button {
+        background: #1c1b19;
+        color: #e8e4df;
+        border: 1px solid #33312d;
+        padding: 7px 10px;
+        font-family: inherit;
+        font-size: 13px;
+      }
+      button {
+        cursor: pointer;
+        border-color: #4a463f;
+      }
+      button:hover:not(:disabled) {
+        background: #26241f;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #chart {
+        width: 100%;
+        height: 320px;
+        display: block;
+        border: 1px solid #26241f;
+        background: #0f0e0d;
+      }
+      #status {
+        color: #a8a29e;
+        margin: 12px 0 20px;
+        min-height: 1.6em;
+      }
+      #status[data-busy="true"]::after {
+        content: " ▍";
+        animation: blink 1s steps(2) infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 7px 10px;
+        border-bottom: 1px solid #26241f;
+      }
+      th {
+        color: #8a8580;
+        font-weight: 400;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      td.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      td.dim {
+        color: #8a8580;
+      }
+      td.backend {
+        color: #6ea8fe;
+      }
+      .tag {
+        font-size: 11px;
+        padding: 1px 6px;
+        border: 1px solid #33312d;
+        color: #8a8580;
+      }
+      .tag.stable {
+        color: #9ec37d;
+        border-color: #33402c;
+      }
+      .tag.noisy {
+        color: #d9b169;
+        border-color: #43391f;
+      }
+      .tag.unstable {
+        color: #d98b6b;
+        border-color: #452c22;
+      }
+      .agreement {
+        color: #8a8580;
+        font-size: 12px;
+      }
+      #verdict {
+        margin: 16px 0 0;
+        padding: 12px 14px;
+        border-left: 2px solid #4a463f;
+        color: #e8e4df;
+        max-width: 74ch;
+      }
+      .notes {
+        margin-top: 34px;
+        padding-top: 20px;
+        border-top: 1px solid #26241f;
+        color: #8a8580;
+        font-size: 12px;
+        max-width: 76ch;
+      }
+      .notes h2 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #a8a29e;
+        margin-bottom: 8px;
+        font-weight: 400;
+      }
+      .notes li {
+        margin: 0 0 6px 18px;
+      }
+      a {
+        color: #6ea8fe;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Backend Lab</h1>
+      <p class="lede">
+        Which backend wins is engine- and workload-dependent, and vizcrush publishes the cases where
+        WASM loses as well as the ones where it wins. Rather than ask you to take that on faith,
+        this runs the real LTTB kernel on both backends, on your machine, through the same public
+        API your code would call — and shows you what it measures, including when the answer is
+        &ldquo;no meaningful difference&rdquo;.
+      </p>
+
+      <div class="caps" id="caps"></div>
+
+      <div class="controls">
+        <div>
+          <label for="size">input points</label>
+          <select id="size">
+            <option value="100000">100,000</option>
+            <option value="1000000" selected>1,000,000</option>
+            <option value="5000000">5,000,000</option>
+          </select>
+        </div>
+        <div>
+          <label for="target">downsample to</label>
+          <select id="target">
+            <option value="500">500</option>
+            <option value="2000" selected>2,000</option>
+            <option value="8000">8,000</option>
+          </select>
+        </div>
+        <button id="run">Measure both backends</button>
+      </div>
+
+      <canvas id="chart"></canvas>
+      <p id="status">loading…</p>
+
+      <div id="results"></div>
+      <p id="verdict"></p>
+
+      <div class="notes">
+        <h2>How this measures</h2>
+        <ul>
+          <li>
+            Nothing renders while timing. A benchmark taken with a canvas animation running measured
+            an identical typed-array loop 4.7x slower than the same loop in an idle tab, so the
+            chart is drawn once and then left alone.
+          </li>
+          <li>
+            3 warm-up calls, then 7 timed repetitions. Median, min and max are all shown, because a
+            single run is noise and a spread you cannot see is a spread you will misread.
+          </li>
+          <li>
+            Both backends run the same seeded input, and their outputs are compared before their
+            speeds are: a faster wrong answer is not a faster answer.
+          </li>
+          <li>Ratios below roughly 1.15x are reported as a tie. At seven samples, they are.</li>
+        </ul>
+        <h2 style="margin-top: 16px">What this cannot tell you</h2>
+        <ul>
+          <li>
+            One machine, one engine, one workload. LTTB's inner loop is an argmax with a branch on
+            every point, which is why SIMD does nothing for it (<a
+              href="https://github.com/debug-diary-1/vizcrush/blob/main/docs/adr/0002-wasm-simd-not-engaged.md"
+              >ADR 0002</a
+            >) and why these numbers should not be generalised to other kernels (<a
+              href="https://github.com/debug-diary-1/vizcrush/blob/main/docs/adr/0003-wasm-vs-js-is-engine-dependent.md"
+              >ADR 0003</a
+            >).
+          </li>
+          <li>
+            <strong>Expect roughly parity here, not the 4x from ADR 0003.</strong> That figure comes
+            from calling the raw wasm-bindgen export directly, in headless Chromium, where the JS
+            core runs about 3x slower than it does in Node. This page calls the public API instead,
+            which marshals your arrays across the JS&#8596;WASM boundary the way real callers do.
+            Measured end-to-end that way,
+            <a
+              href="https://github.com/debug-diary-1/vizcrush/blob/main/docs/adr/0001-no-wasm-heap-marshalling-optimization.md"
+              >ADR 0001</a
+            >
+            already records <code>wasm/js &#8776; 1.00x</code> for LTTB at 1M and 10M points. If
+            this page shows you a tie, it is agreeing with the repo, not contradicting it.
+          </li>
+          <li>
+            Cold start is excluded by the warm-up. First-call cost is real, and on every engine
+            measured it is worse for WASM than for JS.
+          </li>
+        </ul>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
