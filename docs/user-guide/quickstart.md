@@ -61,6 +61,7 @@ const result = await minMaxLttb(x, y, 1_000);
 
 ## What's next
 
+- Follow the [production adoption path](production-adoption.md) for renderer adapters and deployment checks
 - Try a [2D heatmap](../packages/bin.md) with `bin2d()`
 - Build a [spatial index](../packages/spatial.md) for a large scatter plot
 - Add [React hooks](react.md)

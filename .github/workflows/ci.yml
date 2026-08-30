@@ -57,11 +57,15 @@ jobs:
         env:
           SKIP_WASM_OPT: "1"
         run: bash scripts/build-wasm.sh
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - name: Lint (oxlint)
         run: pnpm lint
       - name: Format check (oxfmt)
         run: pnpm format:check
+      - name: Generated documentation inventory
+        run: pnpm docs:inventory:check
+      - name: Dependency automation policy
+        run: pnpm check:dependency-policy
       - name: Typecheck
         run: pnpm typecheck
 
@@ -89,7 +93,7 @@ jobs:
         env:
           SKIP_WASM_OPT: "1"
         run: bash scripts/build-wasm.sh
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm turbo build
       - name: Run Vitest
         env:
@@ -121,24 +125,16 @@ jobs:
         env:
           SKIP_WASM_OPT: "1"
         run: bash scripts/build-wasm.sh
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm turbo build
-      - name: Run benchmarks
+      - name: Run regression benchmarks
         env:
-          # CI runners are noisy on CPU-bound benchmarks (sort especially can
-          # vary 50-70% run-to-run). 100% threshold absorbs variance while
-          # still catching real regressions (anything that doubles a hot path).
-          BENCH_THRESHOLD: "1.0"
+          # Shared runners remain noisy on CPU-bound sort benchmarks. A 75%
+          # threshold catches material regressions while the deterministic
+          # input seed removes dataset variance.
+          BENCH_THRESHOLD: "0.75"
+          BENCH_SEED: "42"
         run: node --experimental-vm-modules benchmarks/dist/runner.js
-      - name: Check for regressions
-        env:
-          BENCH_THRESHOLD: "1.0"
-        run: |
-          if [ -f benchmarks/benchmark-baseline.json ]; then
-            node --experimental-vm-modules benchmarks/dist/runner.js
-          else
-            echo "No baseline found — skipping regression check"
-          fi
 
   security:
     name: Security Audit
@@ -150,7 +146,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - name: npm audit
         run: pnpm audit --audit-level=high
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable

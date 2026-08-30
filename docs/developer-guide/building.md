@@ -108,7 +108,7 @@ pnpm bench
 This runs `benchmarks/dist/runner.js` which:
 
 1. Generates synthetic time series and scatter datasets at 100K / 500K / 1M sizes
-2. Times every algorithm (LTTB, bin2d, stats, sort, …)
+2. Times the regression set (LTTB, range filtering, stats, and sort) through the shipped JS cores
 3. Compares against `benchmarks/benchmark-baseline.json` and exits non-zero if any metric is more than 50% slower than baseline
 
 To capture a new baseline (e.g. after a hardware change):

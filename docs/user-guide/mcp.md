@@ -1,6 +1,6 @@
 # MCP Server (Claude / Cursor)
 
-`@vizcrush/mcp-server` exposes the entire vizcrush toolkit — every algorithm, every package — as **MCP tools** that AI agents like Claude Desktop, Claude Code, Cursor, and other MCP-aware clients can call directly.
+`@vizcrush/mcp-server` exposes a curated set of vizcrush workflows as **MCP tools** that AI agents like Claude Desktop, Claude Code, Cursor, and other MCP-aware clients can call directly.
 
 This means an AI agent can "load my CSV, downsample to 1920 points, detect anomalies, and tell me what's interesting" without any glue code on your end.
 
@@ -8,7 +8,7 @@ This means an AI agent can "load my CSV, downsample to 1920 points, detect anoma
 
 [Model Context Protocol](https://modelcontextprotocol.io) is an open standard for AI agents to call tools and access resources from external servers. An MCP server exposes a list of typed tools; an agent picks which ones to call based on user intent.
 
-vizcrush ships with **24+ MCP tools** covering downsampling, binning, spatial indexing, statistics, and AI features.
+vizcrush ships with **24 MCP tools** covering downsampling, binning, spatial indexing, statistics, and AI features. The generated [project inventory](../reference/generated-inventory.md) is the canonical list.
 
 ## Available tools
 
@@ -34,7 +34,7 @@ vizcrush ships with **24+ MCP tools** covering downsampling, binning, spatial in
 | ------------------------- | --------------------------------- |
 | `vizcrush_build_index`    | Build a 2D quadtree               |
 | `vizcrush_query_range`    | Range query on a quadtree         |
-| `vizcrush_query_nearest`  | k-NN on a quadtree                |
+| `vizcrush_delete_index`   | Release a stored 2D or 3D index   |
 | `vizcrush_build_index_3d` | Build a 3D octree                 |
 | `vizcrush_query_range_3d` | Range query on an octree          |
 | `vizcrush_frustum_cull`   | Frustum culling for GPU rendering |
@@ -53,7 +53,7 @@ vizcrush ships with **24+ MCP tools** covering downsampling, binning, spatial in
 | --------------------------- | ----------------------------------- |
 | `vizcrush_summarize`        | Generate a structured data summary  |
 | `vizcrush_detect_anomalies` | Anomaly detection (MAD-based)       |
-| `vizcrush_auto_optimize`    | Recommend algorithm + parameters    |
+| `vizcrush_ai_auto_optimize` | Recommend algorithm + parameters    |
 | `vizcrush_parse_query`      | Parse a natural-language data query |
 | `vizcrush_shape_similarity` | Compare two series by shape         |
 
@@ -67,6 +67,12 @@ vizcrush ships with **24+ MCP tools** covering downsampling, binning, spatial in
 | `vizcrush_inspect_file` | Inspect CSV columns and dtypes  |
 
 All tools have Zod-validated schemas (in `packages/mcp-server/src/schemas.ts`) so the agent gets exact type information for every parameter.
+
+### File and index limits
+
+File tools resolve symlinks before applying `VIZCRUSH_ALLOWED_DIRS`; a symlink inside an allowed directory cannot expose a target outside it. Files default to a 10 MiB limit (`VIZCRUSH_MAX_FILE_SIZE`), and `vizcrush_load_file` returns at most 100,000 rows unless `max_rows` is set to a smaller or larger value (maximum 1,000,000).
+
+Spatial range tools return at most 10,000 indices per call and accept `offset`/`limit` for pagination. The server retains at most 16 indexes per dimension by default, evicts the least recently used index when full, and exposes `vizcrush_delete_index` for explicit cleanup. Set `VIZCRUSH_MAX_STORED_INDEXES` to a positive integer to change the retention cap.
 
 ## Transports
 
@@ -133,13 +139,24 @@ In Cursor settings → MCP → Add server:
 
 ## Setup: HTTP transport (remote)
 
-Run the server as a long-lived HTTP service:
+The HTTP transport binds to `127.0.0.1` by default:
 
 ```bash
 node packages/mcp-server/dist/index.js --transport http --port 3847
 ```
 
-Then point any MCP client at `http://localhost:3847`.
+Then point any MCP client at `http://localhost:3847/mcp`.
+
+To listen on a non-loopback interface, authentication is mandatory:
+
+```bash
+VIZCRUSH_MCP_TOKEN="$(openssl rand -hex 32)" \
+  node packages/mcp-server/dist/index.js --transport http --host 0.0.0.0 --port 3847
+```
+
+Clients send the token as `Authorization: Bearer <token>`. Request bodies are measured as they stream, including chunked requests, and are rejected above 10 MiB.
+
+Browser clients require an explicit allowed origin, for example `VIZCRUSH_MCP_CORS_ORIGIN=https://app.example.com`. Preflight requests are accepted only when that variable is configured; tool requests still require the bearer token.
 
 ## Example agent prompts
 

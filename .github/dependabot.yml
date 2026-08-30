@@ -1,16 +1,8 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    groups:
-      dev-dependencies:
-        dependency-type: "development"
-      production-dependencies:
-        dependency-type: "production"
-
+  # npm updates are reviewed manually because Dependabot currently writes
+  # concrete lockfile versions for pnpm `catalog:` specifiers, producing a
+  # lockfile that fails `pnpm install --frozen-lockfile` (see PRs #49/#50).
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:

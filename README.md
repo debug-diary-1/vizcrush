@@ -40,7 +40,7 @@ Try **[Backend Lab](https://debug-diary-1.github.io/vizcrush/examples/backend-la
 | A React visualization             | [`@vizcrush/react`](https://www.npmjs.com/package/@vizcrush/react)                                                                              | Wraps common operations in React hooks                |
 | An AI-assisted data workflow      | [`@vizcrush/mcp-server`](https://www.npmjs.com/package/@vizcrush/mcp-server)                                                                    | Exposes vizcrush operations as MCP tools              |
 
-See the **[quickstart](https://debug-diary-1.github.io/vizcrush/user-guide/quickstart)**, follow the **[examples learning path](examples/README.md)**, or browse all **[42 runnable examples](https://debug-diary-1.github.io/vizcrush/examples/)**.
+See the **[quickstart](https://debug-diary-1.github.io/vizcrush/user-guide/quickstart)**, follow the **[production adoption path](https://debug-diary-1.github.io/vizcrush/user-guide/production-adoption)**, or browse all **[42 runnable examples](https://debug-diary-1.github.io/vizcrush/examples/)**.
 
 ## Why vizcrush exists
 
@@ -79,7 +79,7 @@ The opt-in WebGPU path for `bin2d` is currently slower end to end than WASM beca
 
 ## MCP server
 
-AI coding agents can invoke 23 vizcrush tools over MCP:
+AI coding agents can invoke 24 vizcrush tools over MCP:
 
 ```json
 {

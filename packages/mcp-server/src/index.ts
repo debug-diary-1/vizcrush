@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z, type ZodRawShape } from "zod";
 import {
   DownsampleInput,
@@ -16,6 +16,7 @@ import {
   BenchmarkInput,
   BuildIndexInput,
   QueryRangeInput,
+  DeleteIndexInput,
   FileInput,
   BuildIndex3dInput,
   QueryRange3dInput,
@@ -32,6 +33,7 @@ import { handleHistogram, handleBin2d } from "./tools/bin.js";
 import { handleStats, handleNormalize, handleSort } from "./tools/stats.js";
 import { handleCapabilities, handleBenchmark } from "./tools/utils.js";
 import { handleBuildIndex, handleQueryRange } from "./tools/spatial.js";
+import { handleDeleteIndex } from "./tools/index-lifecycle.js";
 import {
   handleBuildIndex3d,
   handleQueryRange3d,
@@ -46,6 +48,7 @@ import {
   handleParseQuery,
   handleShapeSimilarity,
 } from "./tools/ai.js";
+import { startHttpServer } from "./http-server.js";
 
 /**
  * Declarative description of one MCP tool. `registerTool` is the one place
@@ -108,8 +111,7 @@ export const TOOLS: ToolDescriptor[] = [
   // ── Spatial Indexing Tools ──
   {
     name: "vizcrush_build_index",
-    description:
-      "Build a spatial index (quadtree) over 2D point data for fast range and nearest queries.",
+    description: "Build a spatial index (quadtree) over 2D point data for fast range queries.",
     schema: BuildIndexInput.shape,
     handler: handleBuildIndex,
   },
@@ -119,12 +121,17 @@ export const TOOLS: ToolDescriptor[] = [
     schema: QueryRangeInput.shape,
     handler: handleQueryRange,
   },
+  {
+    name: "vizcrush_delete_index",
+    description: "Delete a stored 2D or 3D spatial index and release its memory.",
+    schema: DeleteIndexInput.shape,
+    handler: handleDeleteIndex,
+  },
 
   // ── 3D Spatial Tools ──
   {
     name: "vizcrush_build_index_3d",
-    description:
-      "Build a 3D spatial index (octree) over 3D point data for range and nearest queries.",
+    description: "Build a 3D spatial index (octree) over 3D point data for range queries.",
     schema: BuildIndex3dInput.shape,
     handler: handleBuildIndex3d,
   },
@@ -381,120 +388,29 @@ async function main() {
   const isHttp = args.includes("--transport") && args.includes("http");
   const portIdx = args.indexOf("--port");
   const port = portIdx >= 0 ? parseInt(args[portIdx + 1], 10) : 3847;
-
-  const server = createServer();
+  const hostIdx = args.indexOf("--host");
+  const host = hostIdx >= 0 ? args[hostIdx + 1] : "127.0.0.1";
 
   if (isHttp) {
-    const { createServer: createHttpServer } = await import("node:http");
-
-    class RateLimiter {
-      private windows = new Map<string, { count: number; resetAt: number }>();
-      private maxRequests: number;
-      private windowMs: number;
-
-      constructor(maxRequests = 100, windowMs = 60000) {
-        this.maxRequests = maxRequests;
-        this.windowMs = windowMs;
-      }
-
-      check(ip: string): boolean {
-        const now = Date.now();
-        const window = this.windows.get(ip);
-        if (!window || now > window.resetAt) {
-          this.windows.set(ip, { count: 1, resetAt: now + this.windowMs });
-          return true;
-        }
-        window.count++;
-        return window.count <= this.maxRequests;
-      }
-    }
-
-    const rateLimiter = new RateLimiter();
-    const MCP_TOKEN = process.env.VIZCRUSH_MCP_TOKEN;
-    const CORS_ORIGIN = process.env.VIZCRUSH_MCP_CORS_ORIGIN || "";
-    const MAX_BODY = 10 * 1024 * 1024; // 10MB
-
-    if (!MCP_TOKEN) {
-      console.warn(
-        "⚠ WARNING: MCP HTTP server running without authentication. Set VIZCRUSH_MCP_TOKEN for production use.",
-      );
-    }
-
-    const httpTransport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
+    const running = await startHttpServer({
+      createMcpServer: createServer,
+      version: PACKAGE_VERSION,
+      host,
+      port,
+      token: process.env.VIZCRUSH_MCP_TOKEN,
+      corsOrigin: process.env.VIZCRUSH_MCP_CORS_ORIGIN,
     });
-
-    const httpServer = createHttpServer(async (req, res) => {
-      const ip = req.socket.remoteAddress || "unknown";
-
-      // Rate limit
-      if (!rateLimiter.check(ip)) {
-        res.writeHead(429, { "Content-Type": "text/plain" });
-        res.end("Too Many Requests");
-        return;
-      }
-
-      // Auth
-      if (MCP_TOKEN) {
-        const auth = req.headers.authorization;
-        if (!auth || auth !== `Bearer ${MCP_TOKEN}`) {
-          res.writeHead(401, { "Content-Type": "text/plain" });
-          res.end("Unauthorized");
-          return;
-        }
-      }
-
-      // Body size
-      const contentLength = parseInt(req.headers["content-length"] || "0", 10);
-      if (contentLength > MAX_BODY) {
-        res.writeHead(413, { "Content-Type": "text/plain" });
-        res.end("Payload Too Large");
-        return;
-      }
-
-      // Security headers
-      res.setHeader("X-Content-Type-Options", "nosniff");
-      res.setHeader("X-Frame-Options", "DENY");
-
-      // CORS
-      if (CORS_ORIGIN) {
-        res.setHeader("Access-Control-Allow-Origin", CORS_ORIGIN);
-        res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        if (req.method === "OPTIONS") {
-          res.writeHead(204);
-          res.end();
-          return;
-        }
-      } else {
-        // Deny cross-origin by default
-        res.setHeader("Access-Control-Allow-Origin", "");
-      }
-
-      const url = new URL(req.url ?? "/", `http://localhost:${port}`);
-
-      if (url.pathname === "/mcp") {
-        await httpTransport.handleRequest(req, res);
-      } else if (url.pathname === "/health") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ status: "ok", version: PACKAGE_VERSION }));
-      } else {
-        res.writeHead(404);
-        res.end("Not found");
-      }
-    });
-
-    await server.connect(httpTransport);
-    httpServer.listen(port, () => {
-      console.error(`vizcrush MCP server running at http://localhost:${port}/mcp`);
-    });
+    console.error(`vizcrush MCP server running at ${running.url}`);
   } else {
+    const server = createServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
   }
 }
 
-main().catch((error) => {
-  console.error("MCP server error:", error);
-  process.exit(1);
-});
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
+  main().catch((error) => {
+    console.error("MCP server error:", error);
+    process.exit(1);
+  });
+}

@@ -1,5 +1,28 @@
 # Changelog
 
+## Reliability and adoption hardening (2026-08-29)
+
+### `@vizcrush/mcp-server` v1.1.0
+
+- Resolves real filesystem targets before enforcing allowed directories, closing symlink escapes.
+- Binds HTTP to loopback by default, requires authentication for non-loopback listeners, and measures streamed request bodies rather than trusting `Content-Length`.
+- Caps file rows and spatial query results, bounds retained indexes with LRU eviction, and adds `vizcrush_delete_index`.
+
+### `@vizcrush/react` v1.0.1
+
+- Invalidates in-flight results when inputs are cleared, reacts to explicit bin ranges, and recreates streaming accumulators when `windowSize` changes.
+
+### `@vizcrush/aggregate` v1.1.1
+
+- Fixes rolling `StreamingStats` at `windowSize=1`, which divided by zero while replacing the single retained value.
+
+### Repository verification
+
+- Benchmarks call shipped cores with deterministic data and reviewed, replaceable baselines.
+- Freshly packed npm artifacts execute JS/WASM parity checks in Chromium, Firefox, and WebKit.
+- Source-derived documentation inventories and pnpm-catalog dependency policy checks now fail CI on drift.
+- Adds a production adoption path with renderer adapters and deployment checks.
+
 ## @vizcrush/aggregate v1.1.0 (2026-08-29)
 
 ### `appendAndDownsample` now throws

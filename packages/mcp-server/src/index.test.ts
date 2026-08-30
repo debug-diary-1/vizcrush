@@ -1,4 +1,7 @@
-import { describe, test, expect } from "vitest";
+import { afterEach, describe, test, expect } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, TOOLS } from "./index.js";
@@ -15,13 +18,23 @@ import {
   getIndexList,
   getIndexDetail,
 } from "./tools/spatial.js";
-import { handleFileInspect } from "./tools/file-input.js";
+import { handleDeleteIndex } from "./tools/index-lifecycle.js";
+import { handleFileInspect, handleFileLoad } from "./tools/file-input.js";
+
+const temporaryDirectories: string[] = [];
+
+afterEach(() => {
+  delete process.env.VIZCRUSH_ALLOWED_DIRS;
+  for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 describe("MCP tool registry wiring", () => {
   test("every descriptor has a unique name", () => {
     const names = TOOLS.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);
-    expect(names.length).toBe(23);
+    expect(names.length).toBe(24);
   });
 
   test("createServer + a real client round-trip lists and calls a tool", async () => {
@@ -230,8 +243,9 @@ describe("MCP spatial tools", () => {
       y_min: 10,
       y_max: 20,
     });
+    if ("error" in queryResult) throw new Error(queryResult.error);
     expect(queryResult.count).toBeGreaterThan(0);
-    for (const idx of queryResult.indices!) {
+    for (const idx of queryResult.indices) {
       expect(x[idx]).toBeGreaterThanOrEqual(10);
       expect(x[idx]).toBeLessThanOrEqual(20);
     }
@@ -262,11 +276,82 @@ describe("MCP spatial tools", () => {
     expect(detail.point_count).toBe(10);
     expect(detail.sample_points!.length).toBe(10);
   });
+
+  test("range queries paginate large result sets", () => {
+    const x = Array.from({ length: 100 }, (_, i) => i);
+    const y = Array.from({ length: 100 }, (_, i) => i);
+    handleBuildIndex({ x, y, index_id: "paginated" });
+
+    const result = handleQueryRange({
+      index_id: "paginated",
+      x_min: 0,
+      x_max: 99,
+      y_min: 0,
+      y_max: 99,
+      limit: 5,
+      offset: 0,
+    });
+    if ("error" in result) throw new Error(result.error);
+
+    expect(result.count).toBe(5);
+    expect(result.total_count).toBe(100);
+    expect(result.truncated).toBe(true);
+    expect(result.next_offset).toBe(5);
+  });
+
+  test("stored indexes can be explicitly deleted", () => {
+    handleBuildIndex({ x: [0, 1], y: [0, 1], index_id: "delete-me" });
+
+    expect(handleDeleteIndex({ index_id: "delete-me", dimension: "2d" })).toEqual({
+      index_id: "delete-me",
+      deleted: true,
+    });
+    expect(
+      handleQueryRange({
+        index_id: "delete-me",
+        x_min: 0,
+        x_max: 1,
+        y_min: 0,
+        y_max: 1,
+      }),
+    ).toHaveProperty("error");
+  });
 });
 
 describe("MCP file tools", () => {
   test("inspect nonexistent file returns error", () => {
     const result = handleFileInspect({ file_path: "/nonexistent/file.csv" });
     expect(result).toHaveProperty("error");
+  });
+
+  test("an allowed-directory symlink cannot expose a file outside that directory", () => {
+    const root = mkdtempSync(join(tmpdir(), "vizcrush-file-policy-"));
+    temporaryDirectories.push(root);
+    const allowed = join(root, "allowed");
+    const outside = join(root, "outside.csv");
+    const symlink = join(allowed, "data.csv");
+
+    mkdirSync(allowed);
+    writeFileSync(outside, "x,y\n1,2\n", "utf8");
+    symlinkSync(outside, symlink);
+    process.env.VIZCRUSH_ALLOWED_DIRS = allowed;
+
+    const result = handleFileLoad({ file_path: symlink, delimiter: "," });
+
+    expect(result).toEqual({
+      error: expect.stringContaining("outside allowed directories"),
+    });
+  });
+
+  test("file loading caps the number of rows returned to an agent", () => {
+    const root = mkdtempSync(join(tmpdir(), "vizcrush-file-limit-"));
+    temporaryDirectories.push(root);
+    const csv = join(root, "data.csv");
+    writeFileSync(csv, "x,y\n1,2\n3,4\n5,6\n", "utf8");
+    process.env.VIZCRUSH_ALLOWED_DIRS = root;
+
+    const result = handleFileLoad({ file_path: csv, delimiter: ",", max_rows: 2 });
+
+    expect(result).toMatchObject({ point_count: 2, truncated: true });
   });
 });

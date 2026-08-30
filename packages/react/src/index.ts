@@ -52,12 +52,15 @@ function useAsyncKernel<T>(
   const pendingRef = useRef(0);
 
   useEffect(() => {
+    const id = ++pendingRef.current;
     if (!compute) {
       setData(null);
+      setLoading(false);
+      setError(null);
+      setElapsed(null);
       return;
     }
 
-    const id = ++pendingRef.current;
     setLoading(true);
     setError(null);
 
@@ -136,10 +139,21 @@ export function useBin2d(
 ): UseBin2dResult {
   const xBins = options?.xBins ?? 256;
   const yBins = options?.yBins ?? 256;
+  const xRange = options?.xRange;
+  const yRange = options?.yRange;
 
   const compute = x && y && x.length > 0 ? () => bin2d(x, y, { xBins, yBins, ...options }) : null;
 
-  return useAsyncKernel(compute, [x, y, xBins, yBins]);
+  return useAsyncKernel(compute, [
+    x,
+    y,
+    xBins,
+    yBins,
+    xRange?.[0],
+    xRange?.[1],
+    yRange?.[0],
+    yRange?.[1],
+  ]);
 }
 
 // ── Stats Hook ──
@@ -190,7 +204,13 @@ export interface UseStreamingStatsResult {
 
 export function useStreamingStats(windowSize: number): UseStreamingStatsResult {
   const accRef = useRef<StreamingStats>(streamingStats(windowSize));
+  const windowSizeRef = useRef(windowSize);
   const [, forceUpdate] = useState(0);
+
+  if (windowSizeRef.current !== windowSize) {
+    windowSizeRef.current = windowSize;
+    accRef.current = streamingStats(windowSize);
+  }
 
   const push = useCallback((value: number) => {
     accRef.current.push(value);

@@ -647,17 +647,20 @@ npx @vizcrush/mcp-server --transport http --port 3847
 
 ---
 
-## 8. Testing Strategy
+## 8. Current Verification
 
-| Layer                  | Tool                      | Scope                                                                              |
-| ---------------------- | ------------------------- | ---------------------------------------------------------------------------------- |
-| Unit (Rust)            | `cargo test` + `proptest` | Algorithm correctness; SIMD parity with scalar; edge cases (empty, 1-element, NaN) |
-| Unit (TypeScript)      | `vitest`                  | Binding correctness; type safety; error paths                                      |
-| Integration            | Playwright + Chrome       | Full init → compute → verify cycle in real browser with WebGPU                     |
-| Performance regression | Benchmark.js + CI         | Automated perf comparison on every PR; fail if >10% regression                     |
-| Cross-browser          | BrowserStack              | Chrome, Edge, Firefox, Safari matrix on each release                               |
-| Fuzz                   | `cargo-fuzz`              | Random typed-array inputs to catch panics/OOB in WASM                              |
-| MCP server             | MCP Inspector             | Tool registration, input validation, response format verification                  |
+The original strategy named tools that were never installed. The repository now verifies these concrete seams:
+
+| Layer             | Tool                                              | Scope                                                                                    |
+| ----------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Rust              | `cargo fmt`, `clippy`, `cargo test`               | Algorithm correctness, edge cases, and WASM compilation                                  |
+| TypeScript        | Vitest                                            | Public package behavior, property tests, kernel parity, and MCP protocol round-trips     |
+| Packaged browsers | Playwright                                        | Freshly packed npm artifacts executing real WASM and JS in Chromium, Firefox, and WebKit |
+| Bundler           | Vite fixture                                      | Emitted WASM asset and statically analyzable package self-import                         |
+| Performance       | Deterministic Node runner                         | Shipped JS cores compared with a reviewed baseline; shared-runner threshold is 75%       |
+| Security          | `pnpm audit`, `cargo audit`, MCP regression tests | Dependency advisories, file-policy escapes, authentication, and streamed body limits     |
+
+`cargo-fuzz`, BrowserStack, and a 10% shared-runner performance gate remain unimplemented; this document no longer presents them as shipped.
 
 ---
 
@@ -665,13 +668,13 @@ npx @vizcrush/mcp-server --transport http --port 3847
 
 > Timelines below are the original planning dates, kept for the record.
 
-| Version          | Timeline       | Scope                                                                                                                                                                                     |
-| ---------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **v0.1.0 (MVP)** | April 2026     | LTTB + MinMaxLTTB + histogram + stats + init/detect. WASM+SIMD only. TypeScript bindings. MCP server (stdio, downsample + stats + capabilities tools). Benchmark suite. Launch blog post. |
-| **v0.2.0**       | June 2026      | WebGPU compute shaders for bin2d, quadtree, sort. Auto backend selection. MCP: add bin2d, build_index, query_range, benchmark tools. Streamable HTTP transport. React hook wrapper.       |
-| **v0.3.0**       | September 2026 | Streaming aggregation. Hexbin. filterRange. MCP Prompts (optimize_chart, profile_data, migration_guide). WebGL fallback. VS Code MCP Apps integration.                                    |
-| **v0.4.0**       | December 2026  | t-digest percentiles. kd-tree. SharedArrayBuffer zero-copy. ChartGPU plugin. deck.gl integration example. MCP: file-based data input (CSV, Arrow).                                        |
-| **v1.0.0**       | Q1 2027        | Stable API. Full test coverage. Comprehensive docs. Performance regression CI. MCP Resources (expose spatial indexes). Listed on awesome-mcp-servers, mcp.so, PulseMCP.                   |
+| Version          | Timeline       | Current status             | Original scope                                                                                                                              |
+| ---------------- | -------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **v0.1.0 (MVP)** | April 2026     | Shipped, corrected by ADRs | LTTB + MinMaxLTTB + histogram + stats + init/detect. WASM+SIMD only. TypeScript bindings. MCP server. Benchmark suite.                      |
+| **v0.2.0**       | June 2026      | Partial                    | bin2d WebGPU, MCP spatial tools, HTTP, and React shipped; WebGPU quadtree/sort did not.                                                     |
+| **v0.3.0**       | September 2026 | Partial                    | Streaming aggregation, hexbin, filterRange, and prompts shipped; WebGL fallback and VS Code MCP Apps did not.                               |
+| **v0.4.0**       | December 2026  | Partial                    | CSV input and integrations shipped; t-digest/kd-tree remain Rust-only, Arrow input is absent, and SharedArrayBuffer zero-copy was rejected. |
+| **v1.0.0**       | Q1 2027        | Partial                    | Packages, docs, performance CI, and MCP resources shipped; “full coverage” and directory listings were not completed claims.                |
 
 > **v1.1+ algorithm expansion:** see §14 (Algorithm Expansion Roadmap) for the post-v1.0 algorithm pipeline — GPU foundation primitives, streaming sketches (DDSketch, KLL, HLL++, Count-Min), GPU M4, Morton/radix sort, spatial hash grid, CUSUM, and transform extensions.
 
@@ -1286,6 +1289,8 @@ benchmarks/
 ## 14. Algorithm Expansion Roadmap
 
 This section captures the planned algorithm additions beyond the v0.1–v1.0 roadmap in Section 9, the rationale for each, and the load-bearing design decisions (portability traps, library opinions, dependency ordering) that future work must respect. Entries are scoped to _what, why, where, dependencies, complexity_ — full API sketches land in per-algorithm PRs, not here. The spec captures decisions; the code captures interfaces.
+
+**Implementation status (August 2026):** reservoir sampling, DDSketch, KLL, HyperLogLog, Count-Min Sketch, Morton ordering, spatial hash grids, CUSUM, log/power transforms, and quantile normalization ship today. GPU scan/segmented reduction/compaction, GPU M4, and GPU radix sort remain future work. Treat the numbered ordering below as historical planning, not a current backlog.
 
 ### 14.1 Design Stances
 
