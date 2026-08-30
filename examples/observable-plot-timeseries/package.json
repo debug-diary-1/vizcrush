@@ -1,0 +1,17 @@
+{
+  "name": "vizcrush-observable-plot-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@observablehq/plot": "catalog:",
+    "@vizcrush/downsample": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

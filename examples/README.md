@@ -7,14 +7,19 @@ The gallery contains two deliberately labeled kinds of runnable demos:
 
 Browse the [live gallery](https://debug-diary-1.github.io/vizcrush/examples/) or use this path through the repository:
 
-| Start with                                        | What it teaches                                                      |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
-| [`backend-lab`](./backend-lab/)                   | How backend selection and JS/WASM performance behave in your browser |
-| [`financial-timeseries`](./financial-timeseries/) | How to reduce a million-point series while preserving spikes         |
-| [`chartgpu-integration`](./chartgpu-integration/) | How to feed LTTB and `bin2d` output into Chart.js                    |
-| [`d3-large-scatter`](./d3-large-scatter/)         | How to combine D3 rendering with vizcrush spatial queries            |
-| [`threejs-integration`](./threejs-integration/)   | How to use an octree to cull a large Three.js point cloud            |
-| [`streaming-dashboard`](./streaming-dashboard/)   | How to combine rolling statistics with LTTB in a live view           |
+| Start with                                                    | What it teaches                                                      |
+| ------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [`backend-lab`](./backend-lab/)                               | How backend selection and JS/WASM performance behave in your browser |
+| [`financial-timeseries`](./financial-timeseries/)             | How to reduce a million-point series while preserving spikes         |
+| [`chartgpu-integration`](./chartgpu-integration/)             | How to feed LTTB and `bin2d` output into Chart.js                    |
+| [`d3-large-scatter`](./d3-large-scatter/)                     | How to combine D3 rendering with vizcrush spatial queries            |
+| [`threejs-integration`](./threejs-integration/)               | How to use an octree to cull a large Three.js point cloud            |
+| [`streaming-dashboard`](./streaming-dashboard/)               | How to combine rolling statistics with LTTB in a live view           |
+| [`react-echarts-dashboard`](./react-echarts-dashboard/)       | How to use vizcrush React hooks with an ECharts renderer             |
+| [`worker-pipeline`](./worker-pipeline/)                       | How to transfer typed arrays through a Web Worker                    |
+| [`deckgl-density-lod`](./deckgl-density-lod/)                 | How to aggregate density before constructing deck.gl render objects  |
+| [`observable-plot-timeseries`](./observable-plot-timeseries/) | How to bound SVG marks before Observable Plot rendering              |
+| [`arrow-data-pipeline`](./arrow-data-pipeline/)               | How to process numeric columns decoded from Arrow IPC                |
 
 ## Run locally
 

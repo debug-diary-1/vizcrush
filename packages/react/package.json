@@ -47,10 +47,10 @@
   "devDependencies": {
     "@testing-library/react": "^16.3.2",
     "@types/react": "catalog:",
-    "@types/react-dom": "^19.2.4",
+    "@types/react-dom": "catalog:",
     "jsdom": "^30.0.1",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {

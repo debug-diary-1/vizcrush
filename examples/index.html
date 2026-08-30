@@ -729,6 +729,51 @@
           complexity: 3,
         },
         {
+          name: "react-echarts-dashboard",
+          title: "React + ECharts",
+          desc: "React hooks reduce and summarize 1M samples before ECharts rendering",
+          category: "Integrations",
+          algorithms: ["useVizcrush", "useDownsample", "useStats"],
+          complexity: 2,
+          kind: "vizcrush",
+        },
+        {
+          name: "worker-pipeline",
+          title: "Worker Pipeline",
+          desc: "Transferable typed arrays processed with LTTB in a module worker",
+          category: "Integrations",
+          algorithms: ["lttb"],
+          complexity: 2,
+          kind: "vizcrush",
+        },
+        {
+          name: "deckgl-density-lod",
+          title: "deck.gl Density LOD",
+          desc: "Bound 1M positions into density cells before deck.gl rendering",
+          category: "Integrations",
+          algorithms: ["bin2dWithBackend"],
+          complexity: 2,
+          kind: "vizcrush",
+        },
+        {
+          name: "observable-plot-timeseries",
+          title: "Observable Plot",
+          desc: "LTTB bounds SVG marks while preserving Plot's declarative API",
+          category: "Integrations",
+          algorithms: ["lttb"],
+          complexity: 1,
+          kind: "vizcrush",
+        },
+        {
+          name: "arrow-data-pipeline",
+          title: "Apache Arrow Pipeline",
+          desc: "Arrow IPC numeric columns flow through LTTB and stats to Canvas",
+          category: "Integrations",
+          algorithms: ["lttb", "stats"],
+          complexity: 2,
+          kind: "vizcrush",
+        },
+        {
           name: "ai-playground",
           title: "AI Playground",
           desc: "Interactive anomaly detection, auto-optimization, shape similarity",
@@ -756,6 +801,7 @@
         "Spatial",
         "GPU",
         "Showcase",
+        "Integrations",
         "AI",
       ];
 
@@ -768,6 +814,7 @@
         Spatial: "#facc15",
         GPU: "#f87171",
         Showcase: "#22d3ee",
+        Integrations: "#55d6be",
         AI: "#c084fc",
       };
 

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Worker pipeline · vizcrush</title>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">vizcrush adoption example</p>
+      <h1>Transfer → process → render</h1>
+      <p class="lede">
+        Two million samples move to a module worker without copying their ArrayBuffers. The worker
+        runs LTTB and transfers the reduced result back for Canvas rendering.
+      </p>
+      <button id="run" type="button">Run worker pipeline</button>
+      <section class="metrics" aria-live="polite">
+        <article><span>Input</span><strong id="input">2,000,000</strong></article>
+        <article><span>Executed worker backend</span><strong id="backend">—</strong></article>
+        <article><span>Warm worker compute</span><strong id="compute">—</strong></article>
+        <article><span>Round trip</span><strong id="roundtrip">—</strong></article>
+        <article><span>Largest frame gap</span><strong id="frame-gap">—</strong></article>
+        <article><span>Input bytes after transfer</span><strong id="detached">—</strong></article>
+      </section>
+      <canvas id="chart" width="1200" height="480" aria-label="Downsampled line chart"></canvas>
+      <p id="status" class="note">
+        Ready. Data generation and one worker warm-up are excluded from the reported compute time.
+      </p>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

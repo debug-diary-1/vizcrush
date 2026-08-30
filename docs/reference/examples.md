@@ -1,6 +1,6 @@
 # Examples Gallery
 
-vizcrush ships with 37 runnable example apps under `examples/`. Gallery cards distinguish examples that import vizcrush from adjacent graphics demos that teach browser rendering techniques. For a guided route through the collection, start with the [examples README](https://github.com/debug-diary-1/vizcrush/tree/main/examples).
+vizcrush ships with 42 runnable example apps under `examples/`. Gallery cards distinguish examples that import vizcrush from adjacent graphics demos that teach browser rendering techniques. For a guided route through the collection, start with the [examples README](https://github.com/debug-diary-1/vizcrush/tree/main/examples).
 
 ## Time-Series
 
@@ -301,6 +301,46 @@ Three.js nature scene with terrain, waterfall, and bird flock simulation.
 **Folder:** `examples/threejs-nature/`
 
 ## AI & Integrations
+
+### `react-echarts-dashboard`
+
+React controls backed by `@vizcrush/react` hooks reduce and summarize a one-million-point typed-array series before a real ECharts canvas renderer receives it.
+
+**vizcrush APIs:** `useDownsample`, `useStats`, `useVizcrush`
+
+**Folder:** `examples/react-echarts-dashboard/`
+
+### `worker-pipeline`
+
+Transfers typed-array buffers to a module worker, runs LTTB away from the main thread, and transfers the bounded result back for Canvas rendering.
+
+**vizcrush algorithms:** `lttb`
+
+**Folder:** `examples/worker-pipeline/`
+
+### `deckgl-density-lod`
+
+Aggregates one million positions into selectable density-grid levels before constructing deck.gl `GridCellLayer` objects.
+
+**vizcrush algorithms:** `bin2dWithBackend`
+
+**Folder:** `examples/deckgl-density-lod/`
+
+### `observable-plot-timeseries`
+
+Uses LTTB to bound the number of SVG marks while keeping Observable Plot's declarative chart API.
+
+**vizcrush algorithms:** `lttb`
+
+**Folder:** `examples/observable-plot-timeseries/`
+
+### `arrow-data-pipeline`
+
+Decodes numeric columns from an Apache Arrow IPC stream, sends those typed arrays through LTTB and statistics, and renders the bounded result with Canvas.
+
+**vizcrush algorithms:** `lttb`, `stats`
+
+**Folder:** `examples/arrow-data-pipeline/`
 
 ### `ai-playground`
 
