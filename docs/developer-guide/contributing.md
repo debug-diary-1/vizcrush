@@ -24,16 +24,19 @@ We welcome contributions! See the repo's **[CONTRIBUTING.md](https://github.com/
 
 ## CI gates
 
-Every PR runs four CI jobs:
+Code-affecting PRs run five CI jobs:
 
 | Job                           | What it checks                                                                            |
 | ----------------------------- | ----------------------------------------------------------------------------------------- |
 | **Rust Tests**                | `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`, WASM build with `+simd128` |
 | **Lint + Format + Typecheck** | `pnpm lint` (oxlint `--deny-warnings`), `pnpm format:check` (oxfmt), `pnpm typecheck`     |
 | **TypeScript Build + Test**   | `pnpm turbo build`, `vitest run`                                                          |
-| **Performance Regression**    | Run benchmarks, compare to baseline with 50% threshold                                    |
+| **Performance Regression**    | Run benchmarks, compare to baseline with 75% threshold                                    |
+| **Security Audit**            | Audit pnpm and Cargo dependencies                                                         |
 
-All four must pass before a PR can merge. CI is intentionally strict — `oxlint --deny-warnings` and `cargo clippy -D warnings` mean even cosmetic warnings block the build.
+Documentation-only PRs instead run formatting, generated-inventory validation, and the VitePress build. The expensive Rust, TypeScript, benchmark, security, and packaged-browser jobs are skipped. Required jobs use job-level conditions so GitHub records a successful skip rather than leaving a required check pending. The lightweight change-scope and documentation checks are also required, so classification or docs-validation failures still block merging.
+
+All required jobs must pass before a PR can merge. CI is intentionally strict — `oxlint --deny-warnings` and `cargo clippy -D warnings` mean even cosmetic warnings block the build.
 
 ## Style
 
