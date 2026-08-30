@@ -1,0 +1,85 @@
+:root {
+  color: #1e1930;
+  background: #f5f2ff;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+main {
+  width: min(1120px, calc(100% - 32px));
+  margin: auto;
+  padding: 48px 0;
+}
+.eyebrow {
+  color: #6543e8;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+h1 {
+  margin: 6px 0;
+  font-size: clamp(2.2rem, 6vw, 4.6rem);
+  letter-spacing: -0.05em;
+}
+.lede,
+.note {
+  max-width: 740px;
+  color: #625b79;
+  line-height: 1.6;
+}
+label {
+  display: grid;
+  width: 180px;
+  gap: 7px;
+  margin: 24px 0 14px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+select {
+  border: 1px solid #c8bfeb;
+  border-radius: 8px;
+  padding: 10px;
+  background: white;
+  color: inherit;
+  font: inherit;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+article {
+  border: 1px solid #d7d0ef;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fff;
+}
+article span {
+  display: block;
+  color: #81769f;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+article strong {
+  display: block;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+#plot {
+  min-height: 480px;
+  border: 1px solid #d7d0ef;
+  border-radius: 14px;
+  padding: 8px;
+  background: white;
+  overflow: hidden;
+}
+#plot svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
