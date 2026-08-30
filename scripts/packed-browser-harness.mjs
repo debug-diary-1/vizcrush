@@ -9,6 +9,23 @@ import { build, preview } from "vite";
 const repositoryRoot = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const browserTypes = { chromium, firefox, webkit };
 
+export function createPackedFixturePackageJson(coreTarball, downsampleTarball) {
+  return {
+    name: "vizcrush-packed-browser-fixture",
+    private: true,
+    type: "module",
+    dependencies: {
+      "@vizcrush/core": `file:${coreTarball}`,
+      "@vizcrush/downsample": `file:${downsampleTarball}`,
+    },
+    pnpm: {
+      overrides: {
+        "@vizcrush/core": `file:${coreTarball}`,
+      },
+    },
+  };
+}
+
 function run(command, args, cwd = repositoryRoot) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8", stdio: "pipe" });
   if (result.status !== 0) {
@@ -48,19 +65,7 @@ export async function runPackedBrowserSmoke({ browser }) {
     );
     writeFileSync(
       join(fixtureDirectory, "package.json"),
-      JSON.stringify(
-        {
-          name: "vizcrush-packed-browser-fixture",
-          private: true,
-          type: "module",
-          dependencies: {
-            "@vizcrush/core": `file:${coreTarball}`,
-            "@vizcrush/downsample": `file:${downsampleTarball}`,
-          },
-        },
-        null,
-        2,
-      ),
+      JSON.stringify(createPackedFixturePackageJson(coreTarball, downsampleTarball), null, 2),
     );
     writeFileSync(
       join(fixtureDirectory, "index.html"),
@@ -115,6 +120,19 @@ export async function runPackedBrowserSmoke({ browser }) {
     );
 
     run("pnpm", ["install", "--dir", fixtureDirectory, "--ignore-scripts", "--no-frozen-lockfile"]);
+
+    const directCoreEntry = realpathSync(
+      join(fixtureDirectory, "node_modules/@vizcrush/core/dist/index.js"),
+    );
+    const downsampleDirectory = realpathSync(
+      join(fixtureDirectory, "node_modules/@vizcrush/downsample"),
+    );
+    const transitiveCoreEntry = realpathSync(join(downsampleDirectory, "../core/dist/index.js"));
+    if (transitiveCoreEntry !== directCoreEntry) {
+      throw new Error(
+        `Packed downsample resolved a different core package: ${transitiveCoreEntry}`,
+      );
+    }
 
     await build({
       root: fixtureDirectory,

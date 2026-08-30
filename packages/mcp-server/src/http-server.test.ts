@@ -1,7 +1,9 @@
 import { request } from "node:http";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { describe, expect, test } from "vitest";
 import { createServer } from "./index.js";
-import { startHttpServer } from "./http-server.js";
+import { isLoopbackHost, startHttpServer } from "./http-server.js";
 
 describe("MCP HTTP transport", () => {
   test("listens on loopback unless a host is explicitly configured", async () => {
@@ -28,6 +30,12 @@ describe("MCP HTTP transport", () => {
         version: "test",
       }),
     ).rejects.toThrow("requires VIZCRUSH_MCP_TOKEN");
+  });
+
+  test("does not treat a hostname beginning with 127 as a loopback address", () => {
+    expect(isLoopbackHost("127.192.168.1.5.nip.io")).toBe(false);
+    expect(isLoopbackHost("127.0.0.1")).toBe(true);
+    expect(isLoopbackHost("127.255.255.254")).toBe(true);
   });
 
   test("rejects a forged Host header on a tokenless loopback listener", async () => {
@@ -93,12 +101,24 @@ describe("MCP HTTP transport", () => {
     });
 
     try {
-      const response = await new Promise<{ origin?: string; status: number }>((resolve, reject) => {
-        const req = request(running.url, { method: "OPTIONS" });
+      const response = await new Promise<{
+        allowedHeaders?: string;
+        origin?: string;
+        status: number;
+      }>((resolve, reject) => {
+        const req = request(running.url, {
+          method: "OPTIONS",
+          headers: {
+            origin: "https://app.example.com",
+            "access-control-request-headers":
+              "content-type, authorization, mcp-protocol-version, mcp-session-id",
+          },
+        });
         req.on("response", (incoming) => {
           incoming.resume();
           incoming.on("end", () =>
             resolve({
+              allowedHeaders: incoming.headers["access-control-allow-headers"],
               origin: incoming.headers["access-control-allow-origin"],
               status: incoming.statusCode ?? 0,
             }),
@@ -108,7 +128,11 @@ describe("MCP HTTP transport", () => {
         req.end();
       });
 
-      expect(response).toEqual({ origin: "https://app.example.com", status: 204 });
+      expect(response).toEqual({
+        allowedHeaders: "Content-Type, Authorization, Mcp-Protocol-Version, Mcp-Session-Id",
+        origin: "https://app.example.com",
+        status: 204,
+      });
     } finally {
       await running.close();
     }
@@ -138,6 +162,24 @@ describe("MCP HTTP transport", () => {
 
       expect(status).toBe(204);
     } finally {
+      await running.close();
+    }
+  });
+
+  test("supports initialize and a subsequent request through the SDK HTTP client", async () => {
+    const running = await startHttpServer({
+      createMcpServer: createServer,
+      port: 0,
+      version: "test",
+    });
+    const client = new Client({ name: "http-test-client", version: "0.0.0" });
+
+    try {
+      await client.connect(new StreamableHTTPClientTransport(new URL(running.url)));
+      const { tools } = await client.listTools();
+      expect(tools.map((tool) => tool.name)).toContain("vizcrush_lttb");
+    } finally {
+      await client.close();
       await running.close();
     }
   });

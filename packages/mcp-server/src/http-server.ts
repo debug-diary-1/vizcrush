@@ -4,7 +4,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import type { AddressInfo } from "node:net";
+import { isIP, type AddressInfo } from "node:net";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
@@ -102,8 +102,11 @@ function readJsonBody(req: IncomingMessage, maxBytes: number): Promise<BodyResul
   });
 }
 
-function isLoopbackHost(host: string): boolean {
-  return host === "localhost" || host === "::1" || host.startsWith("127.");
+export function isLoopbackHost(host: string): boolean {
+  const normalized = host.toLowerCase();
+  if (normalized === "localhost") return true;
+  if (isIP(normalized) === 4) return normalized.split(".")[0] === "127";
+  return normalized === "::1" || normalized === "0:0:0:0:0:0:0:1";
 }
 
 function formatHostForUrl(host: string): string {
@@ -168,7 +171,10 @@ export async function startHttpServer(options: HttpServerOptions): Promise<Runni
     if (options.corsOrigin) {
       res.setHeader("Access-Control-Allow-Origin", options.corsOrigin);
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, Mcp-Protocol-Version, Mcp-Session-Id",
+      );
     }
 
     if (!token && !tokenlessRequestIsAllowed(req, host, boundPort, options.corsOrigin)) {
@@ -248,6 +254,13 @@ export async function startHttpServer(options: HttpServerOptions): Promise<Runni
     httpServer.once("error", reject);
     httpServer.listen(port, host, () => {
       httpServer.off("error", reject);
+      const address = httpServer.address() as AddressInfo;
+      if (!token && !isLoopbackHost(address.address)) {
+        httpServer.close(() =>
+          reject(new Error("A non-loopback MCP HTTP listener requires VIZCRUSH_MCP_TOKEN.")),
+        );
+        return;
+      }
       resolve();
     });
   });
