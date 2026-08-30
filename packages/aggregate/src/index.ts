@@ -117,14 +117,21 @@ export class StreamingStats {
     if (old !== undefined) {
       // Remove old from running stats
       const n = this._count;
-      const delta = old - this._mean;
-      this._mean = (this._mean * n - old) / (n - 1);
-      const delta2 = old - this._mean;
-      this._m2 -= delta * delta2;
-      if (this._m2 < 0) this._m2 = 0;
+      if (n === 1) {
+        this._mean = 0;
+        this._m2 = 0;
+        this._min = Infinity;
+        this._max = -Infinity;
+      } else {
+        const delta = old - this._mean;
+        this._mean = (this._mean * n - old) / (n - 1);
+        const delta2 = old - this._mean;
+        this._m2 -= delta * delta2;
+        if (this._m2 < 0) this._m2 = 0;
 
-      if (old <= this._min || old >= this._max) {
-        this.recomputeMinMax();
+        if (old <= this._min || old >= this._max) {
+          this.recomputeMinMax();
+        }
       }
     }
 

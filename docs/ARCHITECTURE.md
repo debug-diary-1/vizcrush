@@ -25,7 +25,7 @@ flowchart TB
             TRANS["Transform<br/>Sort, Normalize,<br/>Filter"]
         end
 
-        MCP["MCP Server<br/>23 tools · 3 prompts · 2 resources"]
+        MCP["MCP Server<br/>24 tools · 3 prompts · 2 resources"]
     end
 
     DS -->|"Raw Data<br/>Float64Array<br/>(millions of points)"| INIT
@@ -265,7 +265,7 @@ flowchart BT
     REACT --> TRANS
     REACT --> SPAT
 
-    MCP["@vizcrush/mcp-server<br/>23 tools, 3 prompts"] --> DOWN
+    MCP["@vizcrush/mcp-server<br/>24 tools, 3 prompts"] --> DOWN
     MCP --> BIN
     MCP --> AGG
     MCP --> TRANS

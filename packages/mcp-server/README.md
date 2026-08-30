@@ -1,6 +1,6 @@
 # @vizcrush/mcp-server
 
-> MCP server exposing 23 vizcrush data-processing tools to AI agents.
+> MCP server exposing 24 vizcrush data-processing tools to AI agents.
 
 Part of [vizcrush](https://github.com/debug-diary-1/vizcrush) — high-performance data primitives for browser visualization,
 written in Rust, compiled to WebAssembly, with a pure-JS fallback.

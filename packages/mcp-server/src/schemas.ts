@@ -77,6 +77,13 @@ export const QueryRangeInput = z.object({
   x_max: z.number().describe("Right bound"),
   y_min: z.number().describe("Bottom bound"),
   y_max: z.number().describe("Top bound"),
+  offset: z.number().int().min(0).default(0).describe("Result offset for pagination"),
+  limit: z.number().int().min(1).max(10_000).default(10_000).describe("Maximum indices returned"),
+});
+
+export const DeleteIndexInput = z.object({
+  index_id: z.string().describe("Stored index ID"),
+  dimension: z.enum(["2d", "3d"]).default("2d").describe("Index store to delete from"),
 });
 
 export const FileInput = z.object({
@@ -84,11 +91,18 @@ export const FileInput = z.object({
     .string()
     .max(4096)
     .describe(
-      "Path to CSV or Arrow file. Subject to path restrictions: must be within allowed directories (VIZCRUSH_ALLOWED_DIRS) and must not match blocked patterns (e.g., .ssh, .env, .pem).",
+      "Path to a CSV file. Subject to real-path restrictions: must be within allowed directories (VIZCRUSH_ALLOWED_DIRS) and must not match blocked patterns (e.g., .ssh, .env, .pem).",
     ),
   x_column: z.string().optional().describe("Column name for X values"),
   y_column: z.string().optional().describe("Column name for Y values"),
   delimiter: z.string().default(",").describe("CSV delimiter"),
+  max_rows: z
+    .number()
+    .int()
+    .min(1)
+    .max(1_000_000)
+    .default(100_000)
+    .describe("Maximum data rows returned to the agent"),
 });
 
 export const BuildIndex3dInput = z.object({
@@ -106,6 +120,8 @@ export const QueryRange3dInput = z.object({
   y_max: z.number(),
   z_min: z.number(),
   z_max: z.number(),
+  offset: z.number().int().min(0).default(0).describe("Result offset for pagination"),
+  limit: z.number().int().min(1).max(10_000).default(10_000).describe("Maximum indices returned"),
 });
 
 export const Bin3dInput = z.object({

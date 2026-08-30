@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, realpathSync, statSync } from "node:fs";
 import { resolve, relative, isAbsolute } from "node:path";
 import type { FileInputType } from "../schemas.js";
 
@@ -9,6 +9,10 @@ const BLOCKED_PATTERNS = [
   /\/\.git\//i,
   /\/\.gnupg\//i,
   /\/\.config\/gh\//i,
+  /\/\.docker\/config\.json$/i,
+  /\/\.netrc$/i,
+  /\/\.npmrc$/i,
+  /\/\.pypirc$/i,
   /\.pem$/i,
   /\.key$/i,
   /\.p12$/i,
@@ -19,19 +23,47 @@ const BLOCKED_PATTERNS = [
   /secrets?\./i,
 ];
 
-const MAX_FILE_SIZE = parseInt(process.env.VIZCRUSH_MAX_FILE_SIZE || "104857600", 10); // 100MB
+const configuredMaxFileSize = Number.parseInt(
+  process.env.VIZCRUSH_MAX_FILE_SIZE || String(10 * 1024 * 1024),
+  10,
+);
+const MAX_FILE_SIZE =
+  Number.isSafeInteger(configuredMaxFileSize) && configuredMaxFileSize > 0
+    ? configuredMaxFileSize
+    : 10 * 1024 * 1024;
 
 function validateFilePath(filePath: string): string {
-  // Resolve to absolute
   const resolved = resolve(filePath);
 
+  let realPath: string;
+  try {
+    realPath = realpathSync(resolved);
+  } catch (error: any) {
+    if (error.code === "ENOENT") throw new Error(`File not found: '${filePath}'`);
+    throw new Error(`Cannot access file: '${filePath}'`);
+  }
+
   // Check against allowed base directories
-  const allowedDirs = (process.env.VIZCRUSH_ALLOWED_DIRS || process.cwd())
+  const configuredAllowedDirs = (process.env.VIZCRUSH_ALLOWED_DIRS || process.cwd())
     .split(",")
-    .map((d) => resolve(d.trim()));
+    .map((directory) => directory.trim())
+    .filter(Boolean);
+  if (configuredAllowedDirs.length === 0) {
+    throw new Error("VIZCRUSH_ALLOWED_DIRS does not contain a directory.");
+  }
+  const allowedDirs = configuredAllowedDirs.map((directory) => {
+    try {
+      return realpathSync(resolve(directory));
+    } catch {
+      throw new Error(
+        `Configured allowed directory cannot be resolved: '${directory}'. ` +
+          "Check VIZCRUSH_ALLOWED_DIRS.",
+      );
+    }
+  });
 
   const isAllowed = allowedDirs.some((dir) => {
-    const rel = relative(dir, resolved);
+    const rel = relative(dir, realPath);
     return !rel.startsWith("..") && !isAbsolute(rel);
   });
 
@@ -43,15 +75,19 @@ function validateFilePath(filePath: string): string {
   }
 
   // Check blocked patterns
+  const portableRealPath = realPath.replaceAll("\\", "/");
   for (const pattern of BLOCKED_PATTERNS) {
-    if (pattern.test(resolved)) {
+    if (pattern.test(portableRealPath)) {
       throw new Error(`Access denied: '${filePath}' matches a blocked pattern.`);
     }
   }
 
   // Check file size
   try {
-    const stat = statSync(resolved);
+    const stat = statSync(realPath);
+    if (!stat.isFile()) {
+      throw new Error(`Access denied: '${filePath}' is not a regular file.`);
+    }
     if (stat.size > MAX_FILE_SIZE) {
       throw new Error(
         `File too large: ${(stat.size / 1048576).toFixed(1)}MB exceeds ` +
@@ -64,15 +100,16 @@ function validateFilePath(filePath: string): string {
     throw new Error(`Cannot access file: '${filePath}'`);
   }
 
-  return resolved;
+  return realPath;
 }
 
 /**
  * Parse a CSV file into numeric arrays for vizcrush tools.
  * Supports custom delimiters and column selection.
  */
-export function handleFileLoad(input: FileInputType) {
+export function handleFileLoad(input: Omit<FileInputType, "max_rows"> & { max_rows?: number }) {
   const start = performance.now();
+  const maxRows = input.max_rows ?? 100_000;
 
   let content: string;
   try {
@@ -111,8 +148,13 @@ export function handleFileLoad(input: FileInputType) {
   const x: number[] = [];
   const y: number[] = [];
   let skipped = 0;
+  let truncated = false;
 
   for (let i = 1; i < lines.length; i++) {
+    if (x.length >= maxRows) {
+      truncated = true;
+      break;
+    }
     const parts = lines[i].split(delimiter);
     const xVal = parseFloat(parts[xIdx]);
     const yVal = parseFloat(parts[yIdx]);
@@ -132,6 +174,7 @@ export function handleFileLoad(input: FileInputType) {
     y,
     point_count: x.length,
     skipped_rows: skipped,
+    truncated,
     columns: headers,
     x_column: xCol,
     y_column: yCol,

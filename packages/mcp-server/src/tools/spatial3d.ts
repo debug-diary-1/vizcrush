@@ -12,11 +12,14 @@ import {
   frustumCullSync,
   type OctreeHandle,
 } from "@vizcrush/spatial3d";
+import { BoundedIndexStore, paginateIndices } from "./bounded-index-store.js";
 
-const indexes3d = new Map<
-  string,
-  { x: number[]; y: number[]; z: number[]; handle: OctreeHandle }
->();
+const indexes3d = new BoundedIndexStore<{
+  x: number[];
+  y: number[];
+  z: number[];
+  handle: OctreeHandle;
+}>();
 let counter3d = 0;
 
 export function handleBuildIndex3d(input: {
@@ -56,12 +59,14 @@ export function handleQueryRange3d(input: {
   y_max: number;
   z_min: number;
   z_max: number;
+  offset?: number;
+  limit?: number;
 }) {
   const entry = indexes3d.get(input.index_id);
   if (!entry) return { error: `3D index '${input.index_id}' not found` };
 
   const start = performance.now();
-  const indices = Array.from(
+  const page = paginateIndices(
     queryRange3d(entry.handle, {
       xMin: input.x_min,
       xMax: input.x_max,
@@ -70,13 +75,18 @@ export function handleQueryRange3d(input: {
       zMin: input.z_min,
       zMax: input.z_max,
     }),
+    input.offset,
+    input.limit,
   );
 
   return {
-    indices,
-    count: indices.length,
+    ...page,
     elapsed_ms: Math.round((performance.now() - start) * 100) / 100,
   };
+}
+
+export function deleteIndex3d(indexId: string): boolean {
+  return indexes3d.delete(indexId);
 }
 
 export function handleBin3d(input: {

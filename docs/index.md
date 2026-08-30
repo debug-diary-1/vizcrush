@@ -33,7 +33,7 @@ features:
     details: Anomaly + changepoint detection, auto-config, shape embeddings, NL query parsing.
     link: /packages/ai
   - title: MCP Server
-    details: Expose 23 tools to Claude, Cursor, and other MCP-aware agents over stdio or HTTP.
+    details: Expose 24 tools to Claude, Cursor, and other MCP-aware agents over stdio or HTTP.
     link: /user-guide/mcp
 ---
 

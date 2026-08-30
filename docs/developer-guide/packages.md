@@ -48,7 +48,7 @@ crates/vizcrush-<name>/
 | Package                | Rust crate? | What it ships                                                               |
 | ---------------------- | ----------- | --------------------------------------------------------------------------- |
 | `@vizcrush/react`      | none        | `useVizcrush`, `useDownsample`, `useBin2d`, `useStats`, `useStreamingStats` |
-| `@vizcrush/mcp-server` | none        | MCP server (stdio + HTTP) exposing 23 tools, 3 prompts, 2 resources         |
+| `@vizcrush/mcp-server` | none        | MCP server (stdio + HTTP) exposing 24 tools, 3 prompts, 2 resources         |
 
 ## Public API conventions
 

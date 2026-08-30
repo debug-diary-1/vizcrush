@@ -109,6 +109,18 @@ describe("streamingStats", () => {
     expect(ss.mean).toBeCloseTo(9, 5);
   });
 
+  test("window=1 replaces its only value without corrupting statistics", () => {
+    const ss = streamingStats(1);
+    ss.push(10);
+    ss.push(20);
+
+    expect(ss.length).toBe(1);
+    expect(ss.mean).toBe(20);
+    expect(ss.min).toBe(20);
+    expect(ss.max).toBe(20);
+    expect(ss.variance).toBe(0);
+  });
+
   test("pushBatch adds multiple values at once", () => {
     const ss = streamingStats(10);
 
