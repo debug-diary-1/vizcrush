@@ -1,13 +1,19 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { compareWithBaseline, persistBenchmarkArtifacts, runBenchmarkSuite } from "./suite.js";
+import {
+  compareWithBaseline,
+  parseBenchmarkSeed,
+  parseBenchmarkThreshold,
+  persistBenchmarkArtifacts,
+  runBenchmarkSuite,
+} from "./suite.js";
 
 const benchmarkDirectory = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const saveBaseline = process.argv.includes("--save-baseline");
 const quick = process.argv.includes("--quick");
-const threshold = Number.parseFloat(process.env.BENCH_THRESHOLD ?? "0.25");
-const seed = Number.parseInt(process.env.BENCH_SEED ?? "42", 10);
+const threshold = parseBenchmarkThreshold(process.env.BENCH_THRESHOLD ?? "0.25");
+const seed = parseBenchmarkSeed(process.env.BENCH_SEED ?? "42");
 const resultsPath = resolve(
   process.env.BENCH_RESULTS_PATH ?? `${benchmarkDirectory}/results/latest.json`,
 );

@@ -6,6 +6,8 @@ import {
   benchmarkOperations,
   compareWithBaseline,
   generateTimeSeries,
+  parseBenchmarkSeed,
+  parseBenchmarkThreshold,
   persistBenchmarkArtifacts,
   type BenchmarkOutput,
 } from "./suite.js";
@@ -19,6 +21,18 @@ afterEach(() => {
 });
 
 describe("benchmark suite", () => {
+  test("rejects invalid benchmark environment values", () => {
+    expect(() => parseBenchmarkThreshold("NaN")).toThrow(/threshold/i);
+    expect(() => parseBenchmarkThreshold("-0.1")).toThrow(/threshold/i);
+    expect(() => parseBenchmarkSeed("42junk")).toThrow(/seed/i);
+    expect(() => parseBenchmarkSeed("1.5")).toThrow(/seed/i);
+  });
+
+  test("accepts finite thresholds and integer seeds", () => {
+    expect(parseBenchmarkThreshold("0.75")).toBe(0.75);
+    expect(parseBenchmarkSeed("42")).toBe(42);
+  });
+
   test("named operations execute the shipped vizcrush cores", () => {
     const values = new Float64Array([3, 1, 2]);
 
@@ -111,5 +125,48 @@ describe("benchmark suite", () => {
     expect(() => compareWithBaseline(output, baselinePath, 0.75)).toThrow(
       /no entry for stats 100/i,
     );
+  });
+
+  test("rejects a malformed baseline result collection", () => {
+    const directory = mkdtempSync(join(tmpdir(), "vizcrush-benchmark-"));
+    temporaryDirectories.push(directory);
+    const baselinePath = join(directory, "baseline.json");
+    const output: BenchmarkOutput = {
+      timestamp: "new",
+      platform: "test",
+      nodeVersion: "test",
+      seed: 42,
+      results: [],
+    };
+    writeFileSync(baselinePath, JSON.stringify({ ...output, results: null }));
+
+    expect(() => compareWithBaseline(output, baselinePath, 0.75)).toThrow(/invalid.*results/i);
+  });
+
+  test("rejects a zero or non-finite baseline median", () => {
+    const directory = mkdtempSync(join(tmpdir(), "vizcrush-benchmark-"));
+    temporaryDirectories.push(directory);
+    const baselinePath = join(directory, "baseline.json");
+    const result = {
+      name: "stats",
+      dataSize: 100,
+      medianMs: 1,
+      p95Ms: 1,
+      minMs: 1,
+      backend: "js" as const,
+    };
+    const output: BenchmarkOutput = {
+      timestamp: "new",
+      platform: "test",
+      nodeVersion: "test",
+      seed: 42,
+      results: [result],
+    };
+    writeFileSync(
+      baselinePath,
+      JSON.stringify({ ...output, results: [{ ...result, medianMs: 0 }] }),
+    );
+
+    expect(() => compareWithBaseline(output, baselinePath, 0.75)).toThrow(/invalid.*median/i);
   });
 });

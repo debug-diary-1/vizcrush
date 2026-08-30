@@ -4,8 +4,8 @@ Thanks for your interest in contributing! This guide covers everything you need 
 
 ## Prerequisites
 
-- **Rust** (stable, latest) — `rustup update stable`
-- **wasm32 target** — `rustup target add wasm32-unknown-unknown`
+- **Rust 1.94.1** — `rustup toolchain install 1.94.1`
+- **wasm32 target** — `rustup target add --toolchain 1.94.1 wasm32-unknown-unknown`
 - **Node.js 24+** (see `engines` in `package.json`)
 - **pnpm 10+** — `npm install -g pnpm`
 - **wasm-bindgen-cli** (optional, for WASM builds) — `cargo install wasm-bindgen-cli`

@@ -61,7 +61,9 @@ for (const entry of await readdir(join(root, "examples"), { withFileTypes: true 
   try {
     await access(join(root, "examples", entry.name, "index.html"));
     runnableExamples.push(entry.name);
-  } catch {}
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
 }
 runnableExamples.sort();
 

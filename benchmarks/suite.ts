@@ -27,6 +27,22 @@ export interface BenchmarkArtifactOptions {
   saveBaseline: boolean;
 }
 
+export function parseBenchmarkThreshold(value: string): number {
+  const threshold = Number(value);
+  if (value.trim() === "" || !Number.isFinite(threshold) || threshold < 0) {
+    throw new Error(`BENCH_THRESHOLD must be a finite non-negative number; received ${value}`);
+  }
+  return threshold;
+}
+
+export function parseBenchmarkSeed(value: string): number {
+  const seed = Number(value);
+  if (value.trim() === "" || !Number.isSafeInteger(seed)) {
+    throw new Error(`BENCH_SEED must be a safe integer; received ${value}`);
+  }
+  return seed;
+}
+
 export const benchmarkOperations = {
   lttb: (x: Float64Array, y: Float64Array, target: number) => lttbSync(x, y, target),
   filterRange: (x: Float64Array, y: Float64Array, viewportMin: number, viewportMax: number) =>
@@ -150,7 +166,10 @@ export function compareWithBaseline(
   if (!existsSync(baselinePath)) {
     throw new Error(`Benchmark baseline not found at ${baselinePath}`);
   }
-  const baseline = JSON.parse(readFileSync(baselinePath, "utf8")) as BenchmarkOutput;
+  const baseline = JSON.parse(readFileSync(baselinePath, "utf8")) as unknown;
+  if (!isRecord(baseline) || !Array.isArray(baseline.results)) {
+    throw new Error("Benchmark baseline is invalid: results must be an array");
+  }
   if (!Number.isSafeInteger(baseline.seed) || baseline.seed !== output.seed) {
     throw new Error(
       `Benchmark baseline seed mismatch: expected ${output.seed}, found ${String(baseline.seed)}`,
@@ -159,18 +178,33 @@ export function compareWithBaseline(
   const regressions: string[] = [];
   for (const result of output.results) {
     const previous = baseline.results.find(
-      (entry) => entry.name === result.name && entry.dataSize === result.dataSize,
+      (entry) =>
+        isRecord(entry) && entry.name === result.name && entry.dataSize === result.dataSize,
     );
     if (!previous) {
       throw new Error(`Benchmark baseline has no entry for ${result.name} ${result.dataSize}`);
     }
-    const ratio = result.medianMs / previous.medianMs;
+    const previousMedian = isRecord(previous) ? previous.medianMs : undefined;
+    if (
+      typeof previousMedian !== "number" ||
+      !Number.isFinite(previousMedian) ||
+      previousMedian <= 0
+    ) {
+      throw new Error(
+        `Benchmark baseline has an invalid median for ${result.name} ${result.dataSize}`,
+      );
+    }
+    const ratio = result.medianMs / previousMedian;
     if (ratio > 1 + threshold) {
       regressions.push(
         `${result.name} ${result.dataSize}: ${((ratio - 1) * 100).toFixed(1)}% slower ` +
-          `(${previous.medianMs}ms -> ${result.medianMs}ms)`,
+          `(${previousMedian}ms -> ${result.medianMs}ms)`,
       );
     }
   }
   return regressions;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

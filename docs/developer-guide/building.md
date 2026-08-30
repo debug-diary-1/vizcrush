@@ -8,7 +8,7 @@ Everything you need to build vizcrush locally — Rust crates → WASM → TypeS
 | ----------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Node.js                 | 24+                                          | `volta install node@24` (recommended) or `nvm install 24`                                                      |
 | pnpm                    | 10.33+                                       | `corepack enable` (auto-installs the version pinned in `package.json`)                                         |
-| Rust toolchain          | stable, with `wasm32-unknown-unknown` target | `rustup default stable && rustup target add wasm32-unknown-unknown`                                            |
+| Rust toolchain          | 1.94.1, with `wasm32-unknown-unknown` target | `rustup toolchain install 1.94.1 && rustup target add --toolchain 1.94.1 wasm32-unknown-unknown`               |
 | `wasm-bindgen-cli`      | matching `wasm-bindgen` version              | `cargo install wasm-bindgen-cli`                                                                               |
 | `wasm-opt` _(optional)_ | latest                                       | `brew install binaryen` or download from [binaryen releases](https://github.com/WebAssembly/binaryen/releases) |
 
@@ -107,9 +107,9 @@ pnpm bench
 
 This runs `benchmarks/dist/runner.js` which:
 
-1. Generates synthetic time series and scatter datasets at 100K / 500K / 1M sizes
+1. Generates seeded synthetic time-series datasets at 100K / 500K / 1M sizes
 2. Times the regression set (LTTB, range filtering, stats, and sort) through the shipped JS cores
-3. Compares against `benchmarks/benchmark-baseline.json` and exits non-zero if any metric is more than 50% slower than baseline
+3. Compares against `benchmarks/benchmark-baseline.json` and exits non-zero if any metric exceeds the configured threshold (25% by default; CI allows 75% for shared-runner noise)
 
 To capture a new baseline (e.g. after a hardware change):
 
