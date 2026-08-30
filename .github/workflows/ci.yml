@@ -54,7 +54,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli --version 0.2.115 # must match wasm-bindgen pin in Cargo.toml
+        run: cargo install wasm-bindgen-cli --version 0.2.115 --locked # must match wasm-bindgen pin in Cargo.toml
       # The packages import their wasm-bindgen glue by package specifier so the
       # path survives bundling, which also means `tsc` resolves it. The glue and
       # its .d.ts are generated, so anything that typechecks or builds now needs
@@ -93,7 +93,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli --version 0.2.115 # must match wasm-bindgen pin in Cargo.toml
+        run: cargo install wasm-bindgen-cli --version 0.2.115 --locked # must match wasm-bindgen pin in Cargo.toml
       # Parity tests verify JS ≡ WASM through the kernel seam and REQUIRE the
       # real wasm build — without it they used to skip silently, meaning CI
       # never actually verified parity. wasm-opt is skipped: parity semantics
@@ -128,7 +128,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli --version 0.2.115 # must match wasm-bindgen pin in Cargo.toml
+        run: cargo install wasm-bindgen-cli --version 0.2.115 --locked # must match wasm-bindgen pin in Cargo.toml
       # The packages import their wasm-bindgen glue by package specifier so the
       # path survives bundling, which also means `tsc` resolves it. The glue and
       # its .d.ts are generated, so anything that typechecks or builds now needs
@@ -168,5 +168,5 @@ jobs:
           toolchain: 1.94.1
       - name: cargo audit
         run: |
-          cargo install cargo-audit --quiet
+          cargo install cargo-audit --version 0.22.2 --locked --quiet
           cargo audit

@@ -29,7 +29,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli --version 0.2.115
+        run: cargo install wasm-bindgen-cli --version 0.2.115 --locked
       - name: Build WASM
         env:
           SKIP_WASM_OPT: "1"

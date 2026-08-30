@@ -9,7 +9,7 @@ Everything you need to build vizcrush locally — Rust crates → WASM → TypeS
 | Node.js                 | 24+                                          | `volta install node@24` (recommended) or `nvm install 24`                                                      |
 | pnpm                    | 10.33+                                       | `corepack enable` (auto-installs the version pinned in `package.json`)                                         |
 | Rust toolchain          | 1.94.1, with `wasm32-unknown-unknown` target | `rustup toolchain install 1.94.1 && rustup target add --toolchain 1.94.1 wasm32-unknown-unknown`               |
-| `wasm-bindgen-cli`      | matching `wasm-bindgen` version              | `cargo install wasm-bindgen-cli`                                                                               |
+| `wasm-bindgen-cli`      | 0.2.115, matching `wasm-bindgen`             | `cargo install wasm-bindgen-cli --version 0.2.115 --locked`                                                    |
 | `wasm-opt` _(optional)_ | latest                                       | `brew install binaryen` or download from [binaryen releases](https://github.com/WebAssembly/binaryen/releases) |
 
 If you're on macOS with Volta installed, the repo's `package.json` pins Node 24 automatically — `cd`'ing into the repo switches your shell to the right version.
@@ -158,7 +158,7 @@ CI runs the same `mkdocs build --strict` and deploys to GitHub Pages on push to 
 Run `rustup target add wasm32-unknown-unknown` to install the target. The `+simd128` target feature also requires Rust 1.78+.
 
 ??? note "`wasm-bindgen` version mismatch"
-`cargo install wasm-bindgen-cli` installs the latest, but your `Cargo.lock` may pin an older version. Match them: `cargo install wasm-bindgen-cli --version <X.Y.Z>` where `<X.Y.Z>` is the version from `Cargo.lock`.
+The CLI must match the `wasm-bindgen` version in `Cargo.lock`. Install the pinned release from its lockfile: `cargo install wasm-bindgen-cli --version 0.2.115 --locked`.
 
 ??? note "`pnpm install` warns about engines"
 `engines.node` requires Node 24. Install Node 24 (`volta install node@24` or `nvm install 24`). The warning is non-fatal but several deps assume Node 24+.

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { dependabotUsesNpm, findNonFrozenPnpmInstalls } from "./dependency-policy.mjs";
+import {
+  dependabotUsesNpm,
+  findNonFrozenPnpmInstalls,
+  findUnpinnedCargoInstalls,
+} from "./dependency-policy.mjs";
 
 describe("dependency policy", () => {
   test.each([
@@ -35,5 +39,15 @@ describe("dependency policy", () => {
 
   test("does not accept a frozen-lockfile flag that appears only in a comment", () => {
     expect(findNonFrozenPnpmInstalls("run: pnpm install # --frozen-lockfile")).toEqual([1]);
+  });
+
+  test("requires CI cargo installs to pin a version and use the crate lockfile", () => {
+    const source = [
+      "run: cargo install cargo-audit --quiet",
+      "run: cargo install cargo-audit --version 0.22.2",
+      "run: cargo install cargo-audit --version 0.22.2 --locked",
+    ].join("\n");
+
+    expect(findUnpinnedCargoInstalls(source)).toEqual([1, 2]);
   });
 });
