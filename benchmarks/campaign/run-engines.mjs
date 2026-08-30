@@ -1,24 +1,17 @@
 // Cross-engine arm: Chromium (V8), Firefox (SpiderMonkey), WebKit
 // (JavaScriptCore) on their current Playwright builds, in one session against
 // one build of the library. Writes raw per-repetition samples so the analysis
-// can report dispersion rather than a bare minimum.
+// can report dispersion rather than a bare minimum. Sizes, reps, warmups, and
+// seed come from the shared protocol module, the same one the page itself
+// loads.
 //
 //   node benchmarks/campaign/run-engines.mjs
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { chromium, firefox, webkit } from "playwright";
+import { REPS, SEED, SIZES, WARMUPS } from "./protocol.mjs";
 import { startServer } from "./serve.mjs";
 import { median } from "./stats.mjs";
-
-// N calls per timed block, chosen so a block lands near ~100ms in the SLOWEST
-// engine, keeping the ~1ms timer quantization of Firefox/WebKit near 1%.
-const SIZES = [
-  { n: 100_000, calls: 300, asyncCalls: 100 },
-  { n: 1_000_000, calls: 30, asyncCalls: 20 },
-];
-const REPS = 15;
-const WARMUPS = 3;
-const SEED = 42;
 
 const engines = [
   ["chromium", chromium],
@@ -79,5 +72,5 @@ try {
 results.finishedAt = new Date().toISOString();
 const out = new URL("./results/raw.json", import.meta.url);
 mkdirSync(new URL("./results/", import.meta.url), { recursive: true });
-writeFileSync(out, JSON.stringify(results, null, 2));
+writeFileSync(out, `${JSON.stringify(results, null, 2)}\n`);
 process.stdout.write(`\nwrote ${out.pathname}\n`);

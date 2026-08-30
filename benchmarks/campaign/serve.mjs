@@ -24,6 +24,12 @@ const TYPES = {
   ".map": "application/json; charset=utf-8",
 };
 
+/**
+ * Start the static server on `port` (0 picks an ephemeral one). Resolves to
+ * `{ url, close }` where `url` is the harness page and `close()` resolves
+ * once the server has shut down. Requests are confined to the repository
+ * root; directories and unknown paths return 404.
+ */
 export function startServer(port = 0) {
   const server = createServer(async (req, res) => {
     // Strip the query string, then normalize away any `..` segments before

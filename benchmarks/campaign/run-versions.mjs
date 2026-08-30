@@ -4,13 +4,17 @@
 // on its own, say what changed. Between two campaigns the browser build may
 // change, but so may the harness, the statistic, the machine, and the browser
 // lifecycle. This script holds all of those fixed and varies ONLY the engine
-// binary, using the Chromium builds Playwright has already cached.
+// binary, using the Chromium builds Playwright has already cached (see the
+// README for how to obtain the historical builds).
 //
 // It also measures each build in several independent launches, so the reported
 // spread is across-launch (fresh process, fresh JIT state) rather than the
-// much smaller within-session spread.
+// much smaller within-session spread. Launches are ordered ROUND-ROBIN —
+// every build once, then every build again — so that slow machine-state drift
+// lands across all builds instead of being confounded with build order.
 //
 //   SESSIONS=5 node benchmarks/campaign/run-versions.mjs
+//   VERSIONS_OUT=versions-run2.json node benchmarks/campaign/run-versions.mjs
 //
 // Chromium only: Playwright's Firefox and WebKit distributions are launched
 // through `pw_run.sh`, which is a wrapper script rather than a browser
@@ -18,61 +22,115 @@
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
+import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { REPS, SEED, SIZES, WARMUPS } from "./protocol.mjs";
 import { startServer } from "./serve.mjs";
 import { median } from "./stats.mjs";
 
-const CACHE = process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${homedir()}/Library/Caches/ms-playwright`;
-const SESSIONS = Number(process.env.SESSIONS ?? 5);
-const SIZES = [
-  { n: 100_000, calls: 300, asyncCalls: 100 },
-  { n: 1_000_000, calls: 30, asyncCalls: 20 },
-];
-const REPS = 15;
-const WARMUPS = 3;
-const SEED = 42;
+const DEFAULT_CACHE =
+  process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${homedir()}/Library/Caches/ms-playwright`;
 
-function cachedChromiumBuilds() {
-  if (!existsSync(CACHE)) return [];
-  return readdirSync(CACHE)
+// Chromium executable location inside a cached build, per Playwright platform.
+const EXE_LAYOUTS = [
+  "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+  "chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+  "chrome-linux/chrome",
+  "chrome-win/chrome.exe",
+];
+
+/**
+ * Discover cached Chromium builds under `cache`, ascending by build number.
+ * A `chromium-<n>` directory counts only if a known executable layout exists
+ * inside it.
+ */
+export function cachedChromiumBuilds(cache = DEFAULT_CACHE) {
+  if (!existsSync(cache)) return [];
+  return readdirSync(cache)
     .filter((entry) => /^chromium-\d+$/u.test(entry))
     .map((entry) => ({
       build: entry,
-      exe: `${CACHE}/${entry}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`,
+      exe: EXE_LAYOUTS.map((layout) => `${cache}/${entry}/${layout}`).find(existsSync) ?? null,
     }))
-    .filter((candidate) => existsSync(candidate.exe))
+    .filter((candidate) => candidate.exe !== null)
     .sort((a, b) => Number(a.build.split("-")[1]) - Number(b.build.split("-")[1]));
 }
 
-const builds = cachedChromiumBuilds();
-if (builds.length === 0) {
-  process.stderr.write(`No cached Chromium builds found under ${CACHE}\n`);
-  process.exit(1);
+/**
+ * Parse a SESSIONS value into a positive integer launch count, or throw.
+ * Zero, negative, fractional, and non-numeric values are configuration
+ * errors, not requests for an empty sweep.
+ */
+export function parseSessions(value, fallback = 5) {
+  if (value === undefined || value === "") return fallback;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new Error(`SESSIONS must be a positive integer, got "${value}"`);
+  }
+  return n;
 }
 
-const server = await startServer();
-const out = {
-  startedAt: new Date().toISOString(),
-  purpose: "engine-version sweep, independent launches per session",
-  machine: { platform: process.platform, arch: process.arch, node: process.version },
-  config: { sessions: SESSIONS, sizes: SIZES, reps: REPS, warmups: WARMUPS, seed: SEED },
-  targets: [],
-};
-const resultsDir = new URL("./results/", import.meta.url);
-const outPath = new URL("./results/versions.json", import.meta.url);
+/**
+ * Round-robin measurement order: session 0 of every build, then session 1 of
+ * every build, and so on. Interleaving decouples slow machine-state drift
+ * from build identity; the sequential alternative would confound the two.
+ */
+export function sessionPlan(builds, sessions) {
+  const plan = [];
+  for (let session = 0; session < sessions; session += 1) {
+    for (const build of builds) plan.push({ session, build });
+  }
+  return plan;
+}
 
-try {
-  for (const { build, exe } of builds) {
-    process.stdout.write(`\n=== ${build}\n`);
+async function main() {
+  const sessions = parseSessions(process.env.SESSIONS);
+  const builds = cachedChromiumBuilds();
+  if (builds.length === 0) {
+    process.stderr.write(`No cached Chromium builds found under ${DEFAULT_CACHE}\n`);
+    process.exit(1);
+  }
+
+  const server = await startServer();
+  const out = {
+    startedAt: new Date().toISOString(),
+    purpose: "engine-version sweep, independent launches per session, round-robin build order",
+    machine: { platform: process.platform, arch: process.arch, node: process.version },
+    config: {
+      sessions,
+      order: "round-robin (session-major)",
+      sizes: SIZES,
+      reps: REPS,
+      warmups: WARMUPS,
+      seed: SEED,
+    },
+    targets: [],
+  };
+  const records = new Map();
+  for (const { build } of builds) {
     const record = { label: build, version: null, sessions: [] };
+    records.set(build, record);
+    out.targets.push(record);
+  }
 
-    for (let index = 0; index < SESSIONS; index += 1) {
+  const resultsDir = new URL("./results/", import.meta.url);
+  const outPath = new URL(process.env.VERSIONS_OUT ?? "versions.json", resultsDir);
+  mkdirSync(resultsDir, { recursive: true });
+
+  const dead = new Set();
+  let order = 0;
+  try {
+    for (const { session, build } of sessionPlan(builds, sessions)) {
+      if (dead.has(build.build)) continue;
+      const record = records.get(build.build);
+
       let browser;
       try {
-        browser = await chromium.launch({ headless: true, executablePath: exe });
+        browser = await chromium.launch({ headless: true, executablePath: build.exe });
       } catch (error) {
-        process.stdout.write(`  launch failed: ${String(error).slice(0, 120)}\n`);
-        break;
+        process.stdout.write(`${build.build} launch failed: ${String(error).slice(0, 120)}\n`);
+        dead.add(build.build);
+        continue;
       }
       try {
         record.version ??= browser.version();
@@ -86,9 +144,10 @@ try {
           seed: SEED,
         });
 
-        const session = { index, sizes: {} };
+        const measured = { index: session, order, sizes: {} };
+        order += 1;
         for (const size of data.sizes) {
-          session.sizes[size.n] = {
+          measured.sizes[size.n] = {
             wasm_median: median(size.wasm_raw),
             wasm_min: Math.min(...size.wasm_raw),
             js_median: median(size.js_core),
@@ -99,40 +158,49 @@ try {
             samples: { wasm_raw: size.wasm_raw, js_core: size.js_core },
           };
         }
-        record.sessions.push(session);
+        record.sessions.push(measured);
 
-        const one = session.sizes[1_000_000];
+        const one = measured.sizes[1_000_000];
         process.stdout.write(
-          `  session ${index}: 1M wasm=${one.wasm_median.toFixed(2)} js=${one.js_median.toFixed(2)} ` +
+          `${build.build} session ${session}: 1M wasm=${one.wasm_median.toFixed(2)} ` +
+            `js=${one.js_median.toFixed(2)} ` +
             `median-ratio=${(one.wasm_median / one.js_median).toFixed(2)}x  ` +
             `min-ratio=${(one.wasm_min / one.js_min).toFixed(2)}x\n`,
         );
       } catch (error) {
-        process.stdout.write(`  session ${index} failed: ${String(error).slice(0, 160)}\n`);
+        // A parity-gate rejection means the harness measured nothing
+        // comparable; that invalidates the sweep, so abort rather than skip.
+        if (/parity gate/u.test(String(error))) throw error;
+        process.stdout.write(
+          `${build.build} session ${session} failed: ${String(error).slice(0, 160)}\n`,
+        );
       } finally {
         await browser.close();
       }
-    }
 
-    if (record.sessions.length > 0) {
-      const ratios = record.sessions.map(
-        (s) => s.sizes[1_000_000].wasm_median / s.sizes[1_000_000].js_median,
-      );
-      process.stdout.write(
-        `  -> ${record.version} | 1M wasm/js across ${ratios.length} launches: ` +
-          `${ratios.map((r) => r.toFixed(2)).join(", ")}\n`,
-      );
+      // Written after every launch so a later hang cannot lose completed work.
+      writeFileSync(outPath, `${JSON.stringify(out, null, 2)}\n`);
     }
-
-    // Written after every build so a later hang cannot lose completed work.
-    out.targets.push(record);
-    mkdirSync(resultsDir, { recursive: true });
-    writeFileSync(outPath, JSON.stringify(out, null, 2));
+  } finally {
+    await server.close();
   }
-} finally {
-  await server.close();
+
+  for (const record of out.targets) {
+    if (record.sessions.length === 0) continue;
+    const ratios = record.sessions.map(
+      (s) => s.sizes[1_000_000].wasm_median / s.sizes[1_000_000].js_median,
+    );
+    process.stdout.write(
+      `${record.label} -> ${record.version} | 1M wasm/js across ${ratios.length} launches: ` +
+        `${ratios.map((r) => r.toFixed(2)).join(", ")}\n`,
+    );
+  }
+
+  out.finishedAt = new Date().toISOString();
+  writeFileSync(outPath, `${JSON.stringify(out, null, 2)}\n`);
+  process.stdout.write(`\nwrote ${outPath.pathname}\n`);
 }
 
-out.finishedAt = new Date().toISOString();
-writeFileSync(outPath, JSON.stringify(out, null, 2));
-process.stdout.write(`\nwrote ${outPath.pathname}\n`);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
+}

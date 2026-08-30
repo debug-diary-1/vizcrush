@@ -12,8 +12,10 @@
 // Reporting the first as though it were the second overstates precision, so the
 // two are kept apart here and in every table that consumes them.
 
+/** Copy of `xs` sorted ascending; the input is not mutated. */
 export const sorted = (xs) => [...xs].sort((a, b) => a - b);
 
+/** Quantile `q` in [0, 1] of `xs`, linearly interpolated between order statistics. */
 export function quantile(xs, q) {
   const s = sorted(xs);
   const pos = (s.length - 1) * q;
@@ -22,9 +24,13 @@ export function quantile(xs, q) {
   return s[lo] + (s[hi] - s[lo]) * (pos - lo);
 }
 
+/** Median of `xs` (interpolated for even lengths). */
 export const median = (xs) => quantile(xs, 0.5);
+
+/** Arithmetic mean of `xs`. */
 export const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
 
+/** Population standard deviation of `xs` as a percentage of its mean. */
 export function relativeStdDevPct(xs) {
   const m = mean(xs);
   const variance = xs.reduce((acc, v) => acc + (v - m) ** 2, 0) / xs.length;
@@ -56,6 +62,10 @@ export function bootstrapMedianCi(samples, { resamples = 10_000, seed = 7 } = {}
   return [quantile(medians, 0.025), quantile(medians, 0.975)];
 }
 
+/**
+ * Descriptive summary of one sample set: count, median, quartiles, extremes,
+ * relative standard deviation, and the within-session bootstrap interval.
+ */
 export function describe(samples) {
   const s = sorted(samples);
   return {

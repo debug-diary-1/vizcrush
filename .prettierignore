@@ -1,0 +1,3 @@
+# Generated measurement artifacts: committed exactly as their generators emit
+# them, so regeneration stays bit-for-bit. Do not reformat.
+benchmarks/campaign/results/

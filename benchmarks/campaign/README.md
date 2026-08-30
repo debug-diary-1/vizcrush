@@ -8,12 +8,26 @@ traces to a file in `results/`.
 
 ## Why it looks like this
 
+**One protocol module for every arm.** The claim is "same work, different
+engine", so the input generation, batch timing, parity gate, and configuration
+(sizes, calls per block, reps, warmups, seed) live once in `protocol.mjs`. The
+browser harness loads it over HTTP and the Node arm imports it directly —
+byte-identical, with nothing to drift.
+
 **Batch timing.** Firefox and WebKit coarsen `performance.now()` to about a
 millisecond as a Spectre mitigation, so a single sub-millisecond call is
 unmeasurable there. Each measurement runs `N` calls as one timed block and
 divides by `N`, with `N` chosen so a block lands near 100 ms in the slowest
 engine. The harness also probes the clock granularity empirically and records
 it, rather than assuming it.
+
+**Every timed result is consumed.** Work whose result never escapes a timed
+loop is dead code to the optimizer, and a JIT is entitled to skip or reshape
+it — fatal for a campaign whose headline is a JavaScript-only speedup. Every
+timed callback therefore returns a scalar drawn from its output (the last y
+value), and the timing loop folds it into a sink that the runners record into
+their JSON (`benchmarkSink`). Consumption is identical for the WASM and JS
+arms: one element read plus one add per call.
 
 **Hot steady state, not cold start.** Batch timing measures throughput once
 everything is warm. That is the right statistic for "which backend is faster
@@ -26,10 +40,24 @@ across launches. `run-versions.mjs` therefore measures each configuration in
 several independent browser launches, and `analyze-versions.mjs` reports the
 across-launch range. Confusing the two overstates precision.
 
-**A parity gate before every timing.** The WebAssembly and JavaScript outputs
-must agree exactly before their runtimes are compared, so a performance
-difference can never be a difference in work done. `maxAbsDiff` is recorded per
-cell and is `0` throughout.
+**Round-robin build order.** The version sweep interleaves its launches —
+session 0 of every build, then session 1 of every build, and so on — so slow
+machine-state drift (thermals, background load) lands across all builds
+instead of being confounded with build identity. A sequential sweep could not
+distinguish "the engine changed" from "the machine changed while we swept".
+
+**A parity gate that gates.** Before any cell is timed, the WebAssembly and
+JavaScript outputs must agree exactly: same length, elementwise difference of
+exactly zero, nothing non-finite. A violation throws and aborts the run —
+no number is produced at all — so a runtime difference can never be a
+difference in work done. `maxAbsDiff` is recorded per cell and is `0`
+throughout the committed data.
+
+**The copy proxy bounds one cost only.** `copy_proxy` times two `.set()`
+calls into preallocated scratch buffers — the bulk copy wasm-bindgen performs
+when passing typed arrays into linear memory, and nothing else. It
+deliberately excludes allocation and the rest of the marshalling, so it can
+rule bulk copying in or out as an explanation and nothing more.
 
 ## Running it
 
@@ -46,6 +74,21 @@ SESSIONS=5 node benchmarks/campaign/run-versions.mjs   # engine-version sweep ->
 node benchmarks/campaign/analyze-versions.mjs          # across-launch ranges, step detection
 ```
 
+`SESSIONS` must be a positive integer. To keep an independent repeat of the
+sweep, point `VERSIONS_OUT` at another file and hand it to the analyzer:
+
+```bash
+VERSIONS_OUT=versions-run2.json SESSIONS=5 node benchmarks/campaign/run-versions.mjs
+node benchmarks/campaign/analyze-versions.mjs results/versions-run2.json
+```
+
+The harness itself is under test — statistics, protocol, parity gate, server,
+analyzers, and sweep orchestration:
+
+```bash
+pnpm exec vitest run benchmarks/campaign
+```
+
 Each runner starts its own static server on an ephemeral port, rooted at the
 repository, so `/packages/...` resolves to the real workspace packages and the
 `.wasm` is served as `application/wasm`.
@@ -55,14 +98,50 @@ distributions launch through a `pw_run.sh` wrapper rather than a browser
 executable, so pointing `executablePath` at a specific cached build hangs
 instead of launching.
 
+## Obtaining the historical Chromium builds
+
+`run-versions.mjs` sweeps whatever Chromium builds sit in Playwright's browser
+cache (`~/Library/Caches/ms-playwright` by default; override with
+`PLAYWRIGHT_BROWSERS_PATH`). `pnpm exec playwright install` fetches only the
+build pinned by the Playwright version in this repo, so the historical builds
+must be installed deliberately.
+
+Each Playwright release pins exactly one Chromium build, recorded in that
+release's `playwright-core/browsers.json`. Installing a historical release's
+browser into the shared cache adds the matching `chromium-<build>` directory.
+The committed sweep used five builds, installable with:
+
+```bash
+# PLAYWRIGHT_SKIP_BROWSER_GC=1 stops newer installs from deleting older builds.
+export PLAYWRIGHT_SKIP_BROWSER_GC=1
+pnpm dlx playwright-core@1.57.0 install chromium   # chromium-1200 = 143.0.7499.4
+pnpm dlx playwright-core@1.58.0 install chromium   # chromium-1208 = 145.0.7632.6
+pnpm dlx playwright-core@1.60.0 install chromium   # chromium-1223 = 148.0.7778.96
+pnpm dlx playwright-core@1.61.0 install chromium   # chromium-1228 = 149.0.7827.55
+pnpm dlx playwright-core@1.62.0 install chromium   # chromium-1234 = 151.0.7922.34
+```
+
+To find the release that pins some other build, check `browsers.json` of
+candidate releases (e.g. `https://unpkg.com/playwright-core@<release>/browsers.json`).
+Any set of two or more builds straddling a suspected boundary is enough to
+run the sweep; the exact five above are only needed to reproduce the committed
+table. The sweep discovers builds in the Linux, Windows, and both macOS cache
+layouts.
+
 ## What is in `results/`
 
-| File            | Contents                                                                                              |
-| --------------- | ----------------------------------------------------------------------------------------------------- |
-| `raw.json`      | Per-repetition samples, three engines, current builds                                                 |
-| `analyzed.json` | Medians, IQR, within-session bootstrap intervals, ratios                                              |
-| `node.json`     | Node arm, same protocol                                                                               |
-| `versions.json` | Version sweep: five Chromium builds x five independent launches, with per-repetition samples retained |
+| File                 | Contents                                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `raw.json`           | Per-repetition samples, three engines, current builds                                                 |
+| `analyzed.json`      | Medians, IQR, within-session bootstrap intervals, ratios                                              |
+| `node.json`          | Node arm, same protocol                                                                               |
+| `versions.json`      | Version sweep: five Chromium builds x five independent launches, with per-repetition samples retained |
+| `versions-run2.json` | An independent repeat of the whole sweep, so its reproducibility is auditable rather than asserted    |
+
+Committed results are the exact bytes their generators wrote (the formatter is
+told to leave `results/` alone), so `node benchmarks/campaign/analyze.mjs`
+regenerates `analyzed.json` bit-for-bit from the committed `raw.json` — the
+test suite checks this equality on every run.
 
 ## The result that motivated the sweep
 
@@ -73,16 +152,20 @@ procedure fixed and varies only the engine binary:
 
 | Chromium      | js core (ms) | wasm (ms) | wasm/js |
 | ------------- | ------------ | --------- | ------- |
-| 143.0.7499.4  | 6.16         | 1.57      | 0.26    |
-| 145.0.7632.6  | 6.15         | 1.53      | 0.25    |
-| 148.0.7778.96 | 5.99         | 1.52      | 0.25    |
-| 149.0.7827.55 | 1.79         | 1.55      | 0.87    |
-| 151.0.7922.34 | 1.82         | 1.60      | 0.88    |
+| 143.0.7499.4  | 6.10         | 1.57      | 0.26    |
+| 145.0.7632.6  | 6.10         | 1.56      | 0.26    |
+| 148.0.7778.96 | 6.11         | 1.58      | 0.26    |
+| 149.0.7827.55 | 1.81         | 1.58      | 0.88    |
+| 151.0.7922.34 | 1.83         | 1.59      | 0.89    |
 
 Builds 143 through 148 reproduce the old result, which validates the current
 harness against the older measurement. The JavaScript baseline then improves
-3.34x at the 148/149 boundary while the WebAssembly path stays flat. The old
+3.38x at the 148/149 boundary while the WebAssembly path stays flat. The old
 number was correct for its engine and expired when V8 improved underneath it.
+An independent repeat of the whole sweep (`versions-run2.json`) puts the step
+at 3.36x with per-build ratios within 0.02 of the first run — and because
+every timed result now feeds the benchmark sink, the step cannot be an
+artifact of the optimizer discarding unobserved work.
 
 The practical lesson, and the reason this directory exists: a performance claim
 about a JIT-compiled host is a claim about a specific engine build. Prefer

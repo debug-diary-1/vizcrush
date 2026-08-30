@@ -1,11 +1,25 @@
-// Node arm of the campaign: identical seeded input, identical batch timing,
-// per-repetition retention. Lets a write-up put the V8-in-Node figure beside
-// the V8-in-Chromium figure from the same build of the library.
+// Node arm of the campaign: the protocol module used by the browser harness —
+// identical seeded input, identical batch timing, identical parity gate,
+// identical configuration — driven from Node. Lets a write-up put the
+// V8-in-Node figure beside the V8-in-Chromium figure from the same build of
+// the library.
 //
 //   node benchmarks/campaign/run-node.mjs
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import {
+  REPS,
+  SEED,
+  SIZES,
+  THRESHOLD,
+  WARMUPS,
+  assertParity,
+  makeSeries,
+  measure,
+  probeTimerResolution,
+  sinkValue,
+} from "./protocol.mjs";
 import { median } from "./stats.mjs";
 
 const WASM_DIR = fileURLToPath(new URL("../../packages/downsample/wasm/", import.meta.url));
@@ -19,56 +33,12 @@ const glue = await import(new URL(`${WASM_DIR}vizcrush_downsample.js`, import.me
 await glue.default({ module_or_path: readFileSync(`${WASM_DIR}vizcrush_downsample_bg.wasm`) });
 const wasmLttb = glue.lttb;
 
-const THRESHOLD = 1000;
-const SIZES = [
-  { n: 100_000, calls: 300 },
-  { n: 1_000_000, calls: 30 },
-];
-const REPS = 15;
-const WARMUPS = 3;
-const SEED = 42;
-
-function mulberry32(seed) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let v = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    v = (v + Math.imul(v ^ (v >>> 7), 61 | v)) ^ v;
-    return ((v ^ (v >>> 14)) >>> 0) / 4_294_967_296;
-  };
-}
-
-function makeSeries(n, seed) {
-  const random = mulberry32(seed);
-  const x = new Float64Array(n);
-  const y = new Float64Array(n);
-  let value = 0;
-  for (let i = 0; i < n; i += 1) {
-    x[i] = i;
-    value += (random() - 0.498) * 10;
-    y[i] = value;
-  }
-  return { x, y };
-}
-
-function timeBlock(fn, calls) {
-  const started = performance.now();
-  for (let i = 0; i < calls; i += 1) fn();
-  return (performance.now() - started) / calls;
-}
-
-function measure(fn, calls) {
-  for (let i = 0; i < WARMUPS; i += 1) timeBlock(fn, calls);
-  const samples = [];
-  for (let i = 0; i < REPS; i += 1) samples.push(timeBlock(fn, calls));
-  return samples;
-}
-
 const out = {
   startedAt: new Date().toISOString(),
   runtime: process.version,
   platform: `${process.platform} ${process.arch}`,
   config: { sizes: SIZES, reps: REPS, warmups: WARMUPS, seed: SEED, threshold: THRESHOLD },
+  timerResolutionProbeMs: probeTimerResolution(),
   sizes: [],
 };
 
@@ -77,29 +47,29 @@ for (const { n, calls } of SIZES) {
   const scratchX = new Float64Array(n);
   const scratchY = new Float64Array(n);
 
+  // Same gate as the browser arm: exact agreement or no numbers at all.
   const wasmOut = wasmLttb(x, y, THRESHOLD);
   const jsOut = lttbCore(x, y, THRESHOLD);
-  let maxAbsDiff = 0;
-  for (let i = 0; i < jsOut.x.length; i += 1) {
-    maxAbsDiff = Math.max(
-      maxAbsDiff,
-      Math.abs(wasmOut[i * 2] - jsOut.x[i]),
-      Math.abs(wasmOut[i * 2 + 1] - jsOut.y[i]),
-    );
-  }
+  const maxAbsDiff = assertParity(wasmOut, jsOut, `n=${n}`);
+  const last = jsOut.x.length - 1;
+  const opts = { calls, reps: REPS, warmups: WARMUPS };
 
   out.sizes.push({
     n,
     calls,
+    outputLength: jsOut.x.length,
     maxAbsDiff,
-    wasm_raw: measure(() => wasmLttb(x, y, THRESHOLD), calls),
-    js_core: measure(() => lttbCore(x, y, THRESHOLD), calls),
+    wasm_raw: measure(() => wasmLttb(x, y, THRESHOLD)[2 * last + 1], opts),
+    js_core: measure(() => lttbCore(x, y, THRESHOLD).y[last], opts),
     copy_proxy: measure(() => {
       scratchX.set(x);
       scratchY.set(y);
-    }, calls),
+      return scratchY[n - 1];
+    }, opts),
   });
 }
+
+out.benchmarkSink = sinkValue();
 
 for (const size of out.sizes) {
   const w = median(size.wasm_raw);
@@ -112,5 +82,5 @@ for (const size of out.sizes) {
 }
 
 mkdirSync(new URL("./results/", import.meta.url), { recursive: true });
-writeFileSync(new URL("./results/node.json", import.meta.url), JSON.stringify(out, null, 2));
+writeFileSync(new URL("./results/node.json", import.meta.url), `${JSON.stringify(out, null, 2)}\n`);
 console.log("wrote results/node.json");
