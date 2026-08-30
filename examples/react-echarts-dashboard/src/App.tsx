@@ -71,7 +71,7 @@ function Dashboard({ series }: { series: Series }) {
   const [setOptionElapsed, setSetOptionElapsed] = useState<number | null>(null);
   const context = useVizcrush();
   const reduced = useDownsample(series.x, series.y, { algorithm, threshold });
-  const summary = useStats(series.y);
+  const summary = useStats(reduced.data ? series.y : null);
   const handleSetOption = useCallback((elapsed: number) => setSetOptionElapsed(elapsed), []);
   const error = reduced.error ?? summary.error;
 
@@ -107,7 +107,7 @@ function Dashboard({ series }: { series: Series }) {
 
       <section className="metrics" aria-live="polite">
         <article>
-          <span>Backend</span>
+          <span>Preferred backend</span>
           <strong>{context?.backend ?? "initializing"}</strong>
         </article>
         <article>
@@ -119,7 +119,7 @@ function Dashboard({ series }: { series: Series }) {
           <strong>{reduced.data?.x.length.toLocaleString() ?? "—"}</strong>
         </article>
         <article>
-          <span>Warm vizcrush</span>
+          <span>Warm downsample</span>
           <strong>{reduced.elapsed?.toFixed(1) ?? "—"} ms</strong>
         </article>
         <article>
@@ -146,7 +146,8 @@ function Dashboard({ series }: { series: Series }) {
       </section>
       <p className="note">
         Timings cover only the named stage after one untimed real-input warm-up; startup is
-        excluded. Drag or wheel inside the chart to zoom.
+        excluded. The preferred backend comes from capability detection, while a kernel may fall
+        back if its lazy WASM module cannot load. Drag or wheel inside the chart to zoom.
       </p>
     </main>
   );

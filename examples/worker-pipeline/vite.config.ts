@@ -5,6 +5,6 @@ export default defineConfig({
     format: "es",
   },
   optimizeDeps: {
-    exclude: ["@vizcrush/core", "@vizcrush/downsample"],
+    exclude: ["@vizcrush/downsample"],
   },
 });

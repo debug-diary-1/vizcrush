@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@observablehq/plot": "catalog:",
-    "@vizcrush/core": "workspace:*",
     "@vizcrush/downsample": "workspace:*"
   },
   "devDependencies": {

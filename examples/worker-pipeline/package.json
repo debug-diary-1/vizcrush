@@ -7,7 +7,6 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@vizcrush/core": "workspace:*",
     "@vizcrush/downsample": "workspace:*"
   },
   "devDependencies": {

@@ -236,9 +236,6 @@ importers:
       '@vizcrush/aggregate':
         specifier: workspace:*
         version: link:../../packages/aggregate
-      '@vizcrush/core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@vizcrush/downsample':
         specifier: workspace:*
         version: link:../../packages/downsample
@@ -729,9 +726,6 @@ importers:
       '@observablehq/plot':
         specifier: 'catalog:'
         version: 0.6.17
-      '@vizcrush/core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@vizcrush/downsample':
         specifier: workspace:*
         version: link:../../packages/downsample
@@ -1029,9 +1023,6 @@ importers:
 
   examples/worker-pipeline:
     dependencies:
-      '@vizcrush/core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@vizcrush/downsample':
         specifier: workspace:*
         version: link:../../packages/downsample

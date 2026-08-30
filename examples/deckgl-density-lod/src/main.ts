@@ -46,7 +46,7 @@ function makeCloud(): { x: Float64Array; y: Float64Array } {
 const source = makeCloud();
 const deck = new Deck({
   parent: container,
-  views: new OrthographicView({ id: "density" }),
+  views: new OrthographicView({ id: "density", flipY: false }),
   initialViewState: { target: [500, 500, 0], zoom: -0.9 },
   controller: true,
 });

@@ -57,7 +57,7 @@ export function EChart({ x, y, onSetOption }: EChartProps) {
           },
         ],
       },
-      { notMerge: true, lazyUpdate: false },
+      { lazyUpdate: false },
     );
     onSetOption(performance.now() - started);
   }, [onSetOption, x, y]);

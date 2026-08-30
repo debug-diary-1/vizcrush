@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@vizcrush/aggregate": "workspace:*",
-    "@vizcrush/core": "workspace:*",
     "@vizcrush/downsample": "workspace:*",
     "apache-arrow": "catalog:"
   },

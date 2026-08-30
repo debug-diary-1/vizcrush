@@ -1,6 +1,5 @@
-import { stats } from "@vizcrush/aggregate";
-import { init } from "@vizcrush/core";
-import { lttb } from "@vizcrush/downsample";
+import { aggregateKernels } from "@vizcrush/aggregate";
+import { downsampleKernels } from "@vizcrush/downsample";
 import { tableFromArrays, tableFromIPC, tableToIPC } from "apache-arrow";
 import "./styles.css";
 
@@ -59,19 +58,26 @@ async function run(): Promise<void> {
   const x = xColumn.toArray() as Float64Array;
   const y = yColumn.toArray() as Float64Array;
   const decodeElapsed = performance.now() - decodeStarted;
-  const context = await init();
   status.textContent = "Warming the downsample and aggregate kernels on the decoded columns…";
-  await Promise.all([lttb(x, y, 1_600), stats(y)]);
+  await Promise.all([
+    downsampleKernels.lttb.withBackend(x, y, 1_600),
+    aggregateKernels.stats.withBackend(y),
+  ]);
   const pipelineStarted = performance.now();
-  const [reduced, summary] = await Promise.all([lttb(x, y, 1_600), stats(y)]);
+  const [downsampled, aggregated] = await Promise.all([
+    downsampleKernels.lttb.withBackend(x, y, 1_600),
+    aggregateKernels.stats.withBackend(y),
+  ]);
   const pipelineElapsed = performance.now() - pipelineStarted;
+  const reduced = downsampled.result;
+  const summary = aggregated.result;
   draw(reduced.x, reduced.y);
 
   fields.rows.textContent = table.numRows.toLocaleString();
   fields.bytes.textContent = `${(payload.byteLength / 1_024).toFixed(1)} KiB`;
   fields.columns.textContent = `${x.constructor.name} + ${y.constructor.name}`;
   fields.decode.textContent = `${decodeElapsed.toFixed(1)} ms`;
-  fields.backend.textContent = context.backend;
+  fields.backend.textContent = `LTTB ${downsampled.backend} · stats ${aggregated.backend}`;
   fields.pipeline.textContent = `${pipelineElapsed.toFixed(1)} ms`;
   fields.output.textContent = reduced.x.length.toLocaleString();
   fields.summary.textContent = `${summary.mean.toFixed(2)} ± ${summary.stdDev.toFixed(2)}`;

@@ -1,6 +1,5 @@
 import * as Plot from "@observablehq/plot";
-import { init } from "@vizcrush/core";
-import { lttb } from "@vizcrush/downsample";
+import { downsampleKernels } from "@vizcrush/downsample";
 import "./styles.css";
 
 interface Point {
@@ -31,13 +30,14 @@ function makeSeries(): { x: Float64Array; y: Float64Array } {
 
 const source = makeSeries();
 let plottedPoints: Point[] = [];
+let plotContentWidth = 0;
 
 function drawPlot(points: Point[]): void {
-  if (points.length === 0) return;
+  if (points.length === 0 || plotContentWidth === 0) return;
 
   const plotStarted = performance.now();
   const chart = Plot.plot({
-    width: Math.max(320, plotHost.clientWidth),
+    width: Math.max(320, plotContentWidth),
     height: 480,
     marginLeft: 58,
     marginBottom: 48,
@@ -54,11 +54,16 @@ async function reduceAndRender(): Promise<void> {
   const target = Number(threshold.value);
   status.textContent = `Reducing to ${target.toLocaleString()} points…`;
   const reduceStarted = performance.now();
-  const reduced = await lttb(source.x, source.y, target);
+  const { result: reduced, backend } = await downsampleKernels.lttb.withBackend(
+    source.x,
+    source.y,
+    target,
+  );
   const reduceElapsed = performance.now() - reduceStarted;
   plottedPoints = Array.from(reduced.x, (x, index) => ({ x, y: reduced.y[index] }));
   drawPlot(plottedPoints);
   fields.output.textContent = reduced.x.length.toLocaleString();
+  fields.backend.textContent = backend;
   fields.lttb.textContent = `${reduceElapsed.toFixed(1)} ms`;
   status.textContent =
     "Timings cover only the named stages after one untimed real-input warm-up; startup is excluded.";
@@ -66,7 +71,12 @@ async function reduceAndRender(): Promise<void> {
 }
 
 let resizeTimer = 0;
-const observer = new ResizeObserver(() => {
+const observer = new ResizeObserver(([entry]) => {
+  if (!entry) return;
+  const width = Math.round(entry.contentRect.width);
+  if (width === plotContentWidth) return;
+  plotContentWidth = width;
+  if (plottedPoints.length === 0) return;
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => drawPlot(plottedPoints), 120);
 });
@@ -80,12 +90,10 @@ threshold.addEventListener("change", () => void reduceAndRender().catch(reportEr
 
 async function start(): Promise<void> {
   threshold.disabled = true;
-  const context = await init();
-  fields.backend.textContent = context.backend;
-  status.textContent = "Warming LTTB on the real input…";
-  await lttb(source.x, source.y, Number(threshold.value));
-  await reduceAndRender();
   observer.observe(plotHost);
+  status.textContent = "Warming LTTB on the real input…";
+  await downsampleKernels.lttb.withBackend(source.x, source.y, Number(threshold.value));
+  await reduceAndRender();
 }
 
 void start().catch(reportError);
