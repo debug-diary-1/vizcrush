@@ -21,6 +21,7 @@
     "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "d3-array": "catalog:",
     "downsample": "catalog:",
     "fast-check": "catalog:",

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>deck.gl density LOD · vizcrush</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">vizcrush adoption example</p>
+        <h1>Density LOD → deck.gl</h1>
+        <p>
+          One million source positions become a bounded density grid before deck.gl receives any
+          render objects.
+        </p>
+      </header>
+      <section class="toolbar">
+        <label
+          >Grid resolution
+          <select id="resolution">
+            <option value="64">64 × 64</option>
+            <option value="128" selected>128 × 128</option>
+            <option value="256">256 × 256</option>
+          </select>
+        </label>
+      </section>
+      <section class="metrics" aria-live="polite">
+        <article><span>Input positions</span><strong>1,000,000</strong></article>
+        <article><span>Rendered cells</span><strong id="cells">—</strong></article>
+        <article><span>Backend</span><strong id="backend">—</strong></article>
+        <article><span>bin2d</span><strong id="elapsed">—</strong></article>
+        <article><span>Peak cell count</span><strong id="peak">—</strong></article>
+      </section>
+      <div id="deck" role="img" aria-label="Interactive deck.gl density grid"></div>
+      <p id="status">Preparing density grid…</p>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

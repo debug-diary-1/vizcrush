@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apache Arrow pipeline · vizcrush</title>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">vizcrush adoption example</p>
+      <h1>Arrow IPC → typed columns → Canvas</h1>
+      <p class="lede">
+        Decode a columnar payload, hand its numeric columns to vizcrush, then render a bounded
+        result.
+      </p>
+      <section class="metrics" aria-live="polite">
+        <article><span>Arrow rows</span><strong id="rows">—</strong></article>
+        <article><span>IPC payload</span><strong id="bytes">—</strong></article>
+        <article><span>Decoded columns</span><strong id="columns">—</strong></article>
+        <article><span>Decode</span><strong id="decode">—</strong></article>
+        <article><span>vizcrush backend</span><strong id="backend">—</strong></article>
+        <article><span>vizcrush pipeline</span><strong id="pipeline">—</strong></article>
+        <article><span>Output</span><strong id="output">—</strong></article>
+        <article><span>Mean ± σ</span><strong id="summary">—</strong></article>
+      </section>
+      <canvas
+        id="chart"
+        width="1200"
+        height="500"
+        aria-label="Line chart produced from Apache Arrow columns"
+      ></canvas>
+      <p id="status" class="note">
+        Building an in-memory Arrow IPC payload for a reproducible browser demo…
+      </p>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
