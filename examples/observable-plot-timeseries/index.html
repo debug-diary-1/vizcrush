@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Observable Plot time series · vizcrush</title>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">vizcrush adoption example</p>
+      <h1>Typed series → Observable Plot</h1>
+      <p class="lede">
+        LTTB bounds the number of SVG marks while Observable Plot keeps its concise, declarative
+        chart grammar.
+      </p>
+      <label
+        >Display points
+        <select id="threshold">
+          <option value="500">500</option>
+          <option value="1000">1,000</option>
+          <option value="2000" selected>2,000</option>
+          <option value="5000">5,000</option>
+        </select>
+      </label>
+      <section class="metrics" aria-live="polite">
+        <article><span>Input</span><strong>1,000,000</strong></article>
+        <article><span>Output</span><strong id="output">—</strong></article>
+        <article><span>Executed backend</span><strong id="backend">—</strong></article>
+        <article><span>Warm LTTB</span><strong id="lttb-time">—</strong></article>
+        <article><span>Plot construction</span><strong id="plot-time">—</strong></article>
+      </section>
+      <section id="plot" aria-label="Observable Plot time-series chart"></section>
+      <p id="status" class="note">Preparing data…</p>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

@@ -17,7 +17,7 @@ You don't need Rust if you just want to use vizcrush — the WASM artifacts are 
 
 1. **[Install](installation.md)** only the `@vizcrush/*` packages your application needs from npm.
 2. **[Run the quickstart](quickstart.md)** — a minimal end-to-end example: downsample a million points and pass the result to a renderer.
-3. **[Browse the example apps](../reference/examples.md)** — 37 runnable demos covering financial time-series, IoT heatmaps, point clouds, volumetric medical data, MCP integration, and more.
+3. **[Browse the example apps](../reference/examples.md)** — 42 runnable demos covering financial time-series, IoT heatmaps, point clouds, framework and data-format integrations, volumetric medical data, and more.
 
 ## How vizcrush is organized
 
