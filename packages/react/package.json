@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React hooks for vizcrush — useDownsample, useBin2d, useStats",
   "keywords": [
     "data",

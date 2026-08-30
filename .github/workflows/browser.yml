@@ -1,20 +1,23 @@
-name: Capture Benchmark Baseline
-
-# Manually-triggered workflow that runs the benchmark suite on a CI runner
-# and uploads the resulting `benchmark-baseline.json` as an artifact. Download
-# the artifact and commit `benchmarks/benchmark-baseline.json` to main when
-# you're happy with the numbers — subsequent CI runs will compare against it.
+name: Packaged Browser Verification
 
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  capture:
-    name: Run benchmarks and capture baseline
+  packed-browser:
+    name: Packed Artifact (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
@@ -28,22 +31,26 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Install wasm-bindgen-cli
         run: cargo install wasm-bindgen-cli --version 0.2.115 --locked
       - name: Build WASM
         env:
           SKIP_WASM_OPT: "1"
         run: bash scripts/build-wasm.sh
-      - run: pnpm install --frozen-lockfile
       - run: pnpm turbo build
-      - name: Run benchmarks with --save-baseline
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify packed artifacts
         env:
-          BENCH_SEED: "42"
-        run: node --experimental-vm-modules benchmarks/dist/runner.js --save-baseline
-      - name: Upload baseline artifact
+          BROWSER: ${{ matrix.browser }}
+          BROWSER_RESULT_PATH: benchmarks/results/browser-${{ matrix.browser }}.json
+        run: node scripts/test-packed-browser.mjs
+      - name: Upload browser measurement
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: benchmark-baseline
-          path: benchmarks/benchmark-baseline.json
-          if-no-files-found: error
+          name: packed-browser-${{ matrix.browser }}
+          path: benchmarks/results/browser-${{ matrix.browser }}.json
+          if-no-files-found: warn
           retention-days: 30

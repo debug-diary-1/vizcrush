@@ -1,6 +1,6 @@
 # Algorithms Reference
 
-A flat catalog of every algorithm shipping in vizcrush, with the package and Rust crate that implements it. Use this page to find the right tool for a job, or as a jumping-off point into the per-package docs.
+A catalog of the algorithm families shipping in vizcrush, with the package and Rust crate that implements them. Use this page to find the right tool for a job; the generated [project inventory](generated-inventory.md) is the canonical runtime-export list.
 
 ## Downsampling
 
@@ -17,20 +17,25 @@ All four return `{ x: Float64Array, y: Float64Array }`. Reference paper: Steinar
 
 ## Aggregation & statistics
 
-| Algorithm                              | Function / Class              | Package                                           | Notes                                |
-| -------------------------------------- | ----------------------------- | ------------------------------------------------- | ------------------------------------ |
-| **Welford's online stats**             | `stats()`, `StreamingStats`   | [`@vizcrush/aggregate`](../packages/aggregate.md) | One-pass, numerically stable         |
-| **Exact percentiles**                  | `percentile()`                | [`@vizcrush/aggregate`](../packages/aggregate.md) | Sort + linear interpolation          |
-| **t-digest** (approximate percentiles) | `vizcrush-aggregate::tdigest` | (Rust crate)                                      | Approximate, sub-linear memory       |
-| **DDSketch / KLL**                     | `DDSketch`, `KllSketch`       | [`@vizcrush/aggregate`](../packages/aggregate.md) | Bounded-memory approximate quantiles |
+| Algorithm                              | Function / Class              | Package                                           | Notes                                 |
+| -------------------------------------- | ----------------------------- | ------------------------------------------------- | ------------------------------------- |
+| **Welford's online stats**             | `stats()`, `StreamingStats`   | [`@vizcrush/aggregate`](../packages/aggregate.md) | One-pass, numerically stable          |
+| **Exact percentiles**                  | `percentile()`                | [`@vizcrush/aggregate`](../packages/aggregate.md) | Sort + linear interpolation           |
+| **t-digest** (approximate percentiles) | `vizcrush-aggregate::tdigest` | (Rust crate)                                      | Approximate, sub-linear memory        |
+| **DDSketch / KLL**                     | `DDSketch`, `KllSketch`       | [`@vizcrush/aggregate`](../packages/aggregate.md) | Bounded-memory approximate quantiles  |
+| **Reservoir sampling**                 | `ReservoirSampler`            | [`@vizcrush/aggregate`](../packages/aggregate.md) | Bounded representative stream sample  |
+| **HyperLogLog**                        | `HyperLogLog`                 | [`@vizcrush/aggregate`](../packages/aggregate.md) | Approximate distinct-value count      |
+| **Count-Min Sketch**                   | `CountMinSketch`              | [`@vizcrush/aggregate`](../packages/aggregate.md) | Approximate frequencies/heavy hitters |
 
 ## Transforms
 
-| Algorithm             | Function        | Package                                           | Cost                        |
-| --------------------- | --------------- | ------------------------------------------------- | --------------------------- |
-| **Radix sort**        | `sortBy()`      | [`@vizcrush/transform`](../packages/transform.md) | O(n) for fixed-width floats |
-| **Min-max normalize** | `normalize()`   | [`@vizcrush/transform`](../packages/transform.md) | O(n) two-pass               |
-| **Range filter**      | `filterRange()` | [`@vizcrush/transform`](../packages/transform.md) | O(n) single pass            |
+| Algorithm                  | Function                             | Package                                           | Cost                        |
+| -------------------------- | ------------------------------------ | ------------------------------------------------- | --------------------------- |
+| **Radix sort**             | `sortBy()`                           | [`@vizcrush/transform`](../packages/transform.md) | O(n) for fixed-width floats |
+| **Min-max normalize**      | `normalize()`                        | [`@vizcrush/transform`](../packages/transform.md) | O(n) two-pass               |
+| **Range filter**           | `filterRange()`                      | [`@vizcrush/transform`](../packages/transform.md) | O(n) single pass            |
+| **Log / power transform**  | `logTransform()`, `powerTransform()` | [`@vizcrush/transform`](../packages/transform.md) | O(n)                        |
+| **Quantile normalization** | `quantileNormalize()`                | [`@vizcrush/transform`](../packages/transform.md) | O(n log n)                  |
 
 ## Binning & density
 
@@ -43,12 +48,14 @@ All four return `{ x: Float64Array, y: Float64Array }`. Reference paper: Steinar
 
 ## Spatial indexing
 
-| Index               | Build / Query functions                         | Package                                           | Dimensions    |
-| ------------------- | ----------------------------------------------- | ------------------------------------------------- | ------------- |
-| **Quadtree**        | `buildQuadtree`, `queryRange`, `queryNearest`   | [`@vizcrush/spatial`](../packages/spatial.md)     | 2D            |
-| **Octree**          | `buildOctree`, `queryRange3d`, `queryNearest3d` | [`@vizcrush/spatial3d`](../packages/spatial3d.md) | 3D            |
-| **k-d tree**        | (in `vizcrush-spatial::kdtree`, future export)  | (Rust crate)                                      | 2D / N-D      |
-| **Frustum culling** | `frustumCull()`                                 | [`@vizcrush/spatial3d`](../packages/spatial3d.md) | 3D, MVP-based |
+| Index                 | Build / Query functions                                      | Package                                           | Dimensions    |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------- | ------------- |
+| **Quadtree**          | `buildQuadtree`, `queryRange`, `queryNearest`                | [`@vizcrush/spatial`](../packages/spatial.md)     | 2D            |
+| **Octree**            | `buildOctree`, `queryRange3d`, `queryNearest3d`              | [`@vizcrush/spatial3d`](../packages/spatial3d.md) | 3D            |
+| **k-d tree**          | (in `vizcrush-spatial::kdtree`, future export)               | (Rust crate)                                      | 2D / N-D      |
+| **Spatial hash grid** | `buildHashGrid`, `hashGridQueryRadius`, `hashGridQueryRange` | [`@vizcrush/spatial`](../packages/spatial.md)     | 2D            |
+| **Morton ordering**   | `mortonOrder2d()`                                            | [`@vizcrush/spatial`](../packages/spatial.md)     | 2D            |
+| **Frustum culling**   | `frustumCull()`                                              | [`@vizcrush/spatial3d`](../packages/spatial3d.md) | 3D, MVP-based |
 
 Both quadtree and octree use the same configuration: `MAX_POINTS = 64` per leaf, `MAX_DEPTH = 12`.
 

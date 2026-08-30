@@ -8,7 +8,7 @@ Welcome to vizcrush. This page is the entry point — by the end of it you'll ha
 | -------------------- | ------------------------------------- | ------------------------------------------------------- |
 | **Node.js**          | 24 or newer                           | Runtime + ESM support                                   |
 | **pnpm**             | 10 or newer                           | Workspace package manager                               |
-| **Rust toolchain**   | stable                                | Only if you want to rebuild the WASM crates from source |
+| **Rust toolchain**   | 1.94.1                                | Only if you want to rebuild the WASM crates from source |
 | **A modern browser** | Chrome 113+, Firefox 117+, Safari 17+ | WebAssembly support                                     |
 
 You don't need Rust if you just want to use vizcrush — the WASM artifacts are built once and shipped with the packages.

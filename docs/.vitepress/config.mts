@@ -44,6 +44,7 @@ export default defineConfig({
             { text: "Getting Started", link: "/user-guide/getting-started" },
             { text: "Installation", link: "/user-guide/installation" },
             { text: "Quickstart", link: "/user-guide/quickstart" },
+            { text: "Production Adoption", link: "/user-guide/production-adoption" },
             {
               text: "Backends & Capabilities",
               link: "/user-guide/backends",
@@ -84,6 +85,7 @@ export default defineConfig({
           items: [
             { text: "Algorithms", link: "/reference/algorithms" },
             { text: "Examples Gallery", link: "/reference/examples" },
+            { text: "Generated Inventory", link: "/reference/generated-inventory" },
           ],
         },
       ],

@@ -6,15 +6,13 @@
  */
 
 import { buildQuadtreeSync, queryRange, type QuadtreeHandle } from "@vizcrush/spatial";
+import { BoundedIndexStore, paginateIndices } from "./bounded-index-store.js";
 
-const spatialIndexes = new Map<
-  string,
-  {
-    x: number[];
-    y: number[];
-    handle: QuadtreeHandle;
-  }
->();
+const spatialIndexes = new BoundedIndexStore<{
+  x: number[];
+  y: number[];
+  handle: QuadtreeHandle;
+}>();
 
 let indexCounter = 0;
 
@@ -42,6 +40,8 @@ export function handleQueryRange(input: {
   x_max: number;
   y_min: number;
   y_max: number;
+  offset?: number;
+  limit?: number;
 }) {
   const entry = spatialIndexes.get(input.index_id);
   if (!entry) {
@@ -49,27 +49,32 @@ export function handleQueryRange(input: {
   }
 
   const start = performance.now();
-  const indices = Array.from(
+  const page = paginateIndices(
     queryRange(entry.handle, {
       xMin: input.x_min,
       xMax: input.x_max,
       yMin: input.y_min,
       yMax: input.y_max,
     }),
+    input.offset,
+    input.limit,
   );
   const elapsed = performance.now() - start;
 
   return {
-    indices,
-    count: indices.length,
+    ...page,
     elapsed_ms: Math.round(elapsed * 100) / 100,
   };
+}
+
+export function deleteIndex(indexId: string): boolean {
+  return spatialIndexes.delete(indexId);
 }
 
 // ── MCP Resource helpers (v1.0) ──
 
 export function getIndexList() {
-  return Array.from(spatialIndexes.entries()).map(([id, entry]) => ({
+  return spatialIndexes.entries().map(([id, entry]) => ({
     index_id: id,
     point_count: entry.handle.pointCount,
     bounds: entry.handle.bounds,

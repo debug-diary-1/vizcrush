@@ -22,6 +22,7 @@ pkg/
 out/
 .turbo/
 benchmark-results.json
+benchmarks/results/browser-*.json
 *.tsbuildinfo
 .env*.local
 
