@@ -55,6 +55,8 @@ async function run(): Promise<void> {
   const y = yColumn.toArray() as Float64Array;
   const decodeElapsed = performance.now() - decodeStarted;
   const context = await init();
+  status.textContent = "Warming the downsample and aggregate kernels on the decoded columns…";
+  await Promise.all([lttb(x, y, 1_600), stats(y)]);
   const pipelineStarted = performance.now();
   const [reduced, summary] = await Promise.all([lttb(x, y, 1_600), stats(y)]);
   const pipelineElapsed = performance.now() - pipelineStarted;
@@ -69,7 +71,7 @@ async function run(): Promise<void> {
   fields.output.textContent = reduced.x.length.toLocaleString();
   fields.summary.textContent = `${summary.mean.toFixed(2)} ± ${summary.stdDev.toFixed(2)}`;
   status.textContent =
-    "All values are local measurements. The IPC payload is generated in-browser so the example has no network dependency.";
+    "All values are local measurements. The vizcrush pipeline excludes one untimed real-input warm-up; the generated IPC payload has no network dependency.";
 }
 
 void run().catch((error) => {

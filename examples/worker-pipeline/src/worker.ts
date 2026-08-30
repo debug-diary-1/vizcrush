@@ -8,6 +8,7 @@ self.onmessage = async (
     const x = new Float64Array(event.data.x);
     const y = new Float64Array(event.data.y);
     const context = await init();
+    await lttb(x, y, event.data.threshold);
     const started = performance.now();
     const reduced = await lttb(x, y, event.data.threshold);
     const elapsed = performance.now() - started;

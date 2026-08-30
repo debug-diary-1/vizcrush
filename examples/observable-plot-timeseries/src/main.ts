@@ -30,15 +30,11 @@ function makeSeries(): { x: Float64Array; y: Float64Array } {
 }
 
 const source = makeSeries();
+let plottedPoints: Point[] = [];
 
-async function render(): Promise<void> {
-  threshold.disabled = true;
-  const target = Number(threshold.value);
-  status.textContent = `Reducing to ${target.toLocaleString()} points…`;
-  const reduceStarted = performance.now();
-  const reduced = await lttb(source.x, source.y, target);
-  const reduceElapsed = performance.now() - reduceStarted;
-  const points: Point[] = Array.from(reduced.x, (x, index) => ({ x, y: reduced.y[index] }));
+function drawPlot(points: Point[]): void {
+  if (points.length === 0) return;
+
   const plotStarted = performance.now();
   const chart = Plot.plot({
     width: Math.max(320, plotHost.clientWidth),
@@ -50,26 +46,46 @@ async function render(): Promise<void> {
     marks: [Plot.ruleY([0]), Plot.lineY(points, { x: "x", y: "y", stroke: "#7656ff" })],
   });
   plotHost.replaceChildren(chart);
-  const plotElapsed = performance.now() - plotStarted;
+  fields.plot.textContent = `${(performance.now() - plotStarted).toFixed(1)} ms`;
+}
+
+async function reduceAndRender(): Promise<void> {
+  threshold.disabled = true;
+  const target = Number(threshold.value);
+  status.textContent = `Reducing to ${target.toLocaleString()} points…`;
+  const reduceStarted = performance.now();
+  const reduced = await lttb(source.x, source.y, target);
+  const reduceElapsed = performance.now() - reduceStarted;
+  plottedPoints = Array.from(reduced.x, (x, index) => ({ x, y: reduced.y[index] }));
+  drawPlot(plottedPoints);
   fields.output.textContent = reduced.x.length.toLocaleString();
   fields.lttb.textContent = `${reduceElapsed.toFixed(1)} ms`;
-  fields.plot.textContent = `${plotElapsed.toFixed(1)} ms`;
-  status.textContent = "Timings cover only the named stages in this browser.";
+  status.textContent =
+    "Timings cover only the named stages after one untimed real-input warm-up; startup is excluded.";
   threshold.disabled = false;
 }
 
 let resizeTimer = 0;
 const observer = new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);
-  resizeTimer = window.setTimeout(() => void render(), 120);
+  resizeTimer = window.setTimeout(() => drawPlot(plottedPoints), 120);
 });
-observer.observe(plotHost);
-threshold.addEventListener("change", () => void render());
 
-async function start(): Promise<void> {
-  const context = await init();
-  fields.backend.textContent = context.backend;
-  await render();
+function reportError(error: unknown): void {
+  status.textContent = `Plot pipeline failed: ${error instanceof Error ? error.message : String(error)}`;
+  threshold.disabled = false;
 }
 
-void start();
+threshold.addEventListener("change", () => void reduceAndRender().catch(reportError));
+
+async function start(): Promise<void> {
+  threshold.disabled = true;
+  const context = await init();
+  fields.backend.textContent = context.backend;
+  status.textContent = "Warming LTTB on the real input…";
+  await lttb(source.x, source.y, Number(threshold.value));
+  await reduceAndRender();
+  observer.observe(plotHost);
+}
+
+void start().catch(reportError);

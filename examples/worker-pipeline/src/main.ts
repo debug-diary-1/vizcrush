@@ -68,7 +68,8 @@ button.addEventListener("click", () => {
     const started = performance.now();
     worker.postMessage({ x: x.buffer, y: y.buffer, threshold: OUTPUT_COUNT }, [x.buffer, y.buffer]);
     fields.detached.textContent = `${x.byteLength + y.byteLength} bytes`;
-    status.textContent = "Worker is processing; input buffers are now detached on the main thread.";
+    status.textContent =
+      "Worker is warming and processing; input buffers are now detached on the main thread.";
 
     worker.onmessage = (
       event: MessageEvent<{
@@ -91,7 +92,7 @@ button.addEventListener("click", () => {
         fields.compute.textContent = `${event.data.elapsed?.toFixed(1) ?? "—"} ms`;
         fields.roundtrip.textContent = `${roundtrip.toFixed(1)} ms`;
         fields.frameGap.textContent = `${largestFrameGap.toFixed(1)} ms`;
-        status.textContent = `${outputX.length.toLocaleString()} points returned. Frame gap is observed during this run, not a responsiveness guarantee.`;
+        status.textContent = `${outputX.length.toLocaleString()} points returned. Compute excludes one real-input warm-up; round trip includes it. Frame gap is observed during this run, not a responsiveness guarantee.`;
       }
       worker.terminate();
       button.disabled = false;

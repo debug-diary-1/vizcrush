@@ -51,17 +51,21 @@ const deck = new Deck({
   controller: true,
 });
 
+function binOptions(resolution: number) {
+  return {
+    xBins: resolution,
+    yBins: resolution,
+    xRange: [0, 1_000] as [number, number],
+    yRange: [0, 1_000] as [number, number],
+  };
+}
+
 async function update(): Promise<void> {
   resolutionSelect.disabled = true;
   const resolution = Number(resolutionSelect.value);
   status.textContent = `Computing ${resolution} × ${resolution} density grid…`;
   const started = performance.now();
-  const { result, backend } = await bin2dWithBackend(source.x, source.y, {
-    xBins: resolution,
-    yBins: resolution,
-    xRange: [0, 1_000],
-    yRange: [0, 1_000],
-  });
+  const { result, backend } = await bin2dWithBackend(source.x, source.y, binOptions(resolution));
   const elapsed = performance.now() - started;
   const cells: Cell[] = [];
   for (let row = 0; row < resolution; row += 1) {
@@ -69,10 +73,7 @@ async function update(): Promise<void> {
       const count = result.grid[row * resolution + column];
       if (count === 0) continue;
       cells.push({
-        position: [
-          (result.xEdges[column] + result.xEdges[column + 1]) / 2,
-          (result.yEdges[row] + result.yEdges[row + 1]) / 2,
-        ],
+        position: [result.xEdges[column], result.yEdges[row]],
         count,
       });
     }
@@ -105,6 +106,19 @@ async function update(): Promise<void> {
   resolutionSelect.disabled = false;
 }
 
-resolutionSelect.addEventListener("change", () => void update());
+async function start(): Promise<void> {
+  resolutionSelect.disabled = true;
+  status.textContent = "Warming bin2d on the real input…";
+  const resolution = Number(resolutionSelect.value);
+  await bin2dWithBackend(source.x, source.y, binOptions(resolution));
+  await update();
+}
+
+function reportError(error: unknown): void {
+  status.textContent = `Density pipeline failed: ${error instanceof Error ? error.message : String(error)}`;
+  resolutionSelect.disabled = false;
+}
+
+resolutionSelect.addEventListener("change", () => void update().catch(reportError));
 window.addEventListener("beforeunload", () => deck.finalize());
-void update();
+void start().catch(reportError);
