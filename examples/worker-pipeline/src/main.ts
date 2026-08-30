@@ -29,6 +29,10 @@ function draw(x: Float64Array, y: Float64Array): void {
   const context = canvas.getContext("2d")!;
   const width = canvas.width;
   const height = canvas.height;
+  if (x.length === 0 || y.length === 0) return;
+
+  const xMin = x[0];
+  const xSpan = x[x.length - 1] - xMin;
   context.clearRect(0, 0, width, height);
   context.fillStyle = "#071412";
   context.fillRect(0, 0, width, height);
@@ -42,8 +46,8 @@ function draw(x: Float64Array, y: Float64Array): void {
   context.lineWidth = 2;
   context.beginPath();
   for (let i = 0; i < x.length; i += 1) {
-    const px = (i / (x.length - 1)) * width;
-    const py = height - ((y[i] - min) / (max - min)) * height;
+    const px = xSpan === 0 ? width / 2 : ((x[i] - xMin) / xSpan) * width;
+    const py = max === min ? height / 2 : height - ((y[i] - min) / (max - min)) * height;
     if (i === 0) context.moveTo(px, py);
     else context.lineTo(px, py);
   }
