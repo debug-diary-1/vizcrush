@@ -8,7 +8,7 @@
 - Uses a dedicated CLI entry so npm/pnpm bin shims and symlinked installs start reliably.
 - Binds HTTP to loopback by default, validates tokenless request authority/origin against the listener, requires authentication for non-loopback listeners, and measures streamed request bodies rather than trusting `Content-Length`.
 - Caps file rows and spatial query results, bounds retained indexes with LRU eviction, and adds `vizcrush_delete_index`.
-- **Breaking behavior:** HTTP now binds to loopback by default, rejects request bodies above 10 MiB, and starts through the dedicated `dist/cli.js` entry instead of treating `dist/index.js` as an executable.
+- **Breaking behavior:** HTTP now binds to loopback by default, file tools reject inputs above 10 MiB by default, and the package starts through the dedicated `dist/cli.js` entry instead of treating `dist/index.js` as an executable.
 
 ### `@vizcrush/react` v1.0.1
 

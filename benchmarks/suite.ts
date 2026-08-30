@@ -43,6 +43,24 @@ export function parseBenchmarkSeed(value: string): number {
   return seed;
 }
 
+export function validateBenchmarkRunMode(options: {
+  baselinePath: string;
+  canonicalBaselinePath: string;
+  quick: boolean;
+  saveBaseline: boolean;
+}): { compareBaseline: boolean } {
+  if (
+    options.quick &&
+    options.saveBaseline &&
+    options.baselinePath === options.canonicalBaselinePath
+  ) {
+    throw new Error(
+      "Quick mode cannot overwrite the canonical baseline; set a separate BENCH_BASELINE_PATH.",
+    );
+  }
+  return { compareBaseline: !options.quick && !options.saveBaseline };
+}
+
 export const benchmarkOperations = {
   lttb: (x: Float64Array, y: Float64Array, target: number) => lttbSync(x, y, target),
   filterRange: (x: Float64Array, y: Float64Array, viewportMin: number, viewportMax: number) =>

@@ -41,6 +41,14 @@ describe("dependency policy", () => {
     expect(findNonFrozenPnpmInstalls("run: pnpm install # --frozen-lockfile")).toEqual([1]);
   });
 
+  test("checks installs separated by a single background operator", () => {
+    expect(
+      findNonFrozenPnpmInstalls(
+        "run: pnpm install --frozen-lockfile & pnpm install --prefer-offline",
+      ),
+    ).toEqual([1]);
+  });
+
   test("requires CI cargo installs to pin a version and use the crate lockfile", () => {
     const source = [
       "run: cargo install cargo-audit --quiet",

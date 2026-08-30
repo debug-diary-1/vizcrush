@@ -9,6 +9,7 @@ import {
   parseBenchmarkSeed,
   parseBenchmarkThreshold,
   persistBenchmarkArtifacts,
+  validateBenchmarkRunMode,
   type BenchmarkOutput,
 } from "./suite.js";
 
@@ -31,6 +32,37 @@ describe("benchmark suite", () => {
   test("accepts finite thresholds and integer seeds", () => {
     expect(parseBenchmarkThreshold("0.75")).toBe(0.75);
     expect(parseBenchmarkSeed("42")).toBe(42);
+  });
+
+  test("quick mode skips baseline comparison", () => {
+    expect(
+      validateBenchmarkRunMode({
+        baselinePath: "/benchmarks/benchmark-baseline.json",
+        canonicalBaselinePath: "/benchmarks/benchmark-baseline.json",
+        quick: true,
+        saveBaseline: false,
+      }),
+    ).toEqual({ compareBaseline: false });
+  });
+
+  test("quick mode cannot overwrite the canonical baseline", () => {
+    expect(() =>
+      validateBenchmarkRunMode({
+        baselinePath: "/benchmarks/benchmark-baseline.json",
+        canonicalBaselinePath: "/benchmarks/benchmark-baseline.json",
+        quick: true,
+        saveBaseline: true,
+      }),
+    ).toThrow(/quick.*separate BENCH_BASELINE_PATH/i);
+
+    expect(
+      validateBenchmarkRunMode({
+        baselinePath: "/tmp/quick-baseline.json",
+        canonicalBaselinePath: "/benchmarks/benchmark-baseline.json",
+        quick: true,
+        saveBaseline: true,
+      }),
+    ).toEqual({ compareBaseline: false });
   });
 
   test("named operations execute the shipped vizcrush cores", () => {

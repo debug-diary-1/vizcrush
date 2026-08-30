@@ -39,5 +39,5 @@ export function findUnpinnedCargoInstalls(source) {
 }
 
 function splitShellCommandSegments(line) {
-  return line.split("#", 1)[0].split(/\s*(?:&&|\|\||;|\|)\s*/u);
+  return line.split("#", 1)[0].split(/\s*(?:&&|&|\|\||;|\|)\s*/u);
 }
