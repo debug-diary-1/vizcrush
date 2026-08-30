@@ -136,16 +136,17 @@ A `vizcrush-ai` Rust crate exists in `crates/` as a placeholder for future Rust/
 
 ## CI pipeline
 
-`.github/workflows/ci.yml` runs on every PR:
+`.github/workflows/ci.yml` classifies every PR by changed path. Code-affecting PRs run:
 
 | Job                           | What it does                                                                              |
 | ----------------------------- | ----------------------------------------------------------------------------------------- |
 | **Rust Tests**                | `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`, build WASM with `+simd128` |
 | **Lint + Format + Typecheck** | `pnpm lint` (oxlint `--deny-warnings`), `pnpm format:check` (oxfmt), `pnpm typecheck`     |
 | **TypeScript Build + Test**   | `pnpm turbo build`, `vitest run`                                                          |
-| **Performance Regression**    | Run benchmarks, compare to `benchmarks/benchmark-baseline.json` (100% CI-noise threshold) |
+| **Performance Regression**    | Run benchmarks, compare to `benchmarks/benchmark-baseline.json` (75% CI-noise threshold)  |
+| **Security Audit**            | Audit pnpm and Cargo dependencies                                                         |
 
-Plus `.github/workflows/docs-deploy.yml` deploys the docs and examples gallery to GitHub Pages when their source changes on `main`.
+Documentation-only PRs run formatting, generated-inventory validation, and a VitePress build while the expensive jobs are skipped at job level. The change-scope and documentation checks are required merge gates, preventing classifier or docs-validation failures from being hidden by conditional skips. `.github/workflows/docs-deploy.yml` deploys the docs and examples gallery to GitHub Pages when their source changes on `main`.
 
 ## See also
 

@@ -6,9 +6,9 @@
 [![npm: @vizcrush/core](https://img.shields.io/npm/v/%40vizcrush%2Fcore?label=%40vizcrush%2Fcore)](https://www.npmjs.com/package/@vizcrush/core)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**vizcrush** is a renderer-agnostic toolkit for processing visualization data in the browser. Downsample time series, build density bins, query 2D and 3D spatial indexes, and compute streaming statistics before the data reaches your chart.
+**vizcrush** reduces massive browser datasets into bounded, renderer-ready data for D3, Three.js, deck.gl, Canvas, WebGL, and WebGPU. Downsample time series, build density bins, query 2D and 3D spatial indexes, and compute streaming statistics before the data reaches your chart.
 
-The algorithms are written in Rust and compiled to WebAssembly, with the same asynchronous API backed by a pure-JavaScript fallback. The output is typed-array data you can pass to D3, Canvas, WebGL, Three.js, or your own renderer.
+The algorithms are written in Rust and compiled to WebAssembly, with the same asynchronous API backed by a pure-JavaScript fallback. Outputs remain typed arrays, keeping vizcrush decoupled from the rendering layer.
 
 **[Live examples](https://debug-diary-1.github.io/vizcrush/examples/)** · **[Documentation](https://debug-diary-1.github.io/vizcrush/)** · **[Algorithm book](https://debug-diary-1.github.io/vizcrush-book/)**
 

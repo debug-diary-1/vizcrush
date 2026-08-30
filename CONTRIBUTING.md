@@ -102,7 +102,7 @@ npx vitest run packages/downsample/
 
 ## Performance
 
-All PRs are checked against the benchmark baseline. CI fails on a >100% regression (anything that doubles a hot path) — the loose threshold absorbs CI-runner noise; run locally for precise numbers.
+Code-affecting PRs are checked against the benchmark baseline. CI fails on a >75% regression — the loose threshold absorbs CI-runner noise; run locally for precise numbers. Documentation-only PRs skip the benchmark.
 
 ```bash
 # Run benchmarks
