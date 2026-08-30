@@ -15,6 +15,7 @@
 //
 //   SESSIONS=5 node benchmarks/campaign/run-versions.mjs
 //   VERSIONS_OUT=versions-run2.json node benchmarks/campaign/run-versions.mjs
+//   SWEEP_BUILDS=chromium-1223,chromium-1228 node benchmarks/campaign/run-versions.mjs
 //
 // Chromium only: Playwright's Firefox and WebKit distributions are launched
 // through `pw_run.sh`, which is a wrapper script rather than a browser
@@ -28,8 +29,18 @@ import { REPS, SEED, SIZES, WARMUPS } from "./protocol.mjs";
 import { startServer } from "./serve.mjs";
 import { median } from "./stats.mjs";
 
-const DEFAULT_CACHE =
-  process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${homedir()}/Library/Caches/ms-playwright`;
+/**
+ * Playwright's browser cache for this platform: the PLAYWRIGHT_BROWSERS_PATH
+ * override when set, otherwise the per-OS default Playwright itself uses.
+ */
+export function defaultCacheDir({ platform = process.platform, env = process.env } = {}) {
+  if (env.PLAYWRIGHT_BROWSERS_PATH) return env.PLAYWRIGHT_BROWSERS_PATH;
+  if (platform === "darwin") return `${homedir()}/Library/Caches/ms-playwright`;
+  if (platform === "win32") {
+    return `${env.LOCALAPPDATA ?? `${homedir()}/AppData/Local`}/ms-playwright`;
+  }
+  return `${env.XDG_CACHE_HOME ?? `${homedir()}/.cache`}/ms-playwright`;
+}
 
 // Chromium executable location inside a cached build, per Playwright platform.
 const EXE_LAYOUTS = [
@@ -44,7 +55,7 @@ const EXE_LAYOUTS = [
  * A `chromium-<n>` directory counts only if a known executable layout exists
  * inside it.
  */
-export function cachedChromiumBuilds(cache = DEFAULT_CACHE) {
+export function cachedChromiumBuilds(cache = defaultCacheDir()) {
   if (!existsSync(cache)) return [];
   return readdirSync(cache)
     .filter((entry) => /^chromium-\d+$/u.test(entry))
@@ -54,6 +65,27 @@ export function cachedChromiumBuilds(cache = DEFAULT_CACHE) {
     }))
     .filter((candidate) => candidate.exe !== null)
     .sort((a, b) => Number(a.build.split("-")[1]) - Number(b.build.split("-")[1]));
+}
+
+/**
+ * Restrict discovered builds to a comma-separated SWEEP_BUILDS allowlist of
+ * cache directory names. Unset means "sweep everything cached". A name that
+ * is not in the cache throws: a pinned sweep that silently dropped a build
+ * would produce a misleading table.
+ */
+export function filterBuilds(builds, allowlist) {
+  if (allowlist === undefined || allowlist === "") return builds;
+  const wanted = new Set(
+    allowlist
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean),
+  );
+  const missing = [...wanted].filter((name) => !builds.some((b) => b.build === name));
+  if (missing.length > 0) {
+    throw new Error(`SWEEP_BUILDS names builds not in the cache: ${missing.join(", ")}`);
+  }
+  return builds.filter((b) => wanted.has(b.build));
 }
 
 /**
@@ -85,9 +117,9 @@ export function sessionPlan(builds, sessions) {
 
 async function main() {
   const sessions = parseSessions(process.env.SESSIONS);
-  const builds = cachedChromiumBuilds();
+  const builds = filterBuilds(cachedChromiumBuilds(), process.env.SWEEP_BUILDS);
   if (builds.length === 0) {
-    process.stderr.write(`No cached Chromium builds found under ${DEFAULT_CACHE}\n`);
+    process.stderr.write(`No cached Chromium builds found under ${defaultCacheDir()}\n`);
     process.exit(1);
   }
 

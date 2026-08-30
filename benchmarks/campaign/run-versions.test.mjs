@@ -2,7 +2,52 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { cachedChromiumBuilds, parseSessions, sessionPlan } from "./run-versions.mjs";
+import {
+  cachedChromiumBuilds,
+  defaultCacheDir,
+  filterBuilds,
+  parseSessions,
+  sessionPlan,
+} from "./run-versions.mjs";
+
+describe("defaultCacheDir", () => {
+  it("prefers PLAYWRIGHT_BROWSERS_PATH on every platform", () => {
+    for (const platform of ["darwin", "linux", "win32"]) {
+      expect(defaultCacheDir({ platform, env: { PLAYWRIGHT_BROWSERS_PATH: "/pw" } })).toBe("/pw");
+    }
+  });
+
+  it("uses each platform's Playwright cache location", () => {
+    expect(defaultCacheDir({ platform: "darwin", env: {} })).toMatch(
+      /Library\/Caches\/ms-playwright$/u,
+    );
+    expect(defaultCacheDir({ platform: "linux", env: {} })).toMatch(/\.cache\/ms-playwright$/u);
+    expect(defaultCacheDir({ platform: "linux", env: { XDG_CACHE_HOME: "/xdg" } })).toBe(
+      "/xdg/ms-playwright",
+    );
+    expect(defaultCacheDir({ platform: "win32", env: { LOCALAPPDATA: "C:/lad" } })).toBe(
+      "C:/lad/ms-playwright",
+    );
+  });
+});
+
+describe("filterBuilds", () => {
+  const builds = [{ build: "chromium-1200" }, { build: "chromium-1234" }];
+
+  it("passes everything through when no allowlist is set", () => {
+    expect(filterBuilds(builds, undefined)).toEqual(builds);
+    expect(filterBuilds(builds, "")).toEqual(builds);
+  });
+
+  it("keeps only the named builds, preserving discovery order", () => {
+    expect(filterBuilds(builds, "chromium-1234")).toEqual([{ build: "chromium-1234" }]);
+    expect(filterBuilds(builds, " chromium-1234 , chromium-1200 ")).toEqual(builds);
+  });
+
+  it("throws when the allowlist names a build the cache does not hold", () => {
+    expect(() => filterBuilds(builds, "chromium-1200,chromium-9999")).toThrow(/chromium-9999/u);
+  });
+});
 
 describe("parseSessions", () => {
   it("defaults when unset and parses positive integers", () => {

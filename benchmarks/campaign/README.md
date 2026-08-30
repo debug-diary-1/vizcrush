@@ -101,10 +101,20 @@ instead of launching.
 ## Obtaining the historical Chromium builds
 
 `run-versions.mjs` sweeps whatever Chromium builds sit in Playwright's browser
-cache (`~/Library/Caches/ms-playwright` by default; override with
+cache (`~/Library/Caches/ms-playwright` on macOS, `~/.cache/ms-playwright` on
+Linux, `%LOCALAPPDATA%\ms-playwright` on Windows; override with
 `PLAYWRIGHT_BROWSERS_PATH`). `pnpm exec playwright install` fetches only the
 build pinned by the Playwright version in this repo, so the historical builds
-must be installed deliberately.
+must be installed deliberately. On a machine whose cache holds unrelated
+builds, pin the target set explicitly — an unknown name fails loudly rather
+than being dropped:
+
+```bash
+SWEEP_BUILDS=chromium-1200,chromium-1208,chromium-1223,chromium-1228,chromium-1234 \
+  SESSIONS=5 node benchmarks/campaign/run-versions.mjs
+```
+
+(or point `PLAYWRIGHT_BROWSERS_PATH` at a cache dedicated to the sweep).
 
 Each Playwright release pins exactly one Chromium build, recorded in that
 release's `playwright-core/browsers.json`. Installing a historical release's
