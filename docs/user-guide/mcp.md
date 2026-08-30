@@ -97,7 +97,7 @@ The MCP server supports two transports:
      "mcpServers": {
        "vizcrush": {
          "command": "node",
-         "args": ["/absolute/path/to/vizcrush/packages/mcp-server/dist/index.js"]
+         "args": ["/absolute/path/to/vizcrush/packages/mcp-server/dist/cli.js"]
        }
      }
    }
@@ -116,7 +116,7 @@ Add to `~/.claude.json` or your project's `.mcp.json`:
   "mcpServers": {
     "vizcrush": {
       "command": "node",
-      "args": ["/absolute/path/to/vizcrush/packages/mcp-server/dist/index.js"]
+      "args": ["/absolute/path/to/vizcrush/packages/mcp-server/dist/cli.js"]
     }
   }
 }
@@ -131,7 +131,7 @@ In Cursor settings → MCP → Add server:
   "mcpServers": {
     "vizcrush": {
       "command": "node",
-      "args": ["/absolute/path/to/vizcrush/packages/mcp-server/dist/index.js"]
+      "args": ["/absolute/path/to/vizcrush/packages/mcp-server/dist/cli.js"]
     }
   }
 }
@@ -142,21 +142,23 @@ In Cursor settings → MCP → Add server:
 The HTTP transport binds to `127.0.0.1` by default:
 
 ```bash
-node packages/mcp-server/dist/index.js --transport http --port 3847
+node packages/mcp-server/dist/cli.js --transport http --port 3847
 ```
 
 Then point any MCP client at `http://localhost:3847/mcp`.
+
+In tokenless loopback mode, the server accepts only the bound listener authority (or `localhost` on the same port). Requests with a forged `Host` are rejected, and browser requests with an `Origin` are rejected unless it exactly matches `VIZCRUSH_MCP_CORS_ORIGIN`. This binds local trust to the listener and prevents DNS-rebinding access.
 
 To listen on a non-loopback interface, authentication is mandatory:
 
 ```bash
 VIZCRUSH_MCP_TOKEN="$(openssl rand -hex 32)" \
-  node packages/mcp-server/dist/index.js --transport http --host 0.0.0.0 --port 3847
+  node packages/mcp-server/dist/cli.js --transport http --host 0.0.0.0 --port 3847
 ```
 
 Clients send the token as `Authorization: Bearer <token>`. Request bodies are measured as they stream, including chunked requests, and are rejected above 10 MiB.
 
-Browser clients require an explicit allowed origin, for example `VIZCRUSH_MCP_CORS_ORIGIN=https://app.example.com`. Preflight requests are accepted only when that variable is configured; tool requests still require the bearer token.
+Browser clients require an explicit allowed origin, for example `VIZCRUSH_MCP_CORS_ORIGIN=https://app.example.com`. Preflight requests are accepted only when that variable is configured. When `VIZCRUSH_MCP_TOKEN` is set, tool requests must still carry its bearer token.
 
 ## Example agent prompts
 
@@ -174,7 +176,7 @@ The agent will pick the right tools, chain them, and report results in natural l
 For development, you can list and introspect tools without an AI client by using the MCP inspector:
 
 ```bash
-npx @modelcontextprotocol/inspector node packages/mcp-server/dist/index.js
+npx @modelcontextprotocol/inspector node packages/mcp-server/dist/cli.js
 ```
 
 This opens a browser UI at `http://localhost:5173` where you can call tools manually.

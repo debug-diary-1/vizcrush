@@ -9,6 +9,10 @@ const BLOCKED_PATTERNS = [
   /\/\.git\//i,
   /\/\.gnupg\//i,
   /\/\.config\/gh\//i,
+  /\/\.docker\/config\.json$/i,
+  /\/\.netrc$/i,
+  /\/\.npmrc$/i,
+  /\/\.pypirc$/i,
   /\.pem$/i,
   /\.key$/i,
   /\.p12$/i,
@@ -40,9 +44,23 @@ function validateFilePath(filePath: string): string {
   }
 
   // Check against allowed base directories
-  const allowedDirs = (process.env.VIZCRUSH_ALLOWED_DIRS || process.cwd())
+  const configuredAllowedDirs = (process.env.VIZCRUSH_ALLOWED_DIRS || process.cwd())
     .split(",")
-    .map((directory) => realpathSync(resolve(directory.trim())));
+    .map((directory) => directory.trim())
+    .filter(Boolean);
+  if (configuredAllowedDirs.length === 0) {
+    throw new Error("VIZCRUSH_ALLOWED_DIRS does not contain a directory.");
+  }
+  const allowedDirs = configuredAllowedDirs.map((directory) => {
+    try {
+      return realpathSync(resolve(directory));
+    } catch {
+      throw new Error(
+        `Configured allowed directory cannot be resolved: '${directory}'. ` +
+          "Check VIZCRUSH_ALLOWED_DIRS.",
+      );
+    }
+  });
 
   const isAllowed = allowedDirs.some((dir) => {
     const rel = relative(dir, realPath);

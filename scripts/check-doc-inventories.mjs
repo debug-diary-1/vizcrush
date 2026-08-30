@@ -65,6 +65,22 @@ for (const entry of await readdir(join(root, "examples"), { withFileTypes: true 
 }
 runnableExamples.sort();
 
+const exampleCountClaims = [
+  ["README.md", /\[(\d+) runnable examples\]/u],
+  ["docs/reference/examples.md", /ships with (\d+) runnable example apps/u],
+  ["docs/developer-guide/architecture.md", /(\d+) runnable example apps/u],
+  ["docs/user-guide/getting-started.md", /(\d+) runnable demos/u],
+];
+for (const [relativePath, pattern] of exampleCountClaims) {
+  const source = await readFile(join(root, relativePath), "utf8");
+  const claimedCount = source.match(pattern)?.[1];
+  if (!claimedCount || Number.parseInt(claimedCount, 10) !== runnableExamples.length) {
+    throw new Error(
+      `${relativePath} has a stale runnable-example count; expected ${runnableExamples.length}`,
+    );
+  }
+}
+
 function renderMarkdownTable(headers, rows) {
   const widths = headers.map((header, index) =>
     Math.max(header.length, ...rows.map((row) => row[index].length)),

@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
 import { createRequire } from "node:module";
-import { pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z, type ZodRawShape } from "zod";
 import {
   DownsampleInput,
@@ -48,7 +46,6 @@ import {
   handleParseQuery,
   handleShapeSimilarity,
 } from "./tools/ai.js";
-import { startHttpServer } from "./http-server.js";
 
 /**
  * Declarative description of one MCP tool. `registerTool` is the one place
@@ -379,38 +376,4 @@ Please help me migrate to vizcrush:
   );
 
   return server;
-}
-
-// ── Start Server ──
-
-async function main() {
-  const args = process.argv.slice(2);
-  const isHttp = args.includes("--transport") && args.includes("http");
-  const portIdx = args.indexOf("--port");
-  const port = portIdx >= 0 ? parseInt(args[portIdx + 1], 10) : 3847;
-  const hostIdx = args.indexOf("--host");
-  const host = hostIdx >= 0 ? args[hostIdx + 1] : "127.0.0.1";
-
-  if (isHttp) {
-    const running = await startHttpServer({
-      createMcpServer: createServer,
-      version: PACKAGE_VERSION,
-      host,
-      port,
-      token: process.env.VIZCRUSH_MCP_TOKEN,
-      corsOrigin: process.env.VIZCRUSH_MCP_CORS_ORIGIN,
-    });
-    console.error(`vizcrush MCP server running at ${running.url}`);
-  } else {
-    const server = createServer();
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-  }
-}
-
-if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
-  main().catch((error) => {
-    console.error("MCP server error:", error);
-    process.exit(1);
-  });
 }

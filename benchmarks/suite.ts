@@ -147,14 +147,23 @@ export function compareWithBaseline(
   baselinePath: string,
   threshold: number,
 ): string[] {
-  if (!existsSync(baselinePath)) return [];
+  if (!existsSync(baselinePath)) {
+    throw new Error(`Benchmark baseline not found at ${baselinePath}`);
+  }
   const baseline = JSON.parse(readFileSync(baselinePath, "utf8")) as BenchmarkOutput;
+  if (!Number.isSafeInteger(baseline.seed) || baseline.seed !== output.seed) {
+    throw new Error(
+      `Benchmark baseline seed mismatch: expected ${output.seed}, found ${String(baseline.seed)}`,
+    );
+  }
   const regressions: string[] = [];
   for (const result of output.results) {
     const previous = baseline.results.find(
       (entry) => entry.name === result.name && entry.dataSize === result.dataSize,
     );
-    if (!previous) continue;
+    if (!previous) {
+      throw new Error(`Benchmark baseline has no entry for ${result.name} ${result.dataSize}`);
+    }
     const ratio = result.medianMs / previous.medianMs;
     if (ratio > 1 + threshold) {
       regressions.push(

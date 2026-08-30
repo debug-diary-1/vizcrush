@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compareWithBaseline, persistBenchmarkArtifacts, runBenchmarkSuite } from "./suite.js";
@@ -32,14 +33,22 @@ for (const result of output.results) {
 if (saveBaseline) {
   console.log(`Baseline saved to ${baselinePath}`);
 } else {
-  const regressions = compareWithBaseline(output, baselinePath, threshold);
-  if (regressions.length > 0) {
-    for (const regression of regressions) console.error(`REGRESSION: ${regression}`);
+  if (!existsSync(baselinePath)) {
     console.error(
-      `${regressions.length} regression(s) exceeded the ${(threshold * 100).toFixed(0)}% threshold.`,
+      `No benchmark baseline found at ${baselinePath}; run with --save-baseline before comparing.`,
     );
     process.exitCode = 1;
   } else {
-    console.log(`No regressions exceeded the ${(threshold * 100).toFixed(0)}% threshold.`);
+    const regressions = compareWithBaseline(output, baselinePath, threshold);
+    if (regressions.length === 0) {
+      console.log(`No regressions exceeded the ${(threshold * 100).toFixed(0)}% threshold.`);
+    }
+    for (const regression of regressions) console.error(`REGRESSION: ${regression}`);
+    if (regressions.length > 0) {
+      console.error(
+        `${regressions.length} regression(s) exceeded the ${(threshold * 100).toFixed(0)}% threshold.`,
+      );
+      process.exitCode = 1;
+    }
   }
 }

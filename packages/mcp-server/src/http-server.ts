@@ -110,6 +110,23 @@ function formatHostForUrl(host: string): string {
   return host.includes(":") ? `[${host}]` : host;
 }
 
+function tokenlessRequestIsAllowed(
+  req: IncomingMessage,
+  host: string,
+  port: number,
+  corsOrigin: string | undefined,
+): boolean {
+  const allowedHosts = new Set([
+    `${formatHostForUrl(host)}:${port}`.toLowerCase(),
+    `localhost:${port}`,
+  ]);
+  const requestHost = req.headers.host?.toLowerCase();
+  if (!requestHost || !allowedHosts.has(requestHost)) return false;
+
+  const requestOrigin = req.headers.origin;
+  return !requestOrigin || requestOrigin === corsOrigin;
+}
+
 function tokenMatches(header: string | undefined, token: string): boolean {
   if (!header?.startsWith("Bearer ")) return false;
   const supplied = Buffer.from(header.slice("Bearer ".length));
@@ -132,6 +149,7 @@ export async function startHttpServer(options: HttpServerOptions): Promise<Runni
   const port = options.port ?? DEFAULT_PORT;
   const token = options.token;
   const maxBodyBytes = options.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
+  let boundPort = port;
 
   if (!isLoopbackHost(host) && !token) {
     throw new Error("A non-loopback MCP HTTP listener requires VIZCRUSH_MCP_TOKEN.");
@@ -151,6 +169,11 @@ export async function startHttpServer(options: HttpServerOptions): Promise<Runni
       res.setHeader("Access-Control-Allow-Origin", options.corsOrigin);
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
       res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    }
+
+    if (!token && !tokenlessRequestIsAllowed(req, host, boundPort, options.corsOrigin)) {
+      respond(res, 403, "Forbidden");
+      return;
     }
 
     if (req.method === "OPTIONS") {
@@ -230,6 +253,7 @@ export async function startHttpServer(options: HttpServerOptions): Promise<Runni
   });
 
   const address = httpServer.address() as AddressInfo;
+  boundPort = address.port;
   return {
     host,
     port: address.port,

@@ -22,7 +22,7 @@
     "directory": "packages/mcp-server"
   },
   "bin": {
-    "vizcrush-mcp-server": "./dist/index.js"
+    "vizcrush-mcp-server": "./dist/cli.js"
   },
   "files": [
     "dist"
@@ -38,7 +38,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "start": "node dist/index.js"
+    "start": "node dist/cli.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "catalog:",

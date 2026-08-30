@@ -354,4 +354,30 @@ describe("MCP file tools", () => {
 
     expect(result).toMatchObject({ point_count: 2, truncated: true });
   });
+
+  test("reports an invalid allowed-directory configuration clearly", () => {
+    const root = mkdtempSync(join(tmpdir(), "vizcrush-file-config-"));
+    temporaryDirectories.push(root);
+    const csv = join(root, "data.csv");
+    writeFileSync(csv, "x,y\n1,2\n", "utf8");
+    process.env.VIZCRUSH_ALLOWED_DIRS = "/definitely/missing/vizcrush-directory";
+
+    const result = handleFileInspect({ file_path: csv });
+
+    expect(result).toEqual({
+      error: expect.stringContaining("Configured allowed directory cannot be resolved"),
+    });
+  });
+
+  test("blocks common package-manager credential files inside an allowed directory", () => {
+    const root = mkdtempSync(join(tmpdir(), "vizcrush-file-sensitive-"));
+    temporaryDirectories.push(root);
+    const npmrc = join(root, ".npmrc");
+    writeFileSync(npmrc, "//registry.npmjs.org/:_authToken=secret\n", "utf8");
+    process.env.VIZCRUSH_ALLOWED_DIRS = root;
+
+    const result = handleFileInspect({ file_path: npmrc });
+
+    expect(result).toEqual({ error: expect.stringContaining("blocked pattern") });
+  });
 });

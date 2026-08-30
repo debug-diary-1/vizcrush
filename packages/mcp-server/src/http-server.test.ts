@@ -30,6 +30,59 @@ describe("MCP HTTP transport", () => {
     ).rejects.toThrow("requires VIZCRUSH_MCP_TOKEN");
   });
 
+  test("rejects a forged Host header on a tokenless loopback listener", async () => {
+    const running = await startHttpServer({
+      createMcpServer: createServer,
+      port: 0,
+      version: "test",
+    });
+
+    try {
+      const status = await new Promise<number>((resolve, reject) => {
+        const req = request(running.url, {
+          method: "POST",
+          headers: { host: `attacker.example:${running.port}` },
+        });
+        req.on("response", (incoming) => {
+          incoming.resume();
+          incoming.on("end", () => resolve(incoming.statusCode ?? 0));
+        });
+        req.on("error", reject);
+        req.end("{}");
+      });
+
+      expect(status).toBe(403);
+    } finally {
+      await running.close();
+    }
+  });
+
+  test("rejects an unconfigured Origin on a tokenless loopback listener", async () => {
+    const running = await startHttpServer({
+      createMcpServer: createServer,
+      port: 0,
+      version: "test",
+    });
+
+    try {
+      const status = await new Promise<number>((resolve, reject) => {
+        const req = request(new URL("/health", running.url), {
+          headers: { origin: "https://attacker.example" },
+        });
+        req.on("response", (incoming) => {
+          incoming.resume();
+          incoming.on("end", () => resolve(incoming.statusCode ?? 0));
+        });
+        req.on("error", reject);
+        req.end();
+      });
+
+      expect(status).toBe(403);
+    } finally {
+      await running.close();
+    }
+  });
+
   test("allows configured CORS preflight without a bearer token", async () => {
     const running = await startHttpServer({
       createMcpServer: createServer,
@@ -56,6 +109,34 @@ describe("MCP HTTP transport", () => {
       });
 
       expect(response).toEqual({ origin: "https://app.example.com", status: 204 });
+    } finally {
+      await running.close();
+    }
+  });
+
+  test("allows an explicitly configured Origin on a tokenless loopback listener", async () => {
+    const running = await startHttpServer({
+      createMcpServer: createServer,
+      corsOrigin: "https://app.example.com",
+      port: 0,
+      version: "test",
+    });
+
+    try {
+      const status = await new Promise<number>((resolve, reject) => {
+        const req = request(running.url, {
+          method: "OPTIONS",
+          headers: { origin: "https://app.example.com" },
+        });
+        req.on("response", (incoming) => {
+          incoming.resume();
+          incoming.on("end", () => resolve(incoming.statusCode ?? 0));
+        });
+        req.on("error", reject);
+        req.end();
+      });
+
+      expect(status).toBe(204);
     } finally {
       await running.close();
     }

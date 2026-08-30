@@ -5,7 +5,8 @@
 ### `@vizcrush/mcp-server` v1.1.0
 
 - Resolves real filesystem targets before enforcing allowed directories, closing symlink escapes.
-- Binds HTTP to loopback by default, requires authentication for non-loopback listeners, and measures streamed request bodies rather than trusting `Content-Length`.
+- Uses a dedicated CLI entry so npm/pnpm bin shims and symlinked installs start reliably.
+- Binds HTTP to loopback by default, validates tokenless request authority/origin against the listener, requires authentication for non-loopback listeners, and measures streamed request bodies rather than trusting `Content-Length`.
 - Caps file rows and spatial query results, bounds retained indexes with LRU eviction, and adds `vizcrush_delete_index`.
 
 ### `@vizcrush/react` v1.0.1
@@ -18,7 +19,7 @@
 
 ### Repository verification
 
-- Benchmarks call shipped cores with deterministic data and reviewed, replaceable baselines.
+- Benchmarks call shipped cores with deterministic data and a regenerated, seed-validated baseline; missing or incomplete baselines fail instead of reporting zero regressions.
 - Freshly packed npm artifacts execute JS/WASM parity checks in Chromium, Firefox, and WebKit.
 - Source-derived documentation inventories and pnpm-catalog dependency policy checks now fail CI on drift.
 - Adds a production adoption path with renderer adapters and deployment checks.
