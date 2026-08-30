@@ -4,7 +4,7 @@ layout: home
 hero:
   name: vizcrush
   text: Make large browser datasets small enough to visualize
-  tagline: Renderer-agnostic downsampling, binning, spatial indexing, and streaming aggregation in Rust, WASM, and JavaScript
+  tagline: Vizcrush reduces massive browser datasets into bounded, renderer-ready data for D3, Three.js, deck.gl, Canvas, WebGL, and WebGPU
   actions:
     - theme: brand
       text: Get Started
