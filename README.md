@@ -73,7 +73,7 @@ vizcrush deliberately draws nothing. Its small, composable packages let you keep
 
 ## Performance, without magic
 
-WASM performance is engine-dependent. In the project's browser benchmarks it is about 4× faster than the JavaScript core in Chromium/V8, but comparable to or slower than JavaScript in Firefox and Safari. Cold first calls are slower everywhere. The JavaScript fallback keeps the API available across environments.
+WASM performance is engine- and version-dependent. Through Chromium 148 the WASM kernel was about 4× faster than the JavaScript core; Chromium 149 shipped a V8 improvement that made the JavaScript core 3.36× faster, leaving WASM only ~1.1× ahead there (measured through Chromium 151). In Firefox and Safari the JavaScript core is comparable or faster. Cold first calls are slower everywhere. The JavaScript fallback keeps the API available across environments. The measurements behind these numbers are committed in [`benchmarks/campaign/`](benchmarks/campaign/).
 
 The opt-in WebGPU path for `bin2d` is currently slower end to end than WASM because transfer costs dominate, so vizcrush never auto-selects it. The measurements, limitations, and rejected optimizations are documented in [ADR 0002](docs/adr/0002-wasm-simd-not-engaged.md), [ADR 0003](docs/adr/0003-wasm-vs-js-is-engine-dependent.md), and [ADR 0004](docs/adr/0004-webgpu-bin2d-wired-but-loses.md).
 
