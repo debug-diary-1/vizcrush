@@ -8,6 +8,7 @@ export default defineConfig({
     include: [
       "packages/*/src/**/*.test.ts",
       "benchmarks/**/*.test.ts",
+      "benchmarks/**/*.test.mjs",
       "scripts/**/*.test.mjs",
       "test/**/*.test.ts",
     ],
