@@ -62,8 +62,9 @@ No cold-start advantage at this size in Node.
 3. **Stop claiming SIMD speedups.** Fixed in this change: the `stats.rs` comment
    and the README headline. WASM is kept, but **not** for "cross-engine
    consistency" — browser benchmarking (ADR 0003) later refuted that. The real
-   reason to keep it: WASM is ~4× faster than the JS core in Chromium/V8, the
-   dominant engine. It is comparable-to-slower in Firefox/WebKit. Not a SIMD
+   reason to keep it: WASM was ~4× faster than the JS core in Chromium/V8, the
+   dominant engine (version-scoped since: Chromium 149 closed most of that gap —
+   see ADR 0003's addendum). It is comparable-to-slower in Firefox/WebKit. Not a SIMD
    advantage either way.
 
 ## Consequences / follow-ups

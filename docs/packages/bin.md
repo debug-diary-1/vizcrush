@@ -111,7 +111,7 @@ for (const cell of cells) {
 
 ## Performance reference
 
-For measured numbers, run the suite in `benchmarks/` and see `benchmarks/results/`. As one backed data point, a 1M-point histogram (50 bins) runs in ~2.5 ms on the pure-JS core in Node (`benchmarks/results/comparison.json`). Whether WASM or JS is faster depends on the engine — WASM wins ~4× in Chromium/V8, while the JS core is comparable or faster in Firefox and Safari; see ADR 0003 (`docs/adr/0003-wasm-vs-js-is-engine-dependent.md`).
+For measured numbers, run the suite in `benchmarks/` and see `benchmarks/results/`. As one backed data point, a 1M-point histogram (50 bins) runs in ~2.5 ms on the pure-JS core in Node (`benchmarks/results/comparison.json`). Whether WASM or JS is faster depends on the engine and its version — WASM won ~4× in Chromium through 148, near parity there since Chromium 149 (~1.1×), and the JS core is comparable or faster in Firefox and Safari; see ADR 0003 (`docs/adr/0003-wasm-vs-js-is-engine-dependent.md`) and `benchmarks/campaign/`.
 
 ## When to use which
 

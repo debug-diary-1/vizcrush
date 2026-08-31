@@ -52,7 +52,7 @@ vizcrush picks its compute backend at runtime:
 1. **WASM** — the Rust core compiled to WebAssembly. Chosen whenever WebAssembly is available.
 2. **JavaScript** — pure-JS fallback so the API still works on legacy or restricted environments.
 
-Which one is faster depends on the engine: WASM wins ~4× in Chromium/V8, while the JS core is comparable or faster in Firefox and Safari — see ADR 0003 (`docs/adr/0003-wasm-vs-js-is-engine-dependent.md`).
+Which one is faster depends on the engine and its version: WASM won ~4× in Chromium through 148, but a V8 improvement in Chromium 149 made the JS core 3.36× faster, leaving the two within ~1.1× there; the JS core is comparable or faster in Firefox and Safari — see ADR 0003 (`docs/adr/0003-wasm-vs-js-is-engine-dependent.md`) and `benchmarks/campaign/`.
 
 You can let it auto-select with `init()`, override per call, or inspect `ctx.capabilities` to see what's available. See **[Backends & Capabilities](backends.md)** for details.
 

@@ -4,10 +4,10 @@ vizcrush picks its compute backend at runtime. You usually don't have to think a
 
 ## The two backends
 
-| Backend    | What it is                         | When it's chosen                                               | Relative speed                                                               |
-| ---------- | ---------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **`wasm`** | WebAssembly build of the Rust core | WebAssembly is available (essentially everywhere modern)       | ~4× faster in Chromium/V8; comparable to slower in Firefox/WebKit (ADR 0003) |
-| **`js`**   | Pure JavaScript core               | WASM unavailable (very old browsers / restricted environments) | Comparable — often faster in Firefox/Safari, and no cold-start module load   |
+| Backend    | What it is                         | When it's chosen                                               | Relative speed                                                                                                                        |
+| ---------- | ---------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **`wasm`** | WebAssembly build of the Rust core | WebAssembly is available (essentially everywhere modern)       | Engine- and version-dependent: ~1.1× faster in Chromium 149+ (was ~4× through 148); comparable to slower in Firefox/WebKit (ADR 0003) |
+| **`js`**   | Pure JavaScript core               | WASM unavailable (very old browsers / restricted environments) | Comparable — often faster in Firefox/Safari, and no cold-start module load                                                            |
 
 A single WASM binary is built for every crate, so there is no separate scalar-WASM or `wasm-simd` path. (The build passes `+simd128`, but the output is byte-identical to a scalar build, so SIMD contributes no speedup today — see ADR 0002.) The selection is feature detection alone — there's no benchmarking. `webgpu` is not a selectable default backend. One operation — `bin2d` — has an opt-in WebGPU compute path (below); the other `.wgsl` files in `src/shaders/` remain unwired drafts.
 

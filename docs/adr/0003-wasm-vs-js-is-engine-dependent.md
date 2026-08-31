@@ -4,6 +4,7 @@
 - **Date:** 2026-05-29
 - **Context issue:** #43 (browser benchmarking — the deferred part of #40)
 - **Corrects:** ADR 0002 and the README, which claimed WASM's benefit is "cross-engine consistency." The browser data refutes that.
+- **Updated:** 2026-08-30 — the Chromium figures below are version-scoped by the addendum: Chromium 149 closed most of the WASM gap.
 
 ## Context
 
@@ -76,3 +77,38 @@ cost.
   micro-benchmark. Out of scope here.
 - **Root-cause the Firefox wasm 10× slowdown** (marshalling vs compute) before
   any per-engine dispatch work.
+
+## Addendum (2026-08-30): the Chromium figure is version-scoped
+
+The ~4× Chromium result above stopped reproducing on later builds. A version
+sweep (`benchmarks/campaign/` in the repository, run twice with
+both runs committed) holds the harness, machine, seed, statistic, and launch
+procedure fixed and varies only the Chromium binary:
+
+| Chromium      | js core (ms) | wasm (ms) | wasm/js |
+| ------------- | ------------ | --------- | ------- |
+| 143.0.7499.4  | 6.15         | 1.60      | 0.26    |
+| 145.0.7632.6  | 6.16         | 1.58      | 0.26    |
+| 148.0.7778.96 | 6.09         | 1.59      | 0.26    |
+| 149.0.7827.55 | 1.81         | 1.58      | 0.88    |
+| 151.0.7922.34 | 1.80         | 1.60      | 0.89    |
+
+Builds through 148 reproduce this ADR's 0.23–0.25 ratio, which validates the
+original measurement. Chromium 149 then improved the JavaScript baseline
+**3.36×** while the WASM path stayed flat, leaving WASM ~1.1× faster there.
+The sweep also settles this ADR's caveat about headless-Chromium's 6 ms JS
+core: the configuration was held fixed while the ratio moved with the engine
+build, so it was the V8 version, not a headless artifact.
+
+Consequences for the findings above:
+
+- Finding 2 ("decisive win in V8/Chromium, ~4×") was correct for its engine
+  builds and expired at Chromium 149.
+- The decision to keep WASM stands, but on the remaining ~1.1× Chromium margin
+  and portability of the Rust core — not on a 4× speedup.
+- The Firefox/WebKit findings are unchanged (re-measured 2026-08-30 on current
+  builds: WASM 7.3× and 1.4× slower than the JS core at 1M).
+
+The durable lesson: a performance claim about a JIT-compiled host is a claim
+about a specific engine build. Public claims now name the build range, and the
+harness that produced every number is committed so the claim can be re-run.

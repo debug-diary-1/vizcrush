@@ -91,7 +91,7 @@ Run the suite in `benchmarks/` for numbers on your hardware; results land in `be
 | `filterRange` | 1M         | 5.3 ms |
 | `stats`       | 1M         | 3.9 ms |
 
-In Chromium, the WASM backend runs `lttb` 1M → 1000 in ~1.5 ms — WASM is roughly 4× faster than the JS core in Chromium/V8, but the JS core is comparable or faster in Firefox and WebKit, and the first WASM call pays a one-time module-load cost. See ADR 0003 (`docs/adr/0003-wasm-vs-js-is-engine-dependent.md`). No WebGPU compute path is wired for any of these algorithms.
+In Chromium, the WASM backend runs `lttb` 1M → 1000 in ~1.5 ms. How that compares to the JS core is engine- and version-dependent: WASM was roughly 4× faster through Chromium 148, but Chromium 149's V8 made the JS core 3.36× faster, so the two are now within ~1.1× there; the JS core is comparable or faster in Firefox and WebKit, and the first WASM call pays a one-time module-load cost. See ADR 0003 (`docs/adr/0003-wasm-vs-js-is-engine-dependent.md`) and `benchmarks/campaign/`. No WebGPU compute path is wired for any of these algorithms.
 
 ## See also
 
