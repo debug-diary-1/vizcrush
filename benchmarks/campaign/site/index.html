@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>vizcrush measurement campaign</title>
+    <!--
+      Served from the repository root, so /packages/* resolves to the real
+      workspace packages. The import map lets the harness load the public API
+      by its published specifier, exactly as an application would.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@vizcrush/core": "/packages/core/dist/index.js",
+          "@vizcrush/downsample": "/packages/downsample/dist/index.js",
+          "@vizcrush/downsample/wasm/vizcrush_downsample.js": "/packages/downsample/wasm/vizcrush_downsample.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <p id="status">loading</p>
+    <script type="module">
+      import "./bench.js";
+      document.querySelector("#status").textContent = "ready";
+      globalThis.__ready = true;
+    </script>
+  </body>
+</html>
