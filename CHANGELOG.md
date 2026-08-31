@@ -172,7 +172,8 @@ function instead of the old `DownsampleOptions.backend`.
 **Performance**
 
 - LTTB 1M→1K: ~1.8ms (JS core, Node/V8); WASM ~4× faster in Chromium,
-  engine-dependent elsewhere (ADR 0003)
+  engine-dependent elsewhere (ADR 0003; the Chromium figure was true of builds
+  through 148 and superseded at Chromium 149 — see ADR 0003's addendum)
 - Octree build 500K: ~200ms; 3D kNN query (k=10): ~0.3ms; 3D range query: ~0.01ms
 
 **Examples**
