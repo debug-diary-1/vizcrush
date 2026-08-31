@@ -9,8 +9,9 @@
 //
 // Timing method: batch timing. Firefox and WebKit coarsen performance.now() to
 // ~1ms as a Spectre mitigation, so a single sub-ms call is unmeasurable. We run
-// N calls as one timed block and divide by N; N is chosen per size so a block
-// is ~100ms in the slowest engine, keeping timer quantization near or below 1%.
+// N calls as one timed block and divide by N. The committed cells land between
+// roughly 40ms and 500ms per block, limiting a 1ms clock quantum to at most a
+// few percent; exact calls-per-block are recorded with every size.
 //
 // This measures hot steady-state throughput, NOT one-shot interactive latency:
 // cold first calls are slower than JS in every engine we have measured.
@@ -19,10 +20,9 @@
 export const THRESHOLD = 1000;
 
 /**
- * Input sizes with calls-per-timed-block, chosen so a block lands near ~100ms
- * in the SLOWEST engine measured (WebKit), keeping the ~1ms timer quantization
- * of Firefox/WebKit near 1%. `asyncCalls` is lower because the public API adds
- * promise machinery per call.
+ * Input sizes with calls-per-timed-block, chosen to turn sub-millisecond calls
+ * into blocks lasting tens to hundreds of milliseconds. `asyncCalls` is lower
+ * because the public API adds promise machinery per call.
  */
 export const SIZES = [
   { n: 100_000, calls: 300, asyncCalls: 100 },
@@ -65,14 +65,42 @@ export function makeSeries(n, seed) {
 
 // A result that never escapes a timed loop is dead code to the optimizer, and
 // V8 is entitled to skip or reshape it — fatal for a campaign whose headline is
-// a JS-only speedup. So every timed callback must return a scalar derived from
-// its result, and the timing loops fold that scalar into this accumulator,
-// which the runners record into their JSON output. Consumption is identical
-// for the WASM and JS arms: one element read plus one add per call.
+// a JS-only speedup. Reading only LTTB's final point is insufficient because
+// that endpoint is copied directly from the input and does not depend on the
+// bucket/argmax work. Every timed core callback therefore returns a checksum of
+// every output point, and the timing loops fold it into this accumulator. The
+// WASM and JS checksum loops perform the same reads and arithmetic per point.
 let sink = 0;
 
 /** Accumulated benchmark sink; runners record it so consumption is auditable. */
 export const sinkValue = () => sink;
+
+/**
+ * Checksum an interleaved WASM result, reading every x/y output pair in order.
+ * The matching split-output helper below performs identical arithmetic.
+ */
+export function checksumInterleaved(output) {
+  if (output.length % 2 !== 0) {
+    throw new Error(`cannot checksum odd interleaved output length ${output.length}`);
+  }
+  let checksum = 0;
+  for (let i = 0; i < output.length; i += 2) checksum += output[i] * 0.5 + output[i + 1];
+  if (!Number.isFinite(checksum)) throw new Error("interleaved output checksum is not finite");
+  return checksum;
+}
+
+/** Checksum a split JS result, reading every x/y output pair in order. */
+export function checksumSplit(output) {
+  if (output.x.length !== output.y.length) {
+    throw new Error(
+      `cannot checksum split output with lengths ${output.x.length}/${output.y.length}`,
+    );
+  }
+  let checksum = 0;
+  for (let i = 0; i < output.x.length; i += 1) checksum += output.x[i] * 0.5 + output.y[i];
+  if (!Number.isFinite(checksum)) throw new Error("split output checksum is not finite");
+  return checksum;
+}
 
 /**
  * Time `calls` invocations of `fn` as one block; returns ms per call.
@@ -81,14 +109,18 @@ export const sinkValue = () => sink;
 export function timeBlock(fn, calls) {
   const started = performance.now();
   for (let i = 0; i < calls; i += 1) sink += fn();
-  return (performance.now() - started) / calls;
+  const perCall = (performance.now() - started) / calls;
+  if (!Number.isFinite(sink)) throw new Error("benchmark sink is not finite");
+  return perCall;
 }
 
 /** Async variant of `timeBlock`; `fn` must resolve to a result-derived scalar. */
 export async function timeBlockAsync(fn, calls) {
   const started = performance.now();
   for (let i = 0; i < calls; i += 1) sink += await fn();
-  return (performance.now() - started) / calls;
+  const perCall = (performance.now() - started) / calls;
+  if (!Number.isFinite(sink)) throw new Error("benchmark sink is not finite");
+  return perCall;
 }
 
 /** Run `warmups` untimed then `reps` timed blocks; returns ms-per-call samples. */
@@ -105,6 +137,32 @@ export async function measureAsync(fn, { calls, reps, warmups }) {
   const samples = [];
   for (let i = 0; i < reps; i += 1) samples.push(await timeBlockAsync(fn, calls));
   return samples;
+}
+
+/**
+ * Gate parity and measure the three synchronous metrics shared by the browser
+ * and Node arms. Keeping this binding in the protocol module prevents output
+ * consumption, copy-proxy behavior, or metric order from drifting by runtime.
+ */
+export function measureCoreCell({ x, y, calls, reps, warmups, wasmLttb, jsLttb }) {
+  const wasmOut = wasmLttb(x, y, THRESHOLD);
+  const jsOut = jsLttb(x, y, THRESHOLD);
+  const maxAbsDiff = assertParity(wasmOut, jsOut, `n=${x.length}`);
+  const opts = { calls, reps, warmups };
+  const scratchX = new Float64Array(x.length);
+  const scratchY = new Float64Array(y.length);
+
+  return {
+    outputLength: jsOut.x.length,
+    maxAbsDiff,
+    wasm_raw: measure(() => checksumInterleaved(wasmLttb(x, y, THRESHOLD)), opts),
+    js_core: measure(() => checksumSplit(jsLttb(x, y, THRESHOLD)), opts),
+    copy_proxy: measure(() => {
+      scratchX.set(x);
+      scratchY.set(y);
+      return scratchX[0] + scratchX[x.length - 1] + scratchY[0] + scratchY[y.length - 1];
+    }, opts),
+  };
 }
 
 /**
@@ -151,7 +209,7 @@ export function assertParity(wasmOut, jsOut, context = "") {
  */
 export function probeTimerResolution() {
   let smallest = Infinity;
-  for (let i = 0; i < 20_000; i += 1) {
+  for (let i = 0; i < 1_000; i += 1) {
     const a = performance.now();
     let b = performance.now();
     while (b === a) b = performance.now();

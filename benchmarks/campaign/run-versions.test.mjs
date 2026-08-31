@@ -65,17 +65,26 @@ describe("parseSessions", () => {
 });
 
 describe("sessionPlan", () => {
-  it("interleaves builds round-robin, session-major", () => {
-    const builds = [{ build: "chromium-1" }, { build: "chromium-2" }];
+  it("counterbalances within-round position by rotating the first build", () => {
+    const builds = [{ build: "chromium-1" }, { build: "chromium-2" }, { build: "chromium-3" }];
     const plan = sessionPlan(builds, 3);
     expect(plan.map((p) => `${p.build.build}#${p.session}`)).toEqual([
       "chromium-1#0",
       "chromium-2#0",
-      "chromium-1#1",
+      "chromium-3#0",
       "chromium-2#1",
+      "chromium-3#1",
+      "chromium-1#1",
+      "chromium-3#2",
       "chromium-1#2",
       "chromium-2#2",
     ]);
+    for (const build of builds) {
+      const positions = plan
+        .filter((entry) => entry.build === build)
+        .map((entry) => entry.position);
+      expect(positions.sort()).toEqual([0, 1, 2]);
+    }
   });
 });
 
@@ -87,11 +96,11 @@ describe("cachedChromiumBuilds", () => {
     expect(cachedChromiumBuilds(join(cache, "nope"))).toEqual([]);
   });
 
-  it("finds builds across platform layouts, sorted by build number", () => {
+  it("finds current builds across platform layouts, sorted by build number", () => {
     const macExe = join(
       cache,
       "chromium-1300",
-      "chrome-mac-arm64",
+      "chrome-mac-x64",
       "Google Chrome for Testing.app",
       "Contents",
       "MacOS",
@@ -99,9 +108,13 @@ describe("cachedChromiumBuilds", () => {
     mkdirSync(macExe, { recursive: true });
     writeFileSync(join(macExe, "Google Chrome for Testing"), "");
 
-    const linuxExe = join(cache, "chromium-999", "chrome-linux");
+    const linuxExe = join(cache, "chromium-999", "chrome-linux64");
     mkdirSync(linuxExe, { recursive: true });
     writeFileSync(join(linuxExe, "chrome"), "");
+
+    const winExe = join(cache, "chromium-1200", "chrome-win64");
+    mkdirSync(winExe, { recursive: true });
+    writeFileSync(join(winExe, "chrome.exe"), "");
 
     // No executable inside: must be filtered out, not returned with a bad path.
     mkdirSync(join(cache, "chromium-1400"), { recursive: true });
@@ -110,8 +123,9 @@ describe("cachedChromiumBuilds", () => {
     mkdirSync(join(cache, "chromium_headless_shell-1300"), { recursive: true });
 
     const builds = cachedChromiumBuilds(cache);
-    expect(builds.map((b) => b.build)).toEqual(["chromium-999", "chromium-1300"]);
-    expect(builds[0].exe.endsWith("chrome-linux/chrome")).toBe(true);
-    expect(builds[1].exe.endsWith("MacOS/Google Chrome for Testing")).toBe(true);
+    expect(builds.map((b) => b.build)).toEqual(["chromium-999", "chromium-1200", "chromium-1300"]);
+    expect(builds[0].exe.endsWith("chrome-linux64/chrome")).toBe(true);
+    expect(builds[1].exe.endsWith("chrome-win64/chrome.exe")).toBe(true);
+    expect(builds[2].exe.endsWith("MacOS/Google Chrome for Testing")).toBe(true);
   });
 });

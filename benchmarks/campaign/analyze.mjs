@@ -16,8 +16,97 @@ const LABEL = {
   firefox: "Firefox (SpiderMonkey)",
   webkit: "WebKit (JavaScriptCore)",
 };
+const REQUIRED_ENGINES = Object.keys(LABEL);
 
 const format = (v) => (v >= 1 ? v.toFixed(2) : v.toFixed(3));
+const positiveFinite = (value) => Number.isFinite(value) && value > 0;
+
+/**
+ * Validate the complete cross-engine artifact before computing statistics.
+ * A missing size/metric, browser error, parity failure, invalid sink, or
+ * malformed sample set must fail analysis rather than yield a plausible table.
+ */
+export function validateEngineResults(raw) {
+  if (!Number.isInteger(raw?.config?.reps) || raw.config.reps <= 0) {
+    throw new Error("engine results require a positive config.reps");
+  }
+  if (!Array.isArray(raw.config.sizes) || raw.config.sizes.length === 0) {
+    throw new Error("engine results require configured sizes");
+  }
+  const engineNames = Object.keys(raw.engines ?? {}).sort();
+  if (engineNames.join("\0") !== [...REQUIRED_ENGINES].sort().join("\0")) {
+    throw new Error(`engine results require exactly: ${REQUIRED_ENGINES.join(", ")}`);
+  }
+  const engines = Object.entries(raw.engines);
+
+  for (const [name, engine] of engines) {
+    if (!Array.isArray(engine.errors)) throw new Error(`${name}: errors must be an array`);
+    if (engine.errors.length > 0) {
+      throw new Error(`${name}: browser emitted errors: ${engine.errors.join(" | ")}`);
+    }
+    if (!Number.isFinite(engine.benchmarkSink)) {
+      throw new Error(`${name}: benchmark sink is not finite`);
+    }
+    if (!positiveFinite(engine.timerResolutionProbeMs)) {
+      throw new Error(`${name}: invalid timer resolution`);
+    }
+    if (!Array.isArray(engine.sizes) || engine.sizes.length !== raw.config.sizes.length) {
+      throw new Error(`${name}: incomplete size results`);
+    }
+
+    for (const configured of raw.config.sizes) {
+      const cell = engine.sizes.find((candidate) => candidate.n === configured.n);
+      const where = `${name} size ${configured.n}`;
+      if (!cell) throw new Error(`${where}: missing cell`);
+      if (cell.maxAbsDiff !== 0) throw new Error(`${where}: parity gate did not pass`);
+      if (!Number.isInteger(cell.outputLength) || cell.outputLength <= 0) {
+        throw new Error(`${where}: invalid output length`);
+      }
+      for (const key of ["wasm_raw", "js_core", "copy_proxy", "public_api"]) {
+        const samples = cell[key];
+        if (!Array.isArray(samples) || samples.length !== raw.config.reps) {
+          throw new Error(`${where}: ${key} must contain ${raw.config.reps} samples`);
+        }
+        if (!samples.every(positiveFinite)) throw new Error(`${where}: invalid ${key} sample`);
+      }
+    }
+  }
+}
+
+/** Validate the optional Node companion artifact before displaying it. */
+export function validateNodeResults(node) {
+  if (!Number.isInteger(node?.config?.reps) || node.config.reps <= 0) {
+    throw new Error("node results require a positive config.reps");
+  }
+  if (!Array.isArray(node.config.sizes) || node.config.sizes.length === 0) {
+    throw new Error("node results require configured sizes");
+  }
+  if (!Number.isFinite(node.benchmarkSink)) {
+    throw new Error("node benchmark sink is not finite");
+  }
+  if (!positiveFinite(node.timerResolutionProbeMs)) {
+    throw new Error("node results contain an invalid timer resolution");
+  }
+  if (!Array.isArray(node.sizes) || node.sizes.length !== node.config.sizes.length) {
+    throw new Error("node results contain incomplete size results");
+  }
+  for (const configured of node.config.sizes) {
+    const cell = node.sizes.find((candidate) => candidate.n === configured.n);
+    const where = `node size ${configured.n}`;
+    if (!cell) throw new Error(`${where}: missing cell`);
+    if (cell.maxAbsDiff !== 0) throw new Error(`${where}: parity gate did not pass`);
+    if (!Number.isInteger(cell.outputLength) || cell.outputLength <= 0) {
+      throw new Error(`${where}: invalid output length`);
+    }
+    for (const key of ["wasm_raw", "js_core", "copy_proxy"]) {
+      const samples = cell[key];
+      if (!Array.isArray(samples) || samples.length !== node.config.reps) {
+        throw new Error(`${where}: ${key} must contain ${node.config.reps} samples`);
+      }
+      if (!samples.every(positiveFinite)) throw new Error(`${where}: invalid ${key} sample`);
+    }
+  }
+}
 
 /**
  * Summarize a raw campaign file (the shape written by run-engines.mjs) into
@@ -25,6 +114,7 @@ const format = (v) => (v >= 1 ? v.toFixed(2) : v.toFixed(3));
  * metric plus the derived ratios. Deterministic: same input, same output.
  */
 export function summarizeEngines(raw) {
+  validateEngineResults(raw);
   const out = {
     generatedFrom: raw.startedAt,
     machine: raw.machine,
@@ -93,6 +183,7 @@ function printReport(raw, out) {
   // V8-in-Chromium from the same build.
   try {
     const node = JSON.parse(readFileSync(new URL("./results/node.json", import.meta.url), "utf8"));
+    validateNodeResults(node);
     console.log(`### Node ${node.runtime} (V8, no browser)`);
     for (const size of node.sizes) {
       const w = median(size.wasm_raw);
@@ -103,8 +194,9 @@ function printReport(raw, out) {
       );
     }
     console.log("");
-  } catch {
-    // Optional arm; absence is not an error.
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    // Optional arm; absence is not an error, but a malformed artifact is.
   }
 }
 

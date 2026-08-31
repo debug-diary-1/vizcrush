@@ -17,17 +17,21 @@ byte-identical, with nothing to drift.
 **Batch timing.** Firefox and WebKit coarsen `performance.now()` to about a
 millisecond as a Spectre mitigation, so a single sub-millisecond call is
 unmeasurable there. Each measurement runs `N` calls as one timed block and
-divides by `N`, with `N` chosen so a block lands near 100 ms in the slowest
-engine. The harness also probes the clock granularity empirically and records
-it, rather than assuming it.
+divides by `N`. In the committed campaign, blocks land between roughly 40 ms
+and 500 ms, limiting a 1 ms clock quantum to at most a few percent. Exact call
+counts are recorded per size. The harness also probes clock granularity
+empirically rather than assuming it.
 
 **Every timed result is consumed.** Work whose result never escapes a timed
 loop is dead code to the optimizer, and a JIT is entitled to skip or reshape
 it — fatal for a campaign whose headline is a JavaScript-only speedup. Every
-timed callback therefore returns a scalar drawn from its output (the last y
-value), and the timing loop folds it into a sink that the runners record into
-their JSON (`benchmarkSink`). Consumption is identical for the WASM and JS
-arms: one element read plus one add per call.
+timed core callback therefore checksums every x/y output pair, and the timing
+loop folds that checksum into a sink that the runners record in their JSON
+(`benchmarkSink`). Reading only LTTB's last point would not be sufficient: it
+is copied directly from the input and does not depend on the bucket/argmax
+work. The WASM and JS checksum loops perform identical reads and arithmetic.
+Consequently, `wasm_raw` and `js_core` mean kernel plus complete output
+consumption, not an unobserved bare-kernel call.
 
 **Hot steady state, not cold start.** Batch timing measures throughput once
 everything is warm. That is the right statistic for "which backend is faster
@@ -40,11 +44,12 @@ across launches. `run-versions.mjs` therefore measures each configuration in
 several independent browser launches, and `analyze-versions.mjs` reports the
 across-launch range. Confusing the two overstates precision.
 
-**Round-robin build order.** The version sweep interleaves its launches —
-session 0 of every build, then session 1 of every build, and so on — so slow
-machine-state drift (thermals, background load) lands across all builds
-instead of being confounded with build identity. A sequential sweep could not
-distinguish "the engine changed" from "the machine changed while we swept".
+**Counterbalanced round-robin build order.** The version sweep interleaves its
+launches — session 0 of every build, then session 1 of every build, and so on —
+and rotates the first build each session. Over one five-session cycle, every
+build occupies every within-round position once. That distributes both slow
+machine-state drift and shorter within-round drift across builds instead of
+confounding either with build identity.
 
 **A parity gate that gates.** Before any cell is timed, the WebAssembly and
 JavaScript outputs must agree exactly: same length, elementwise difference of
@@ -151,7 +156,10 @@ layouts.
 Committed results are the exact bytes their generators wrote (the formatter is
 told to leave `results/` alone), so `node benchmarks/campaign/analyze.mjs`
 regenerates `analyzed.json` bit-for-bit from the committed `raw.json` — the
-test suite checks this equality on every run.
+test suite checks this equality on every run. Both analyzers reject incomplete
+or corrupt artifacts before reporting: the engine analyzer requires all three
+named browsers, and the version analyzer derives its comparisons from retained
+raw samples while checking every stored median and minimum against them.
 
 ## The result that motivated the sweep
 
@@ -162,20 +170,21 @@ procedure fixed and varies only the engine binary:
 
 | Chromium      | js core (ms) | wasm (ms) | wasm/js |
 | ------------- | ------------ | --------- | ------- |
-| 143.0.7499.4  | 6.10         | 1.57      | 0.26    |
-| 145.0.7632.6  | 6.10         | 1.56      | 0.26    |
-| 148.0.7778.96 | 6.11         | 1.58      | 0.26    |
+| 143.0.7499.4  | 6.15         | 1.60      | 0.26    |
+| 145.0.7632.6  | 6.16         | 1.58      | 0.26    |
+| 148.0.7778.96 | 6.09         | 1.59      | 0.26    |
 | 149.0.7827.55 | 1.81         | 1.58      | 0.88    |
-| 151.0.7922.34 | 1.83         | 1.59      | 0.89    |
+| 151.0.7922.34 | 1.80         | 1.60      | 0.89    |
 
 Builds 143 through 148 reproduce the old result, which validates the current
 harness against the older measurement. The JavaScript baseline then improves
-3.38x at the 148/149 boundary while the WebAssembly path stays flat. The old
+3.36x at the 148/149 boundary while the WebAssembly path stays flat. The old
 number was correct for its engine and expired when V8 improved underneath it.
 An independent repeat of the whole sweep (`versions-run2.json`) puts the step
-at 3.36x with per-build ratios within 0.02 of the first run — and because
-every timed result now feeds the benchmark sink, the step cannot be an
-artifact of the optimizer discarding unobserved work.
+at 3.35x with per-build median ratios within 0.03 of the first run — and because
+every timed result's full output now feeds the benchmark sink, the step cannot
+be an artifact of the optimizer preserving only LTTB's copied endpoint while
+discarding unobserved bucket work.
 
 The practical lesson, and the reason this directory exists: a performance claim
 about a JIT-compiled host is a claim about a specific engine build. Prefer

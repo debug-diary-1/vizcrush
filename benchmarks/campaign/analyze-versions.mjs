@@ -17,6 +17,123 @@ const N = 1_000_000;
 // What the earlier campaign (ADR 0003, March 2026) published for Chromium at 1M.
 const PRIOR_RATIO = [0.23, 0.25];
 
+const positiveFinite = (value) => Number.isFinite(value) && value > 0;
+
+/**
+ * Validate a complete version-sweep artifact before deriving any comparison.
+ * Partial launches, duplicate/missing session indices, malformed samples,
+ * parity failures, or an incomplete execution order invalidate the sweep.
+ */
+export function validateVersionResults(data, { requiredSize = N } = {}) {
+  const { config } = data ?? {};
+  if (!Number.isInteger(config?.sessions) || config.sessions <= 0) {
+    throw new Error("version results require a positive config.sessions");
+  }
+  if (!Number.isInteger(config.reps) || config.reps <= 0) {
+    throw new Error("version results require a positive config.reps");
+  }
+  if (!Array.isArray(config.sizes) || config.sizes.length === 0) {
+    throw new Error("version results require configured sizes");
+  }
+  const configuredSizes = config.sizes.map((size) => size.n);
+  if (!configuredSizes.includes(requiredSize)) {
+    throw new Error(`version results do not include required size ${requiredSize}`);
+  }
+  if (!Array.isArray(data.targets) || data.targets.length < 2) {
+    throw new Error("version results require at least two build targets");
+  }
+
+  const labels = data.targets.map((target) => target.label);
+  if (new Set(labels).size !== labels.length)
+    throw new Error("version build labels must be unique");
+  if (!Array.isArray(config.builds) || config.builds.join("\0") !== labels.join("\0")) {
+    throw new Error("version targets do not match config.builds order");
+  }
+
+  const orders = [];
+  for (const target of data.targets) {
+    if (typeof target.version !== "string" || target.version.length === 0) {
+      throw new Error(`${target.label}: missing browser version`);
+    }
+    if (!Array.isArray(target.sessions) || target.sessions.length !== config.sessions) {
+      throw new Error(
+        `${target.label}: expected ${config.sessions} sessions, got ${target.sessions?.length ?? 0}`,
+      );
+    }
+    const indices = target.sessions.map((session) => session.index).sort((a, b) => a - b);
+    if (indices.some((value, index) => value !== index)) {
+      throw new Error(`${target.label}: session indices must be exactly 0..${config.sessions - 1}`);
+    }
+
+    for (const session of target.sessions) {
+      if (!Number.isInteger(session.order) || session.order < 0) {
+        throw new Error(`${target.label} session ${session.index}: invalid execution order`);
+      }
+      orders.push(session.order);
+      if (!Number.isFinite(session.benchmarkSink)) {
+        throw new Error(`${target.label} session ${session.index}: benchmark sink is not finite`);
+      }
+
+      for (const size of configuredSizes) {
+        const cell = session.sizes?.[String(size)];
+        const where = `${target.label} session ${session.index} size ${size}`;
+        if (!cell) throw new Error(`${where}: missing cell`);
+        if (cell.maxAbsDiff !== 0) throw new Error(`${where}: parity gate did not pass`);
+        for (const key of [
+          "wasm_median",
+          "wasm_min",
+          "js_median",
+          "js_min",
+          "copy_median",
+          "api_median",
+        ]) {
+          if (!positiveFinite(cell[key])) throw new Error(`${where}: invalid ${key}`);
+        }
+        for (const key of ["wasm_raw", "js_core"]) {
+          const samples = cell.samples?.[key];
+          if (!Array.isArray(samples) || samples.length !== config.reps) {
+            throw new Error(`${where}: ${key} must contain ${config.reps} samples`);
+          }
+          if (!samples.every(positiveFinite)) throw new Error(`${where}: invalid ${key} sample`);
+        }
+        const derived = {
+          wasm_median: median(cell.samples.wasm_raw),
+          wasm_min: Math.min(...cell.samples.wasm_raw),
+          js_median: median(cell.samples.js_core),
+          js_min: Math.min(...cell.samples.js_core),
+        };
+        for (const [key, value] of Object.entries(derived)) {
+          if (cell[key] !== value) {
+            throw new Error(`${where}: stored ${key} does not match raw samples`);
+          }
+        }
+      }
+    }
+  }
+
+  orders.sort((a, b) => a - b);
+  if (orders.some((value, index) => value !== index)) {
+    throw new Error("version execution orders must be unique and contiguous");
+  }
+
+  const byOrder = new Map();
+  for (const target of data.targets) {
+    for (const session of target.sessions) {
+      byOrder.set(session.order, { label: target.label, session: session.index });
+    }
+  }
+  for (let session = 0; session < config.sessions; session += 1) {
+    for (let position = 0; position < labels.length; position += 1) {
+      const order = session * labels.length + position;
+      const actual = byOrder.get(order);
+      const expected = labels[(session + position) % labels.length];
+      if (actual?.session !== session || actual.label !== expected) {
+        throw new Error(`version execution order ${order} is not counterbalanced`);
+      }
+    }
+  }
+}
+
 /**
  * Summarize a sweep file (the shape written by run-versions.mjs) at size `n`:
  * per-build across-launch js/wasm/ratio distributions, adjacent-build step
@@ -26,15 +143,12 @@ const PRIOR_RATIO = [0.23, 0.25];
  * below the band is as much a failure to reproduce as one far above it.
  */
 export function summarizeVersions(data, { n = N, prior = PRIOR_RATIO, tolerance = 0.05 } = {}) {
+  validateVersionResults(data, { requiredSize: n });
   const rows = [];
   for (const target of data.targets) {
-    const sessions = target.sessions ?? [];
-    if (sessions.length === 0) {
-      rows.push({ label: target.label, version: target.version, sessions: 0 });
-      continue;
-    }
-    const js = sessions.map((s) => s.sizes[String(n)].js_median);
-    const wasm = sessions.map((s) => s.sizes[String(n)].wasm_median);
+    const sessions = target.sessions;
+    const js = sessions.map((s) => median(s.sizes[String(n)].samples.js_core));
+    const wasm = sessions.map((s) => median(s.sizes[String(n)].samples.wasm_raw));
     const ratios = sessions.map((s, i) => wasm[i] / js[i]);
     rows.push({
       label: target.label,
@@ -46,11 +160,10 @@ export function summarizeVersions(data, { n = N, prior = PRIOR_RATIO, tolerance 
     });
   }
 
-  const measured = rows.filter((row) => row.sessions > 0);
   const steps = [];
-  for (let i = 1; i < measured.length; i += 1) {
-    const before = measured[i - 1];
-    const after = measured[i];
+  for (let i = 1; i < rows.length; i += 1) {
+    const before = rows[i - 1];
+    const after = rows[i];
     steps.push({
       from: before.label,
       to: after.label,
@@ -62,7 +175,7 @@ export function summarizeVersions(data, { n = N, prior = PRIOR_RATIO, tolerance 
     });
   }
 
-  const reproduction = measured.map((row) => {
+  const reproduction = rows.map((row) => {
     const lo = Math.min(...row.ratios);
     const hi = Math.max(...row.ratios);
     return {
@@ -93,12 +206,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const range = (xs) =>
     `${median(xs).toFixed(2)} [${Math.min(...xs).toFixed(2)}, ${Math.max(...xs).toFixed(2)}]`;
   for (const row of rows) {
-    if (row.sessions === 0) {
-      console.log(
-        `${row.label.padEnd(15)}${String(row.version ?? "").padEnd(18)}${"0".padStart(9)}   no sessions`,
-      );
-      continue;
-    }
     console.log(
       `${row.label.padEnd(15)}${String(row.version ?? "").padEnd(18)}` +
         `${String(row.sessions).padStart(9)}${range(row.js).padStart(22)}${range(row.wasm).padStart(22)}${range(row.ratios).padStart(20)}`,

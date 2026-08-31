@@ -8,10 +8,10 @@
 // README for how to obtain the historical builds).
 //
 // It also measures each build in several independent launches, so the reported
-// spread is across-launch (fresh process, fresh JIT state) rather than the
-// much smaller within-session spread. Launches are ordered ROUND-ROBIN —
-// every build once, then every build again — so that slow machine-state drift
-// lands across all builds instead of being confounded with build order.
+// spread is across-launch (fresh process, fresh JIT state) rather than the much
+// smaller within-session spread. Launches use a COUNTERBALANCED ROUND-ROBIN:
+// every build once per session, rotating the first build each session, so both
+// slow drift and within-round position are distributed across build identity.
 //
 //   SESSIONS=5 node benchmarks/campaign/run-versions.mjs
 //   VERSIONS_OUT=versions-run2.json node benchmarks/campaign/run-versions.mjs
@@ -25,6 +25,7 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { validateVersionResults } from "./analyze-versions.mjs";
 import { REPS, SEED, SIZES, WARMUPS } from "./protocol.mjs";
 import { startServer } from "./serve.mjs";
 import { median } from "./stats.mjs";
@@ -45,8 +46,11 @@ export function defaultCacheDir({ platform = process.platform, env = process.env
 // Chromium executable location inside a cached build, per Playwright platform.
 const EXE_LAYOUTS = [
   "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+  "chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
   "chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+  "chrome-linux64/chrome",
   "chrome-linux/chrome",
+  "chrome-win64/chrome.exe",
   "chrome-win/chrome.exe",
 ];
 
@@ -103,14 +107,17 @@ export function parseSessions(value, fallback = 5) {
 }
 
 /**
- * Round-robin measurement order: session 0 of every build, then session 1 of
- * every build, and so on. Interleaving decouples slow machine-state drift
- * from build identity; the sequential alternative would confound the two.
+ * Counterbalanced round-robin order. Each session rotates the first build, so
+ * over one full cycle every build occupies every within-round position once.
+ * This distributes both slow drift and shorter within-round drift across builds.
  */
 export function sessionPlan(builds, sessions) {
   const plan = [];
   for (let session = 0; session < sessions; session += 1) {
-    for (const build of builds) plan.push({ session, build });
+    for (let position = 0; position < builds.length; position += 1) {
+      const build = builds[(session + position) % builds.length];
+      plan.push({ session, position, build });
+    }
   }
   return plan;
 }
@@ -118,19 +125,22 @@ export function sessionPlan(builds, sessions) {
 async function main() {
   const sessions = parseSessions(process.env.SESSIONS);
   const builds = filterBuilds(cachedChromiumBuilds(), process.env.SWEEP_BUILDS);
-  if (builds.length === 0) {
-    process.stderr.write(`No cached Chromium builds found under ${defaultCacheDir()}\n`);
-    process.exit(1);
+  if (builds.length < 2) {
+    throw new Error(
+      `Version sweep requires at least two cached Chromium builds under ${defaultCacheDir()}`,
+    );
   }
 
   const server = await startServer();
   const out = {
     startedAt: new Date().toISOString(),
-    purpose: "engine-version sweep, independent launches per session, round-robin build order",
+    purpose:
+      "engine-version sweep, independent launches per session, counterbalanced round-robin build order",
     machine: { platform: process.platform, arch: process.arch, node: process.version },
     config: {
       sessions,
-      order: "round-robin (session-major)",
+      order: "counterbalanced round-robin rotation (session-major)",
+      builds: builds.map(({ build }) => build),
       sizes: SIZES,
       reps: REPS,
       warmups: WARMUPS,
@@ -149,20 +159,16 @@ async function main() {
   const outPath = new URL(process.env.VERSIONS_OUT ?? "versions.json", resultsDir);
   mkdirSync(resultsDir, { recursive: true });
 
-  const dead = new Set();
   let order = 0;
   try {
     for (const { session, build } of sessionPlan(builds, sessions)) {
-      if (dead.has(build.build)) continue;
       const record = records.get(build.build);
 
       let browser;
       try {
         browser = await chromium.launch({ headless: true, executablePath: build.exe });
       } catch (error) {
-        process.stdout.write(`${build.build} launch failed: ${String(error).slice(0, 120)}\n`);
-        dead.add(build.build);
-        continue;
+        throw new Error(`${build.build} launch failed`, { cause: error });
       }
       try {
         record.version ??= browser.version();
@@ -176,7 +182,7 @@ async function main() {
           seed: SEED,
         });
 
-        const measured = { index: session, order, sizes: {} };
+        const measured = { index: session, order, benchmarkSink: data.benchmarkSink, sizes: {} };
         order += 1;
         for (const size of data.sizes) {
           measured.sizes[size.n] = {
@@ -200,12 +206,7 @@ async function main() {
             `min-ratio=${(one.wasm_min / one.js_min).toFixed(2)}x\n`,
         );
       } catch (error) {
-        // A parity-gate rejection means the harness measured nothing
-        // comparable; that invalidates the sweep, so abort rather than skip.
-        if (/parity gate/u.test(String(error))) throw error;
-        process.stdout.write(
-          `${build.build} session ${session} failed: ${String(error).slice(0, 160)}\n`,
-        );
+        throw new Error(`${build.build} session ${session} failed`, { cause: error });
       } finally {
         await browser.close();
       }
@@ -216,6 +217,8 @@ async function main() {
   } finally {
     await server.close();
   }
+
+  validateVersionResults(out);
 
   for (const record of out.targets) {
     if (record.sessions.length === 0) continue;

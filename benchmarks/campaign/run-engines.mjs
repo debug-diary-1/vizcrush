@@ -9,6 +9,7 @@
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { chromium, firefox, webkit } from "playwright";
+import { validateEngineResults } from "./analyze.mjs";
 import { REPS, SEED, SIZES, WARMUPS } from "./protocol.mjs";
 import { startServer } from "./serve.mjs";
 import { median } from "./stats.mjs";
@@ -70,6 +71,7 @@ try {
 }
 
 results.finishedAt = new Date().toISOString();
+validateEngineResults(results);
 const out = new URL("./results/raw.json", import.meta.url);
 mkdirSync(new URL("./results/", import.meta.url), { recursive: true });
 writeFileSync(out, `${JSON.stringify(results, null, 2)}\n`);

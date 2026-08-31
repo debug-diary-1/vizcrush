@@ -14,9 +14,8 @@ import {
   SIZES,
   THRESHOLD,
   WARMUPS,
-  assertParity,
   makeSeries,
-  measure,
+  measureCoreCell,
   probeTimerResolution,
   sinkValue,
 } from "./protocol.mjs";
@@ -44,28 +43,20 @@ const out = {
 
 for (const { n, calls } of SIZES) {
   const { x, y } = makeSeries(n, SEED);
-  const scratchX = new Float64Array(n);
-  const scratchY = new Float64Array(n);
-
-  // Same gate as the browser arm: exact agreement or no numbers at all.
-  const wasmOut = wasmLttb(x, y, THRESHOLD);
-  const jsOut = lttbCore(x, y, THRESHOLD);
-  const maxAbsDiff = assertParity(wasmOut, jsOut, `n=${n}`);
-  const last = jsOut.x.length - 1;
-  const opts = { calls, reps: REPS, warmups: WARMUPS };
+  const core = measureCoreCell({
+    x,
+    y,
+    calls,
+    reps: REPS,
+    warmups: WARMUPS,
+    wasmLttb,
+    jsLttb: lttbCore,
+  });
 
   out.sizes.push({
     n,
     calls,
-    outputLength: jsOut.x.length,
-    maxAbsDiff,
-    wasm_raw: measure(() => wasmLttb(x, y, THRESHOLD)[2 * last + 1], opts),
-    js_core: measure(() => lttbCore(x, y, THRESHOLD).y[last], opts),
-    copy_proxy: measure(() => {
-      scratchX.set(x);
-      scratchY.set(y);
-      return scratchY[n - 1];
-    }, opts),
+    ...core,
   });
 }
 

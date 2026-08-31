@@ -6,9 +6,12 @@ import {
   THRESHOLD,
   WARMUPS,
   assertParity,
+  checksumInterleaved,
+  checksumSplit,
   makeSeries,
   measure,
   measureAsync,
+  measureCoreCell,
   mulberry32,
   sinkValue,
   timeBlock,
@@ -82,6 +85,69 @@ describe("timing loops and the benchmark sink", () => {
     });
     expect(samples).toHaveLength(3);
     expect(sinkValue() - before).toBe((3 + 1) * 2 * 3);
+  });
+});
+
+describe("full-output consumption", () => {
+  const split = { x: Float64Array.of(0, 1, 2), y: Float64Array.of(5, 6, 7) };
+  const interleaved = Float64Array.of(0, 5, 1, 6, 2, 7);
+
+  it("checksums the interleaved and split representations identically", () => {
+    expect(checksumInterleaved(interleaved)).toBe(checksumSplit(split));
+  });
+
+  it("depends on interior values rather than only LTTB's copied endpoint", () => {
+    const changed = { x: split.x, y: Float64Array.of(5, 600, 7) };
+    expect(checksumSplit(changed)).not.toBe(checksumSplit(split));
+  });
+
+  it("rejects malformed or non-finite outputs", () => {
+    expect(() => checksumInterleaved(Float64Array.of(1))).toThrow(/odd interleaved/u);
+    expect(() => checksumSplit({ x: Float64Array.of(1), y: new Float64Array() })).toThrow(
+      /split output/u,
+    );
+    expect(() => checksumSplit({ x: Float64Array.of(1), y: Float64Array.of(Number.NaN) })).toThrow(
+      /not finite/u,
+    );
+  });
+});
+
+describe("measureCoreCell", () => {
+  const x = Float64Array.of(0, 1, 2, 3);
+  const y = Float64Array.of(4, 5, 6, 7);
+  const jsLttb = () => ({ x: Float64Array.from(x), y: Float64Array.from(y) });
+  const wasmLttb = () => Float64Array.of(0, 4, 1, 5, 2, 6, 3, 7);
+
+  it("gates parity and measures the shared browser/Node metrics", () => {
+    const cell = measureCoreCell({
+      x,
+      y,
+      calls: 2,
+      reps: 3,
+      warmups: 1,
+      wasmLttb,
+      jsLttb,
+    });
+    expect(cell.outputLength).toBe(4);
+    expect(cell.maxAbsDiff).toBe(0);
+    expect(cell.wasm_raw).toHaveLength(3);
+    expect(cell.js_core).toHaveLength(3);
+    expect(cell.copy_proxy).toHaveLength(3);
+  });
+
+  it("throws before timing when the bound implementations differ", () => {
+    const wrongJs = () => ({ x: Float64Array.from(x), y: Float64Array.of(4, 5, 60, 7) });
+    expect(() =>
+      measureCoreCell({
+        x,
+        y,
+        calls: 1,
+        reps: 1,
+        warmups: 0,
+        wasmLttb,
+        jsLttb: wrongJs,
+      }),
+    ).toThrow(/parity gate/u);
   });
 });
 
