@@ -41,3 +41,26 @@ catalog:
   vite: "6.4.3"
   vitepress: "1.6.4"
   vitest: "4.1.11"
+
+# ── Security overrides ───────────────────────────────────────
+# CVE-driven pins enforced by the `pnpm audit --audit-level=high` CI gate.
+# pnpm 11 reads overrides only from this file (the package.json "pnpm"
+# field is no longer honored).
+overrides:
+  "@hono/node-server@<2.0.10": "2.0.12"
+  "hono@<4.12.34": "4.12.34"
+  "esbuild@<0.25.0": "0.25.12"
+  "vite@<6.4.3": "6.4.3"
+  "fast-uri@<3.1.5": "3.1.5"
+  "postcss@<8.5.23": "8.5.23"
+  "qs@<6.15.2": "6.15.2"
+  "ip-address@<10.3.1": "10.3.1"
+  "body-parser@<2.3.0": "2.3.0"
+  "undici@>=7.0.0 <7.29.0": "7.29.0"
+  "nanoid@<3.3.18": "3.3.18"
+
+# ── Dependency build scripts ─────────────────────────────────
+# pnpm 11 fails the install on any unreviewed build script; list each
+# reviewed package here as true (run) or false (skip).
+allowBuilds:
+  esbuild: true

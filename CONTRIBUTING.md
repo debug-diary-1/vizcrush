@@ -83,7 +83,7 @@ Property-based tests use [fast-check](https://github.com/dubzzz/fast-check) to v
 
 ### Dependency updates
 
-The workspace centralizes npm versions in the pnpm catalog. Review npm updates manually and regenerate the lockfile with pnpm 10.33.0; Dependabot npm updates are disabled because its catalog output is not frozen-lockfile compatible. Every dependency PR must pass:
+The workspace centralizes npm versions in the pnpm catalog. Review npm updates manually and regenerate the lockfile with pnpm 11.25.0; Dependabot npm updates are disabled because its catalog output is not frozen-lockfile compatible. Every dependency PR must pass:
 
 ```bash
 pnpm install --frozen-lockfile
