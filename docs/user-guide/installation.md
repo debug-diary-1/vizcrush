@@ -38,7 +38,7 @@ The JavaScript fallback is used if a WASM module cannot load. Use [Backend Lab](
 
 ## Building from source
 
-Contributors need Rust, the `wasm32-unknown-unknown` target, Node.js 24+, and pnpm 10+:
+Contributors need Rust, the `wasm32-unknown-unknown` target, Node.js 24+, and pnpm 11+:
 
 ```bash
 git clone https://github.com/debug-diary-1/vizcrush.git

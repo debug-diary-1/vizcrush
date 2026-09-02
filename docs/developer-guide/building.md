@@ -7,7 +7,7 @@ Everything you need to build vizcrush locally — Rust crates → WASM → TypeS
 | Tool                    | Version                                      | How                                                                                                            |
 | ----------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Node.js                 | 24+                                          | `mise install` (recommended; reads the pin in `mise.toml`) or `nvm install 24`                                 |
-| pnpm                    | 10.33+                                       | `mise install` (pinned in `mise.toml`) or `corepack enable` (uses the `packageManager` pin)                    |
+| pnpm                    | 11.25+                                       | `mise install` (pinned in `mise.toml`) or `corepack enable` (uses the `packageManager` pin)                    |
 | Rust toolchain          | 1.94.1, with `wasm32-unknown-unknown` target | `rustup toolchain install 1.94.1 && rustup target add --toolchain 1.94.1 wasm32-unknown-unknown`               |
 | `wasm-bindgen-cli`      | 0.2.115, matching `wasm-bindgen`             | `cargo install wasm-bindgen-cli --version 0.2.115 --locked`                                                    |
 | `wasm-opt` _(optional)_ | latest                                       | `brew install binaryen` or download from [binaryen releases](https://github.com/WebAssembly/binaryen/releases) |
@@ -164,7 +164,7 @@ The CLI must match the `wasm-bindgen` version in `Cargo.lock`. Install the pinne
 `engines.node` requires Node 24. Install Node 24 (`mise install` in the repo root, or `nvm install 24`). The warning is non-fatal but several deps assume Node 24+.
 
 ??? note "`Ignored build scripts: esbuild`"
-pnpm 10 sandboxes postinstall scripts by default. The repo's `package.json` includes `pnpm.onlyBuiltDependencies: ["esbuild"]` so a fresh install should not warn. If you see it, run `pnpm approve-builds` once.
+pnpm sandboxes postinstall scripts by default, and pnpm 11 fails the install when a dependency ships an unreviewed build script. The repo's `pnpm-workspace.yaml` lists the reviewed ones under `allowBuilds` (esbuild is allowed). When a new dependency adds a build script, add it there as `true` or `false`; `pnpm approve-builds` writes that entry for you.
 
 ## See also
 

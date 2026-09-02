@@ -18,12 +18,13 @@ export function createPackedFixturePackageJson(coreTarball, downsampleTarball) {
       "@vizcrush/core": `file:${coreTarball}`,
       "@vizcrush/downsample": `file:${downsampleTarball}`,
     },
-    pnpm: {
-      overrides: {
-        "@vizcrush/core": `file:${coreTarball}`,
-      },
-    },
   };
+}
+
+// pnpm 11 reads overrides only from pnpm-workspace.yaml, never from a
+// package.json "pnpm" field, so the fixture pins its transitive core here.
+export function createPackedFixtureWorkspaceYaml(coreTarball) {
+  return `overrides:\n  "@vizcrush/core": ${JSON.stringify(`file:${coreTarball}`)}\n`;
 }
 
 function run(command, args, cwd = repositoryRoot) {
@@ -66,6 +67,10 @@ export async function runPackedBrowserSmoke({ browser }) {
     writeFileSync(
       join(fixtureDirectory, "package.json"),
       JSON.stringify(createPackedFixturePackageJson(coreTarball, downsampleTarball), null, 2),
+    );
+    writeFileSync(
+      join(fixtureDirectory, "pnpm-workspace.yaml"),
+      createPackedFixtureWorkspaceYaml(coreTarball),
     );
     writeFileSync(
       join(fixtureDirectory, "index.html"),
