@@ -38,3 +38,7 @@ packages/*/wasm/
 *.pfx
 credentials.json
 *.secret
+
+# Version manager (per-developer overrides)
+mise.local.toml
+.mise.local.toml
