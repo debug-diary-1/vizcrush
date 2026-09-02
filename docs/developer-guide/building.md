@@ -6,13 +6,13 @@ Everything you need to build vizcrush locally — Rust crates → WASM → TypeS
 
 | Tool                    | Version                                      | How                                                                                                            |
 | ----------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Node.js                 | 24+                                          | `volta install node@24` (recommended) or `nvm install 24`                                                      |
-| pnpm                    | 10.33+                                       | `corepack enable` (auto-installs the version pinned in `package.json`)                                         |
+| Node.js                 | 24+                                          | `mise install` (recommended; reads the pin in `mise.toml`) or `nvm install 24`                                 |
+| pnpm                    | 10.33+                                       | `mise install` (pinned in `mise.toml`) or `corepack enable` (uses the `packageManager` pin)                    |
 | Rust toolchain          | 1.94.1, with `wasm32-unknown-unknown` target | `rustup toolchain install 1.94.1 && rustup target add --toolchain 1.94.1 wasm32-unknown-unknown`               |
 | `wasm-bindgen-cli`      | 0.2.115, matching `wasm-bindgen`             | `cargo install wasm-bindgen-cli --version 0.2.115 --locked`                                                    |
 | `wasm-opt` _(optional)_ | latest                                       | `brew install binaryen` or download from [binaryen releases](https://github.com/WebAssembly/binaryen/releases) |
 
-If you're on macOS with Volta installed, the repo's `package.json` pins Node 24 automatically — `cd`'ing into the repo switches your shell to the right version.
+The repo's `mise.toml` pins the exact Node and pnpm versions. With [mise](https://mise.jdx.dev/) activated in your shell, `cd`'ing into the repo selects both automatically; run `mise install` once to fetch them. Volta is unmaintained and its `package.json` pin has been removed.
 
 ## First-time setup
 
@@ -161,7 +161,7 @@ Run `rustup target add wasm32-unknown-unknown` to install the target. The `+simd
 The CLI must match the `wasm-bindgen` version in `Cargo.lock`. Install the pinned release from its lockfile: `cargo install wasm-bindgen-cli --version 0.2.115 --locked`.
 
 ??? note "`pnpm install` warns about engines"
-`engines.node` requires Node 24. Install Node 24 (`volta install node@24` or `nvm install 24`). The warning is non-fatal but several deps assume Node 24+.
+`engines.node` requires Node 24. Install Node 24 (`mise install` in the repo root, or `nvm install 24`). The warning is non-fatal but several deps assume Node 24+.
 
 ??? note "`Ignored build scripts: esbuild`"
 pnpm 10 sandboxes postinstall scripts by default. The repo's `package.json` includes `pnpm.onlyBuiltDependencies: ["esbuild"]` so a fresh install should not warn. If you see it, run `pnpm approve-builds` once.

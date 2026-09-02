@@ -1,0 +1,5 @@
+# Development toolchain pins, read by mise (https://mise.jdx.dev/).
+# Keep the pnpm version equal to "packageManager" in package.json.
+[tools]
+node = "24.14.1"
+pnpm = "10.33.0"
