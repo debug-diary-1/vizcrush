@@ -63,7 +63,7 @@ The [Backends & Capabilities](backends.md) guide explains how to inspect and for
 
 ### Node reports an engine mismatch
 
-The repository's development toolchain requires Node.js 24. Use the version pinned in the root `package.json`, for example with Volta or another version manager.
+The repository's development toolchain requires Node.js 24. Use the version pinned in the root `mise.toml`, for example with [mise](https://mise.jdx.dev/) or another version manager.
 
 ### A source build cannot find the WASM target
 
