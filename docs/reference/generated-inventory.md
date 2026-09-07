@@ -45,7 +45,7 @@
 - `vizcrush_stats`
 - `vizcrush_summarize`
 
-## Runnable examples (42)
+## Runnable examples (43)
 
 - `ai-playground`
 - `arrow-data-pipeline`
@@ -85,6 +85,7 @@
 - `streaming-dashboard`
 - `threejs-integration`
 - `threejs-nature`
+- `viewport-session`
 - `volume-raymarcher`
 - `voxel-heatmap-3d`
 - `webgpu-heatmap`
