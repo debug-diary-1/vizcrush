@@ -109,6 +109,16 @@ export async function runPackedBrowserSmoke({ browser }) {
           };
         }
 
+        function batch(start, length) {
+          const x = new Float64Array(length);
+          const y = new Float64Array(length);
+          for (let index = 0; index < length; index++) {
+            x[index] = start + index;
+            y[index] = Math.sin((start + index) / 100);
+          }
+          return { x, y };
+        }
+
         try {
           const state = await client.state();
           const obsolete = client.view({ xMin: 40_000, xMax: 60_000, widthCssPixels: 100 });
@@ -122,13 +132,49 @@ export async function runPackedBrowserSmoke({ browser }) {
           if (resetOutcome.status !== "fulfilled") throw resetOutcome.reason;
           const wasm = await measure("wasm");
           const js = await measure("js");
+          const firstBatch = batch(100_000, 20_000);
+          const activeBeforeAppend = client.view({ xMin: 90_000, xMax: 99_999, widthCssPixels: 100 });
+          const firstAppend = client.append(firstBatch.x, firstBatch.y, { transfer: true });
+          const navigationDuringAppend = client.view({ xMin: 80_000, xMax: 89_999, widthCssPixels: 100 });
+          const rejectedBatch = batch(120_000, 1);
+          const backpressure = await client
+            .append(rejectedBatch.x, rejectedBatch.y, { transfer: true })
+            .then(() => "unexpected-success", (error) => error.name);
+          const [activeOutcome, navigationOutcome, firstAppendState] = await Promise.all([
+            activeBeforeAppend.then(() => "unexpected-success", (error) => error.name),
+            navigationDuringAppend,
+            firstAppend,
+          ]);
+          for (let start = 120_000; start < 220_000; start += 20_000) {
+            const next = batch(start, 20_000);
+            await client.append(next.x, next.y, { transfer: true });
+          }
+          const finalState = await client.state();
+          const evicted = await client.view({ xMin: 0, xMax: 999, widthCssPixels: 100 });
+          const newest = await client.view({ xMin: 120_000, xMax: 219_999, widthCssPixels: 100 });
           globalThis.__vizcrushResult = {
-            retainedPoints: state.value.retainedPoints,
+            retainedPoints: finalState.value.retainedPoints,
+            bufferBytes: finalState.value.bufferBytes,
             scheduling: {
               obsolete: obsoleteOutcome.reason?.name,
               replaced: replacedOutcome.reason?.name,
               resetViewportId: resetOutcome.value.viewportId,
               resetOutputLength: resetOutcome.value.value.x.length,
+            },
+            streaming: {
+              activeOutcome,
+              navigationRevision: navigationOutcome.value.sourceRevision,
+              appendRevision: firstAppendState.value.sourceRevision,
+              transferDetached: firstBatch.x.byteLength === 0 && firstBatch.y.byteLength === 0,
+              backpressure,
+              rejectedOwnershipPreserved:
+                rejectedBatch.x.byteLength > 0 && rejectedBatch.y.byteLength > 0,
+              sourceRevision: finalState.value.sourceRevision,
+              oldestX: finalState.value.oldestX,
+              newestX: finalState.value.newestX,
+              evictedVisiblePoints: evicted.value.visiblePoints,
+              evictedNeighborPoints: evicted.value.edgeNeighborPoints,
+              newestOutputLength: newest.value.x.length,
             },
             wasm,
             js,
@@ -157,7 +203,11 @@ export async function runPackedBrowserSmoke({ browser }) {
           x[index] = index;
           y[index] = Math.sin(index / 100) + (index % 997 === 0 ? 5 : 0);
         }
-        const session = new TimeSeriesSession({ capacity: size, maxOutputPoints: 100 });
+        const session = new TimeSeriesSession({
+          capacity: size,
+          maxOutputPoints: 100,
+          maxIngestionBatchPoints: 20_000,
+        });
         session.load(x, y);
         installTimeSeriesWorkerHost(self, session);
       `,
@@ -225,8 +275,10 @@ export async function runPackedBrowserSmoke({ browser }) {
       },
       parity: result.parity,
       retainedPoints: result.retainedPoints,
+      bufferBytes: result.bufferBytes,
       requestIds: { wasm: result.wasm.requestId, js: result.js.requestId },
       scheduling: result.scheduling,
+      streaming: result.streaming,
       diagnostics,
     };
 

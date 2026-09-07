@@ -27,3 +27,29 @@ if (
 ) {
   throw new Error(`${browser}: bounded latest/reset scheduling was incorrect`);
 }
+if (
+  result.streaming.activeOutcome !== "TimeSeriesWorkerSupersededError" ||
+  result.streaming.navigationRevision !== 1 ||
+  result.streaming.appendRevision !== 2 ||
+  !result.streaming.transferDetached ||
+  result.streaming.backpressure !== "TimeSeriesWorkerBusyError" ||
+  !result.streaming.rejectedOwnershipPreserved ||
+  result.streaming.sourceRevision !== 7 ||
+  result.streaming.oldestX !== 120_000 ||
+  result.streaming.newestX !== 219_999 ||
+  result.streaming.evictedVisiblePoints !== 0 ||
+  result.streaming.evictedNeighborPoints !== 1 ||
+  result.streaming.newestOutputLength !== 100
+) {
+  throw new Error(`${browser}: bounded streaming retention or navigation was incorrect`);
+}
+if (
+  result.bufferBytes.retainedSourceBytes !== 1_600_000 ||
+  result.bufferBytes.sourceCapacityBytes !== 1_600_000 ||
+  result.bufferBytes.scratchCapacityBytes !== 1_600_000 ||
+  result.bufferBytes.pendingAppendCapacityBytes !== 320_000 ||
+  result.bufferBytes.outputCapacityBytes !== 1_600 ||
+  result.bufferBytes.totalAccountedCapacityBytes !== 3_521_600
+) {
+  throw new Error(`${browser}: buffer accounting did not match configured bounds`);
+}
