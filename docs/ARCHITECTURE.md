@@ -42,12 +42,12 @@ flowchart TB
 
 ## 2. Compute Backend Selection
 
-Only two paths are real: WASM (one SIMD-enabled binary, always built — there is
-no separate scalar build) and the pure-JS core. There is no WebGPU compute
-path; `detectCapabilities()` still probes `navigator.gpu` for reporting, but
-`selectBackend()` never returns it (see `packages/core/src/types.ts` and ADR
-0002/0003, which found WASM's real advantage to be engine-dependent, not a
-GPU-vs-CPU story).
+Only two default kernel paths are real: WASM (one `+simd128` binary, with no
+separate scalar build) and the pure-JS core. `detectCapabilities()` probes
+`navigator.gpu` for reporting, but `selectBackend()` never returns it. `bin2d`
+has a separate opt-in WebGPU path (ADR 0004); it is never selected by this
+default dispatch. ADR 0002/0003 found WASM's performance to be engine- and
+version-dependent rather than a general SIMD advantage.
 
 ```mermaid
 flowchart TD
@@ -87,7 +87,7 @@ sequenceDiagram
         TS->>WASM: dynamic import('../wasm/vizcrush_*.js')
         WASM->>WASM: WebAssembly.instantiate()
         WASM-->>TS: wasmReady = true
-        Note over TS,Rust: All calls route through Rust WASM
+        Note over TS,Rust: Above-threshold auto or forced WASM calls can use the loaded module
         Browser->>TS: lttb(x, y, 1920)
         TS->>Rust: WASM lttb() (or JS core fallback)
         Rust-->>TS: interleaved Float64Array

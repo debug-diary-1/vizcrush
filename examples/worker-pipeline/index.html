@@ -13,10 +13,20 @@
         Two million samples move to a module worker without copying their ArrayBuffers. The worker
         runs LTTB and transfers the reduced result back for Canvas rendering.
       </p>
+      <label>
+        Requested backend
+        <select id="backend-choice">
+          <option value="auto">Auto</option>
+          <option value="js">JavaScript</option>
+          <option value="wasm">WebAssembly</option>
+        </select>
+      </label>
       <button id="run" type="button">Run worker pipeline</button>
       <section class="metrics" aria-live="polite">
         <article><span>Input</span><strong id="input">2,000,000</strong></article>
-        <article><span>Executed worker backend</span><strong id="backend">—</strong></article>
+        <article><span>Requested backend</span><strong id="requested-backend">—</strong></article>
+        <article><span>Actual worker backend</span><strong id="backend">—</strong></article>
+        <article><span>Decision reason</span><strong id="reason">—</strong></article>
         <article><span>Warm worker compute</span><strong id="compute">—</strong></article>
         <article><span>Round trip</span><strong id="roundtrip">—</strong></article>
         <article><span>Largest frame gap</span><strong id="frame-gap">—</strong></article>

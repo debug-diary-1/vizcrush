@@ -79,7 +79,7 @@ Both quadtree and octree use the same configuration: `MAX_POINTS = 64` per leaf,
 | `detectCapabilities()` | [`@vizcrush/core`](../packages/core.md) | Probe runtime features               |
 | `selectBackend(caps)`  | [`@vizcrush/core`](../packages/core.md) | Apply selection rules                |
 
-The selection is: **WASM → JS** — WASM whenever WebAssembly is available, the pure-JS core otherwise. See **[Backends & Capabilities](../user-guide/backends.md)** for details.
+Automatic kernel calls use the JS core below their size threshold and otherwise try the package's WASM module, falling back to JS if it is unavailable. Explicit JS and WASM requests are also supported. See **[Backends & Capabilities](../user-guide/backends.md)** for completed-call diagnostics and details.
 
 ## Performance reference
 

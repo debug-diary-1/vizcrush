@@ -1,12 +1,16 @@
 import "./styles.css";
+import type { KernelBackend, KernelBackendReason } from "@vizcrush/core";
 
 const POINT_COUNT = 2_000_000;
 const OUTPUT_COUNT = 2_000;
 const button = document.querySelector<HTMLButtonElement>("#run")!;
 const canvas = document.querySelector<HTMLCanvasElement>("#chart")!;
 const status = document.querySelector<HTMLElement>("#status")!;
+const backendChoice = document.querySelector<HTMLSelectElement>("#backend-choice")!;
 const fields = {
+  requestedBackend: document.querySelector<HTMLElement>("#requested-backend")!,
   backend: document.querySelector<HTMLElement>("#backend")!,
+  reason: document.querySelector<HTMLElement>("#reason")!,
   compute: document.querySelector<HTMLElement>("#compute")!,
   roundtrip: document.querySelector<HTMLElement>("#roundtrip")!,
   frameGap: document.querySelector<HTMLElement>("#frame-gap")!,
@@ -70,7 +74,11 @@ button.addEventListener("click", () => {
     };
     frameRequest = requestAnimationFrame(trackFrames);
     const started = performance.now();
-    worker.postMessage({ x: x.buffer, y: y.buffer, threshold: OUTPUT_COUNT }, [x.buffer, y.buffer]);
+    const requestedBackend = backendChoice.value as KernelBackend;
+    worker.postMessage(
+      { x: x.buffer, y: y.buffer, threshold: OUTPUT_COUNT, backend: requestedBackend },
+      [x.buffer, y.buffer],
+    );
     fields.detached.textContent = `${x.byteLength + y.byteLength} bytes`;
     status.textContent =
       "Worker is warming and processing; input buffers are now detached on the main thread.";
@@ -79,7 +87,9 @@ button.addEventListener("click", () => {
       event: MessageEvent<{
         x?: ArrayBuffer;
         y?: ArrayBuffer;
+        requestedBackend?: KernelBackend;
         backend?: string;
+        reason?: KernelBackendReason;
         elapsed?: number;
         error?: string;
       }>,
@@ -92,7 +102,9 @@ button.addEventListener("click", () => {
         const outputX = new Float64Array(event.data.x);
         const outputY = new Float64Array(event.data.y);
         draw(outputX, outputY);
+        fields.requestedBackend.textContent = event.data.requestedBackend ?? "—";
         fields.backend.textContent = event.data.backend ?? "—";
+        fields.reason.textContent = event.data.reason ?? "—";
         fields.compute.textContent = `${event.data.elapsed?.toFixed(1) ?? "—"} ms`;
         fields.roundtrip.textContent = `${roundtrip.toFixed(1)} ms`;
         fields.frameGap.textContent = `${largestFrameGap.toFixed(1)} ms`;

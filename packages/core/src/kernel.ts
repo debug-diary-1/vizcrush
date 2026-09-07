@@ -10,6 +10,25 @@
 /** Effective backend choice consumed by the kernel. */
 export type KernelBackend = "auto" | "wasm" | "js";
 
+/** Why the kernel chose the backend reported by a completed call. */
+export type KernelBackendReason =
+  | "explicit-js"
+  | "explicit-wasm"
+  | "auto-size-threshold"
+  | "auto-wasm"
+  | "wasm-unavailable";
+
+/** Caller-visible diagnostics from a completed kernel dispatch. */
+export interface KernelExecution<Out> {
+  result: Out;
+  /** Backend requested by the caller, including the default `auto` mode. */
+  requestedBackend: KernelBackend;
+  /** Backend that actually produced `result`. */
+  backend: "wasm" | "js";
+  /** Stable explanation for the dispatch decision. */
+  reason: KernelBackendReason;
+}
+
 /**
  * A loader returns the loaded WASM module (after running its init), or `null`
  * if WASM is unavailable / failed to load. `loaded` reports whether the module
@@ -155,15 +174,12 @@ export interface Kernel<Args extends unknown[], Out> {
   /** The pure, synchronous JS core. */
   core(...args: Args): Out;
   /**
-   * Same dispatch as calling the kernel directly, but also reports which
-   * backend actually ran — for callers that must tell a caller-supplied
-   * `backend` choice apart from what really executed (e.g. the MCP server
-   * echoing `backend_used` back to an agent), instead of assuming the request
-   * was honoured.
+   * Same dispatch as calling the kernel directly, but also reports the
+   * requested mode, actual backend, and decision reason. This lets callers
+   * distinguish a requested override from what really executed (e.g. the MCP
+   * server echoing `backend_used` back to an agent).
    */
-  withBackend(
-    ...argsAndOpts: [...Args, KernelCallOptions?]
-  ): Promise<{ result: Out; backend: "wasm" | "js" }>;
+  withBackend(...argsAndOpts: [...Args, KernelCallOptions?]): Promise<KernelExecution<Out>>;
 }
 
 /**
@@ -185,7 +201,7 @@ export function defineKernel<Args extends unknown[], Out, WasmIn extends unknown
 
   async function runWithBackend(
     ...argsAndOpts: [...Args, KernelCallOptions?]
-  ): Promise<{ result: Out; backend: "wasm" | "js" }> {
+  ): Promise<KernelExecution<Out>> {
     let opts: KernelCallOptions | undefined;
     const last = argsAndOpts[argsAndOpts.length - 1];
     let args: Args;
@@ -199,13 +215,23 @@ export function defineKernel<Args extends unknown[], Out, WasmIn extends unknown
     const backend: KernelBackend = opts?.backend ?? "auto";
 
     if (backend === "js") {
-      return { result: core(...args), backend: "js" };
+      return {
+        result: core(...args),
+        requestedBackend: backend,
+        backend: "js",
+        reason: "explicit-js",
+      };
     }
 
     if (backend === "auto" && spec.sizeOf) {
       const size = spec.sizeOf(...args);
       if (size < autoThreshold) {
-        return { result: core(...args), backend: "js" };
+        return {
+          result: core(...args),
+          requestedBackend: backend,
+          backend: "js",
+          reason: "auto-size-threshold",
+        };
       }
     }
 
@@ -215,10 +241,20 @@ export function defineKernel<Args extends unknown[], Out, WasmIn extends unknown
       if (mod) {
         const input = spec.marshal(...args);
         const raw = spec.wasmFn(mod as any, ...input);
-        return { result: spec.unmarshal(raw, ...args), backend: "wasm" };
+        return {
+          result: spec.unmarshal(raw, ...args),
+          requestedBackend: backend,
+          backend: "wasm",
+          reason: backend === "wasm" ? "explicit-wasm" : "auto-wasm",
+        };
       }
     }
-    return { result: core(...args), backend: "js" };
+    return {
+      result: core(...args),
+      requestedBackend: backend,
+      backend: "js",
+      reason: "wasm-unavailable",
+    };
   }
 
   async function run(...argsAndOpts: [...Args, KernelCallOptions?]): Promise<Out> {

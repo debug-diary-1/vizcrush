@@ -4,6 +4,10 @@
 - **Date:** 2026-05-29
 - **Context issue:** #39 (investigation, surfaced by #37 / ADR 0001)
 
+## Correction (2026-09-07)
+
+This investigation established narrower facts than some of its original causal wording claimed. The LTTB SIMD-on and scalar test binaries were byte-identical; the aggregate binaries differed; and neither tested operation showed a measured SIMD speedup. The experiment did not inspect every function in either module, prove why the compiler emitted the observed code, or measure memory-bandwidth saturation. References below to branch-heavy loops "blocking" vectorization and large inputs being memory-bandwidth bound should therefore be read as hypotheses, not established causes. The measurements and the decision to avoid hand-written SIMD remain unchanged.
+
 ## Context
 
 The `+simd128` WASM build is sold (README, docs, a `stats.rs` doc comment) as the
@@ -39,24 +43,26 @@ release profile (`opt-level=3, lto=true, codegen-units=1`).
 `simd/scalar ≈ 1.00×` for both algorithms — SIMD makes no runtime difference,
 even for the "vectorizable" stats loop. The hot loops are branch-heavy (LTTB:
 argmax with `if area > max_area`; stats: `is_finite` skip + min/max branches),
-which blocks autovectorization, and there are no explicit SIMD intrinsics in the
-Rust. The `stats.rs` doc comment describing a "SIMD pre-scan" was fiction —
+which may inhibit autovectorization, and there are no explicit SIMD intrinsics in the
+tested Rust hot loops. The experiment did not isolate the compiler's reason for
+the emitted code. The `stats.rs` doc comment describing a "SIMD pre-scan" was fiction —
 removed.
 
 **3. Why wasm/js ≈ 1.00× in the public path.** Raw WASM _does_ beat the JS core
 at 100K (157µs vs 250µs, ~1.6×). But the kernel's marshalling overhead (the
 boundary copy + deinterleave, see ADR 0001) erases that win in the full public
-call. At ≥1M the algorithms are memory-bandwidth bound and raw WASM ≈ JS anyway.
+call. At ≥1M raw WASM and JS measured similarly in this harness; the experiment
+did not isolate memory bandwidth or another cause.
 
 **4. Cold-start.** First-call latency at 1M: wasm 1.91ms vs js 1.92ms (1.00×).
 No cold-start advantage at this size in Node.
 
 ## Decision
 
-1. **Do not hand-write SIMD intrinsics.** At the input sizes that matter (≥1M)
-   these algorithms are memory-bandwidth bound, so vectorizing the compute would
-   optimize something that isn't the bottleneck. The small-input win WASM
-   already has is eaten by marshalling, not by lack of SIMD.
+1. **Do not hand-write SIMD intrinsics.** The tested SIMD build produced no
+   measured gain, and this investigation did not identify evidence that manual
+   vectorization would improve the public call. The small-input raw-WASM win was
+   absent from the full call after marshalling overhead was included.
 2. **Keep the `+simd128` flag.** It is harmless (identical or smaller binaries)
    and may help future vectorizable code.
 3. **Stop claiming SIMD speedups.** Fixed in this change: the `stats.rs` comment

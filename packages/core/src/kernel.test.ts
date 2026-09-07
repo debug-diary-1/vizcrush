@@ -114,6 +114,18 @@ describe("defineKernel dispatch", () => {
     expect(Array.from(result)).toEqual([1002, 1004, 1006]);
   });
 
+  test(".withBackend explains an explicit WASM selection", async () => {
+    const k = makeKernel(stubLoader(wasmMod), 1_000_000);
+    const execution = await k.withBackend(new Float64Array([1, 2, 3]), {
+      backend: "wasm",
+    });
+    expect(execution).toMatchObject({
+      requestedBackend: "wasm",
+      backend: "wasm",
+      reason: "explicit-wasm",
+    });
+  });
+
   test(".withBackend reports 'js' when 'wasm' was requested but the module is absent", async () => {
     const k = makeKernel(stubLoader(null), 0);
     const { result, backend } = await k.withBackend(new Float64Array([1, 2, 3]), {
@@ -123,10 +135,50 @@ describe("defineKernel dispatch", () => {
     expect(Array.from(result)).toEqual([2, 4, 6]);
   });
 
+  test(".withBackend explains unavailable WASM without exposing a loader error", async () => {
+    const loader = createWasmLoader("diagnostic-missing", () => {
+      throw new Error("private loader detail");
+    });
+    const k = makeKernel(loader, 0);
+    const execution = await k.withBackend(new Float64Array([1, 2, 3]), {
+      backend: "wasm",
+    });
+    expect(execution).toMatchObject({
+      requestedBackend: "wasm",
+      backend: "js",
+      reason: "wasm-unavailable",
+    });
+    expect(JSON.stringify(execution)).not.toContain("private loader detail");
+  });
+
   test(".withBackend reports 'js' when 'js' was forced despite WASM being available", async () => {
     const k = makeKernel(stubLoader(wasmMod), 0);
-    const { backend } = await k.withBackend(new Float64Array([1, 2, 3]), { backend: "js" });
-    expect(backend).toBe("js");
+    const execution = await k.withBackend(new Float64Array([1, 2, 3]), { backend: "js" });
+    expect(execution).toMatchObject({
+      requestedBackend: "js",
+      backend: "js",
+      reason: "explicit-js",
+    });
+  });
+
+  test(".withBackend explains the automatic size threshold", async () => {
+    const k = makeKernel(stubLoader(wasmMod), 4);
+    const execution = await k.withBackend(new Float64Array([1, 2, 3]));
+    expect(execution).toMatchObject({
+      requestedBackend: "auto",
+      backend: "js",
+      reason: "auto-size-threshold",
+    });
+  });
+
+  test(".withBackend explains automatic WASM execution", async () => {
+    const k = makeKernel(stubLoader(wasmMod), 3);
+    const execution = await k.withBackend(new Float64Array([1, 2, 3]));
+    expect(execution).toMatchObject({
+      requestedBackend: "auto",
+      backend: "wasm",
+      reason: "auto-wasm",
+    });
   });
 });
 
