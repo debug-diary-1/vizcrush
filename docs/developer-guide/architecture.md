@@ -35,7 +35,7 @@ vizcrush/
 │   └── mcp-server/               @vizcrush/mcp-server — MCP server
 │
 ├── benchmarks/                   Performance regression suite
-├── examples/                     42 runnable example apps
+├── examples/                     43 runnable example apps
 ├── scripts/                      Build/publish/test bash scripts
 └── .github/workflows/            CI: build, lint, test, bench, deploy docs
 ```

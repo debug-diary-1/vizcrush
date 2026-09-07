@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viewport session · vizcrush</title>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">vizcrush adoption example</p>
+      <h1>Explore one million points</h1>
+      <p class="lede">
+        A bounded time-series session selects the visible domain and reduces it to the current
+        physical-pixel budget. This first slice runs in the page's calling context; the persistent
+        worker adapter follows in the next milestone story.
+      </p>
+      <div class="controls" aria-label="Viewport controls">
+        <button id="pan-left" type="button">Pan left</button>
+        <button id="pan-right" type="button">Pan right</button>
+        <button id="zoom-in" type="button">Zoom in</button>
+        <button id="zoom-out" type="button">Zoom out</button>
+        <button id="reset" type="button">Reset view</button>
+        <label>
+          Backend
+          <select id="backend">
+            <option value="auto">Auto</option>
+            <option value="js">JavaScript</option>
+            <option value="wasm">WebAssembly</option>
+          </select>
+        </label>
+      </div>
+      <section class="metrics" aria-live="polite">
+        <article><span>Retained</span><strong id="retained">—</strong></article>
+        <article><span>Visible source</span><strong id="visible">—</strong></article>
+        <article><span>Returned / budget</span><strong id="output">—</strong></article>
+        <article><span>Actual backend</span><strong id="actual-backend">—</strong></article>
+        <article><span>Decision</span><strong id="reason">—</strong></article>
+        <article><span>Domain</span><strong id="domain">—</strong></article>
+      </section>
+      <canvas id="chart" height="480" aria-label="Downsampled time-series viewport"></canvas>
+      <p id="status" class="note">Generating a deterministic million-point history…</p>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
