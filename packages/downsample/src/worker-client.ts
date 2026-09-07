@@ -27,6 +27,8 @@ export interface WorkerLoadOptions {
   transfer?: boolean;
 }
 
+export type WorkerAppendOptions = WorkerLoadOptions;
+
 interface WorkerSuccessResponse {
   type: "vizcrush:response";
   requestId: number;
@@ -55,6 +57,14 @@ interface ScheduledViewport {
   request: ViewportRequest;
   options: KernelCallOptions;
   resolve(value: WorkerViewportResult): void;
+  reject(reason: unknown): void;
+}
+
+interface ScheduledAppend {
+  x: Float64Array;
+  y: Float64Array;
+  transfer?: Transferable[];
+  resolve(value: WorkerOperationResult<TimeSeriesSessionState>): void;
   reject(reason: unknown): void;
 }
 
@@ -141,6 +151,20 @@ function assertTransferableInput(x: Float64Array, y: Float64Array): Transferable
   return [x.buffer, y.buffer];
 }
 
+function snapshotAppendInput(
+  x: Float64Array,
+  y: Float64Array,
+  transfer: boolean,
+): { x: Float64Array; y: Float64Array; transfer: Transferable[] } {
+  if (transfer) {
+    const transferables = assertTransferableInput(x, y);
+    const snapshot = structuredClone({ x, y }, { transfer: transferables });
+    return { ...snapshot, transfer: [snapshot.x.buffer, snapshot.y.buffer] };
+  }
+  const snapshot = { x: new Float64Array(x), y: new Float64Array(y) };
+  return { ...snapshot, transfer: [snapshot.x.buffer, snapshot.y.buffer] };
+}
+
 /**
  * Owns one browser worker and permits one in-flight operation. It never falls
  * back to processing in the caller when worker startup or execution fails.
@@ -153,6 +177,7 @@ export class TimeSeriesWorkerClient {
   #pending: PendingRequest | null = null;
   #activeView: ScheduledViewport | null = null;
   #queuedView: ScheduledViewport | null = null;
+  #append: ScheduledAppend | null = null;
   #disposed = false;
   #disposing = false;
   #disposePromise: Promise<void> | null = null;
@@ -202,6 +227,40 @@ export class TimeSeriesWorkerClient {
   }
 
   /**
+   * Append one ordered batch. At most one append may be unacknowledged. A
+   * second producer call is rejected before transfer validation or detachment;
+   * viewport work remains coalesced independently.
+   */
+  append(
+    x: Float64Array,
+    y: Float64Array,
+    options: WorkerAppendOptions = {},
+  ): Promise<WorkerOperationResult<TimeSeriesSessionState>> {
+    try {
+      if (this.#disposed || this.#disposing) throw new TimeSeriesWorkerDisposedError();
+      if (this.#append) throw new TimeSeriesWorkerBusyError();
+      if (this.#pending && this.#pending.operation !== "view") {
+        throw new TimeSeriesWorkerBusyError();
+      }
+      if (!(x instanceof Float64Array) || !(y instanceof Float64Array)) {
+        throw new TypeError("x and y must be Float64Array instances");
+      }
+      const scheduled = snapshotAppendInput(x, y, options.transfer ?? false) as ScheduledAppend;
+      const promise = new Promise<WorkerOperationResult<TimeSeriesSessionState>>(
+        (resolve, reject) => {
+          scheduled.resolve = resolve;
+          scheduled.reject = reject;
+        },
+      );
+      this.#append = scheduled;
+      if (!this.#pending && !this.#activeView) this.#dispatchAppend(scheduled);
+      return promise;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  /**
    * Request one bounded viewport. One request may run and one latest request
    * may wait; replacing the waiting viewport rejects it explicitly. Results
    * carry transport, viewport, and session-generation identities.
@@ -210,7 +269,11 @@ export class TimeSeriesWorkerClient {
     if (this.#disposed || this.#disposing) {
       return Promise.reject(new TimeSeriesWorkerDisposedError());
     }
-    if (this.#pending && this.#pending.operation !== "view") {
+    if (
+      this.#pending &&
+      this.#pending.operation !== "view" &&
+      this.#pending.operation !== "append"
+    ) {
       return Promise.reject(new TimeSeriesWorkerBusyError());
     }
     const viewportId = this.#nextViewportId;
@@ -224,7 +287,7 @@ export class TimeSeriesWorkerClient {
       scheduled.resolve = resolve;
       scheduled.reject = reject;
     });
-    if (!this.#activeView) {
+    if (!this.#pending && !this.#activeView) {
       this.#dispatchViewport(scheduled);
     } else {
       this.#queuedView?.reject(
@@ -245,14 +308,17 @@ export class TimeSeriesWorkerClient {
       this.#disposePromise = Promise.resolve();
       return this.#disposePromise;
     }
-    if (this.#pending || this.#activeView) {
+    if (this.#pending || this.#activeView || this.#append) {
       this.#disposed = true;
-      this.#pending?.reject(new TimeSeriesWorkerDisposedError(this.#pending.requestId));
-      this.#activeView?.reject(new TimeSeriesWorkerDisposedError(this.#pending?.requestId ?? null));
-      this.#queuedView?.reject(new TimeSeriesWorkerDisposedError());
-      this.#pending = null;
-      this.#activeView = null;
-      this.#queuedView = null;
+      const requestId = this.#pending?.requestId ?? null;
+      const operation = this.#pending?.operation;
+      this.#rejectOutstanding((kind) => {
+        const matchesPending =
+          kind === "pending" ||
+          (kind === "active-view" && operation === "view") ||
+          (kind === "append" && operation === "append");
+        return new TimeSeriesWorkerDisposedError(matchesPending ? requestId : null);
+      });
       this.#disposePromise = Promise.resolve();
       this.#terminate();
       return this.#disposePromise;
@@ -318,7 +384,9 @@ export class TimeSeriesWorkerClient {
 
   #assertAvailable(): void {
     if (this.#disposed || this.#disposing) throw new TimeSeriesWorkerDisposedError();
-    if (this.#pending || this.#activeView) throw new TimeSeriesWorkerBusyError();
+    if (this.#pending || this.#activeView || this.#queuedView || this.#append) {
+      throw new TimeSeriesWorkerBusyError();
+    }
   }
 
   #dispatchViewport(scheduled: ScheduledViewport): void {
@@ -328,6 +396,8 @@ export class TimeSeriesWorkerClient {
       options: scheduled.options,
     })
       .then((result) => {
+        if (this.#activeView !== scheduled) return;
+        this.#activeView = null;
         if (this.#queuedView) {
           scheduled.reject(
             new TimeSeriesWorkerSupersededError(scheduled.viewportId, this.#queuedView.viewportId),
@@ -339,16 +409,46 @@ export class TimeSeriesWorkerClient {
             generation: this.#generation,
           });
         }
+        this.#drain();
       })
-      .catch((error) => scheduled.reject(error))
-      .finally(() => {
+      .catch((error) => {
         if (this.#activeView !== scheduled) return;
         this.#activeView = null;
-        const next = this.#queuedView;
-        this.#queuedView = null;
-        if (next && !this.#disposed) this.#dispatchViewport(next);
-        else if (next) next.reject(new TimeSeriesWorkerDisposedError());
+        scheduled.reject(error);
+        this.#drain();
       });
+  }
+
+  #dispatchAppend(scheduled: ScheduledAppend): void {
+    void this.#sendRequest<TimeSeriesSessionState>(
+      "append",
+      { x: scheduled.x, y: scheduled.y },
+      scheduled.transfer,
+    ).then(
+      (result) => {
+        if (this.#append !== scheduled) return;
+        this.#append = null;
+        this.#drain();
+        scheduled.resolve(result);
+      },
+      (error) => {
+        if (this.#append !== scheduled) return;
+        this.#append = null;
+        this.#drain();
+        scheduled.reject(error);
+      },
+    );
+  }
+
+  #drain(): void {
+    if (this.#disposed || this.#pending || this.#activeView) return;
+    const view = this.#queuedView;
+    if (view) {
+      this.#queuedView = null;
+      this.#dispatchViewport(view);
+      return;
+    }
+    if (this.#append) this.#dispatchAppend(this.#append);
   }
 
   #handleMessage(event: MessageEvent<unknown>): void {
@@ -385,13 +485,21 @@ export class TimeSeriesWorkerClient {
             error instanceof TimeSeriesWorkerError ? error.code : "worker-error",
             this.#pending?.requestId ?? null,
           );
-    this.#pending?.reject(failure);
-    this.#activeView?.reject(failure);
-    this.#queuedView?.reject(failure);
+    this.#rejectOutstanding(() => failure);
+    this.#terminate();
+  }
+
+  #rejectOutstanding(
+    errorFor: (kind: "pending" | "active-view" | "queued-view" | "append") => Error,
+  ): void {
+    this.#pending?.reject(errorFor("pending"));
+    this.#activeView?.reject(errorFor("active-view"));
+    this.#queuedView?.reject(errorFor("queued-view"));
+    this.#append?.reject(errorFor("append"));
     this.#pending = null;
     this.#activeView = null;
     this.#queuedView = null;
-    this.#terminate();
+    this.#append = null;
   }
 
   #terminate(): void {

@@ -15,6 +15,7 @@ for (let index = 0; index < POINT_COUNT; index += 1) {
 const session = new TimeSeriesSession({
   capacity: POINT_COUNT,
   maxOutputPoints: 20_000,
+  maxIngestionBatchPoints: 65_536,
   pointsPerPixel: 1,
 });
 session.load(x, y);

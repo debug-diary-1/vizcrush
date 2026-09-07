@@ -50,7 +50,10 @@ class ControlledWorker implements TimeSeriesWorkerTransport {
   terminateCalls = 0;
 
   postMessage(message: unknown, transfer?: Transferable[]): void {
-    this.sent.push({ message: message as Record<string, unknown>, transfer });
+    this.sent.push({
+      message: structuredClone(message, { transfer }) as Record<string, unknown>,
+      transfer,
+    });
   }
 
   terminate(): void {
@@ -111,6 +114,98 @@ describe("TimeSeriesWorkerClient and host", () => {
     await expect(other.load(aliased, paired, { transfer: true })).rejects.toThrow(/complete/);
     expect(backing.byteLength).toBeGreaterThan(0);
     expect(paired.byteLength).toBeGreaterThan(0);
+  });
+
+  test("appends through the host with circular retention and source revisions", async () => {
+    const worker = new LinkedWorker();
+    const session = new TimeSeriesSession({
+      capacity: 3,
+      maxOutputPoints: 10,
+      maxIngestionBatchPoints: 2,
+    });
+    session.load(new Float64Array([0, 1, 2]), new Float64Array([0, 10, 20]));
+    installTimeSeriesWorkerHost(worker.host, session);
+    const client = new TimeSeriesWorkerClient(worker);
+
+    const appended = await client.append(new Float64Array([3, 4]), new Float64Array([30, 40]));
+    const result = await client.view({ xMin: -1, xMax: 10, widthCssPixels: 10 });
+
+    expect(appended.value).toMatchObject({
+      retainedPoints: 3,
+      oldestX: 2,
+      newestX: 4,
+      sourceRevision: 2,
+    });
+    expect(result.value.sourceRevision).toBe(2);
+    expect(Array.from(result.value.x)).toEqual([2, 3, 4]);
+  });
+
+  test("allows one unacknowledged append and rejects another before detachment", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const firstX = new Float64Array([1]);
+    const firstY = new Float64Array([10]);
+    const first = client.append(firstX, firstY, { transfer: true });
+    expect(firstX.byteLength).toBe(0);
+    expect(firstY.byteLength).toBe(0);
+
+    const rejectedX = new Float64Array([2]);
+    const rejectedY = new Float64Array([20]);
+    await expect(client.append(rejectedX, rejectedY, { transfer: true })).rejects.toBeInstanceOf(
+      TimeSeriesWorkerBusyError,
+    );
+    expect(rejectedX.byteLength).toBe(8);
+    expect(rejectedY.byteLength).toBe(8);
+
+    worker.succeed(0, { retainedPoints: 1, sourceRevision: 1 });
+    await first;
+  });
+
+  test("snapshots safe-copy append inputs while they wait behind a viewport", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const view = client.view({ xMin: 0, xMax: 10, widthCssPixels: 10 });
+    const x = new Float64Array([11]);
+    const y = new Float64Array([110]);
+    const append = client.append(x, y);
+    x[0] = 99;
+    y[0] = 990;
+
+    worker.succeed(0, { x: new Float64Array([0]), y: new Float64Array([0]) });
+    await view;
+    await Promise.resolve();
+    expect(worker.sent[1].message).toMatchObject({
+      operation: "append",
+      x: new Float64Array([11]),
+      y: new Float64Array([110]),
+    });
+    worker.succeed(1, { retainedPoints: 1, sourceRevision: 1 });
+    await append;
+  });
+
+  test("prioritizes the latest viewport between continuous append acknowledgements", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const active = client.view({ xMin: 0, xMax: 10, widthCssPixels: 10 });
+    const appendX = new Float64Array([11]);
+    const appendY = new Float64Array([110]);
+    const append = client.append(appendX, appendY, { transfer: true });
+    expect(appendX.byteLength).toBe(0);
+    expect(appendY.byteLength).toBe(0);
+    const latest = client.view({ xMin: 1, xMax: 11, widthCssPixels: 10 });
+
+    worker.succeed(0, { x: new Float64Array([0]), y: new Float64Array([0]), sourceRevision: 1 });
+    await expect(active).rejects.toBeInstanceOf(TimeSeriesWorkerSupersededError);
+    await Promise.resolve();
+    expect(worker.sent[1].message.operation).toBe("view");
+
+    worker.succeed(1, { x: new Float64Array([1]), y: new Float64Array([10]), sourceRevision: 1 });
+    await expect(latest).resolves.toMatchObject({ value: { sourceRevision: 1 } });
+    await Promise.resolve();
+    expect(worker.sent[2].message.operation).toBe("append");
+
+    worker.succeed(2, { retainedPoints: 11, sourceRevision: 2 });
+    await expect(append).resolves.toMatchObject({ value: { sourceRevision: 2 } });
   });
 
   test("rejects overlap before transferred inputs can detach", async () => {

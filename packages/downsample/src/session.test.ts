@@ -21,6 +21,120 @@ describe("TimeSeriesSession", () => {
     expect(
       () => new TimeSeriesSession({ capacity: 10, maxOutputPoints: 10, pointsPerPixel: 0 }),
     ).toThrow(/pointsPerPixel/);
+    expect(
+      () =>
+        new TimeSeriesSession({
+          capacity: 10,
+          maxOutputPoints: 10,
+          maxIngestionBatchPoints: 0,
+        }),
+    ).toThrow(/maxIngestionBatchPoints/);
+  });
+
+  test("appends ordered batches through wraparound and evicts oldest pairs", async () => {
+    const session = new TimeSeriesSession({
+      capacity: 5,
+      maxOutputPoints: 10,
+      maxIngestionBatchPoints: 3,
+    });
+    const initial = series(4);
+    session.load(initial.x, initial.y);
+
+    expect(session.append(new Float64Array([4, 5]), new Float64Array([40, 50]))).toMatchObject({
+      retainedPoints: 5,
+      oldestX: 1,
+      newestX: 5,
+      sourceRevision: 2,
+    });
+    session.append(new Float64Array([5, 6, 7]), new Float64Array([51, 60, 70]));
+
+    const result = await session.view({ xMin: -1, xMax: 10, widthCssPixels: 10 });
+    expect(Array.from(result.x)).toEqual([4, 5, 5, 6, 7]);
+    expect(Array.from(result.y)).toEqual([40, 50, 51, 60, 70]);
+    expect(session.state).toMatchObject({ oldestX: 4, newestX: 7, sourceRevision: 3 });
+  });
+
+  test("rejects invalid and oversized appends without partial mutation", async () => {
+    const session = new TimeSeriesSession({
+      capacity: 5,
+      maxOutputPoints: 10,
+      maxIngestionBatchPoints: 2,
+    });
+    const input = series(3);
+    session.load(input.x, input.y);
+
+    expect(() => session.append(new Float64Array([3, 2]), new Float64Array([30, 20]))).toThrow(
+      /nondecreasing/,
+    );
+    expect(() =>
+      session.append(new Float64Array([3, 4, 5]), new Float64Array([30, 40, 50])),
+    ).toThrow(/maxIngestionBatchPoints/);
+    expect(() => session.append(new Float64Array([1]), new Float64Array([10]))).toThrow(
+      /last retained timestamp/,
+    );
+    expect(() => session.append(new Float64Array([3]), new Float64Array([NaN]))).toThrow(/finite/);
+
+    const result = await session.view({ xMin: -1, xMax: 10, widthCssPixels: 10 });
+    expect(Array.from(result.x)).toEqual([0, 1, 2]);
+    expect(session.state.sourceRevision).toBe(1);
+  });
+
+  test("reports explicit source, scratch, pending append, and output byte bounds", async () => {
+    const session = new TimeSeriesSession({
+      capacity: 5,
+      maxOutputPoints: 3,
+      maxIngestionBatchPoints: 2,
+    });
+    const input = series(4);
+    const state = session.load(input.x, input.y);
+
+    expect(state.bufferBytes).toEqual({
+      retainedSourceBytes: 64,
+      sourceCapacityBytes: 80,
+      scratchCapacityBytes: 80,
+      pendingAppendCapacityBytes: 32,
+      outputCapacityBytes: 48,
+      totalAccountedCapacityBytes: 240,
+    });
+    const result = await session.view({ xMin: 0, xMax: 3, widthCssPixels: 3 });
+    expect(result.outputBytes).toBe(result.x.byteLength + result.y.byteLength);
+    expect(result.outputBytes).toBeLessThanOrEqual(state.bufferBytes.outputCapacityBytes);
+  });
+
+  test("circular retention agrees with a simple append reference", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 30 }),
+        fc.array(fc.integer({ min: 0, max: 8 }), { minLength: 1, maxLength: 30 }),
+        async (capacity, batchLengths) => {
+          const maximumBatch = Math.max(1, ...batchLengths);
+          const session = new TimeSeriesSession({
+            capacity,
+            maxOutputPoints: 1_000,
+            maxIngestionBatchPoints: maximumBatch,
+          });
+          const reference: Array<{ x: number; y: number }> = [];
+          let next = 0;
+          for (const length of batchLengths) {
+            const x = new Float64Array(length);
+            const y = new Float64Array(length);
+            for (let index = 0; index < length; index += 1) {
+              x[index] = next;
+              y[index] = next + 0.25;
+              next += 1;
+              reference.push({ x: x[index], y: y[index] });
+            }
+            session.append(x, y);
+            if (reference.length > capacity) reference.splice(0, reference.length - capacity);
+          }
+
+          const result = await session.view({ xMin: -1, xMax: next + 1, widthCssPixels: 1_000 });
+          expect(Array.from(result.x)).toEqual(reference.map((point) => point.x));
+          expect(Array.from(result.y)).toEqual(reference.map((point) => point.y));
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 
   test("retains the newest capacity points from an oversized valid history", async () => {

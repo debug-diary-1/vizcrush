@@ -60,6 +60,11 @@ export function installTimeSeriesWorkerHost(
           throw new TypeError("load requires Float64Array x and y");
         }
         value = session.load(event.data.x, event.data.y);
+      } else if (operation === "append") {
+        if (!(event.data.x instanceof Float64Array) || !(event.data.y instanceof Float64Array)) {
+          throw new TypeError("append requires Float64Array x and y");
+        }
+        value = session.append(event.data.x, event.data.y);
       } else if (operation === "view") {
         if (!event.data.request) throw new TypeError("view requires a viewport request");
         value = await session.view(event.data.request, event.data.options);

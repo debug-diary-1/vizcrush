@@ -8,18 +8,25 @@
   <body>
     <main>
       <p class="eyebrow">vizcrush adoption example</p>
-      <h1>Explore one million points</h1>
+      <h1>Explore a live million-point window</h1>
       <p class="lede">
         A bounded time-series session selects the visible domain and reduces it to the current
         physical-pixel budget. One persistent worker generates and retains the source history; only
-        reduced arrays and diagnostics return to this page.
+        reduced arrays and diagnostics return to this page. A deterministic stream continuously
+        evicts the oldest points after retention fills.
       </p>
       <div class="controls" aria-label="Viewport controls">
         <button id="pan-left" type="button" aria-keyshortcuts="ArrowLeft">Pan left</button>
         <button id="pan-right" type="button" aria-keyshortcuts="ArrowRight">Pan right</button>
         <button id="zoom-in" type="button" aria-keyshortcuts="+">Zoom in</button>
         <button id="zoom-out" type="button" aria-keyshortcuts="-">Zoom out</button>
-        <button id="reset" type="button" aria-keyshortcuts="0">Reset view</button>
+        <button id="follow" type="button" aria-keyshortcuts="F" aria-pressed="true">
+          Following latest
+        </button>
+        <button id="pause" type="button" aria-keyshortcuts="Space" aria-pressed="false">
+          Pause stream
+        </button>
+        <button id="reset" type="button" aria-keyshortcuts="0">Reset scenario</button>
         <label>
           Backend
           <select id="backend">
@@ -29,9 +36,11 @@
           </select>
         </label>
       </div>
-      <p class="note">Keyboard: ←/→ pan, +/- zoom, 0 reset.</p>
+      <p class="note">Keyboard: ←/→ pan, +/- zoom, F follow latest, Space pause/resume, 0 reset.</p>
       <section class="metrics" aria-live="polite">
         <article><span>Retained</span><strong id="retained">—</strong></article>
+        <article><span>Stream progress</span><strong id="progress">—</strong></article>
+        <article><span>Buffer accounting</span><strong id="buffers">—</strong></article>
         <article><span>Visible source</span><strong id="visible">—</strong></article>
         <article><span>Returned / budget</span><strong id="output">—</strong></article>
         <article><span>Actual backend</span><strong id="actual-backend">—</strong></article>
