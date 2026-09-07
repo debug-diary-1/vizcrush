@@ -16,3 +16,6 @@ if (result.wasm.outputLength !== 100 || result.js.outputLength !== 100) {
 if (!result.parity) {
   throw new Error(`${browser}: packed WASM and JS outputs disagree`);
 }
+if (result.retainedPoints !== 100_000 || result.requestIds.js <= result.requestIds.wasm) {
+  throw new Error(`${browser}: persistent worker state or request identity was incorrect`);
+}

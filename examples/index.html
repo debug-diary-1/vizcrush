@@ -749,9 +749,9 @@
         {
           name: "viewport-session",
           title: "Bounded Viewport Session",
-          desc: "Pan and zoom one million retained points through a physical-pixel budget",
+          desc: "Pan and zoom one million worker-resident points through a pixel budget",
           category: "Time-Series",
-          algorithms: ["TimeSeriesSession"],
+          algorithms: ["TimeSeriesSession", "Worker client"],
           complexity: 2,
           kind: "vizcrush",
         },
