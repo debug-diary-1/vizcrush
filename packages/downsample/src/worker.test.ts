@@ -1,0 +1,220 @@
+import { describe, expect, test } from "vitest";
+import { TimeSeriesSession } from "./session.js";
+import {
+  TimeSeriesWorkerBusyError,
+  TimeSeriesWorkerClient,
+  TimeSeriesWorkerDisposedError,
+  TimeSeriesWorkerError,
+  type TimeSeriesWorkerTransport,
+} from "./worker-client.js";
+import { installTimeSeriesWorkerHost, type TimeSeriesWorkerHostScope } from "./worker-host.js";
+
+class LinkedWorker implements TimeSeriesWorkerTransport {
+  onmessage: ((event: MessageEvent<unknown>) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  onmessageerror: ((event: MessageEvent<unknown>) => void) | null = null;
+  readonly host: TimeSeriesWorkerHostScope;
+  terminateCalls = 0;
+
+  constructor() {
+    this.host = {
+      onmessage: null,
+      postMessage: (message, transfer) => {
+        const data = structuredClone(message, { transfer });
+        queueMicrotask(() => this.onmessage?.({ data } as MessageEvent<unknown>));
+      },
+    };
+  }
+
+  postMessage(message: unknown, transfer?: Transferable[]): void {
+    const data = structuredClone(message, { transfer });
+    queueMicrotask(() => this.host.onmessage?.({ data } as MessageEvent<unknown>));
+  }
+
+  terminate(): void {
+    this.terminateCalls += 1;
+    this.host.onmessage = null;
+  }
+
+  fail(message: string): void {
+    this.onerror?.({ message } as ErrorEvent);
+  }
+}
+
+class ControlledWorker implements TimeSeriesWorkerTransport {
+  onmessage: ((event: MessageEvent<unknown>) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  onmessageerror: ((event: MessageEvent<unknown>) => void) | null = null;
+  readonly sent: Array<{ message: Record<string, unknown>; transfer?: Transferable[] }> = [];
+  terminateCalls = 0;
+
+  postMessage(message: unknown, transfer?: Transferable[]): void {
+    this.sent.push({ message: message as Record<string, unknown>, transfer });
+  }
+
+  terminate(): void {
+    this.terminateCalls += 1;
+  }
+
+  succeed(index: number, value: unknown): void {
+    const requestId = this.sent[index].message.requestId;
+    this.onmessage?.({
+      data: { type: "vizcrush:response", requestId, ok: true, value },
+    } as MessageEvent<unknown>);
+  }
+}
+
+function loadedWorker(): { worker: LinkedWorker; client: TimeSeriesWorkerClient } {
+  const worker = new LinkedWorker();
+  const session = new TimeSeriesSession({ capacity: 10, maxOutputPoints: 10 });
+  installTimeSeriesWorkerHost(worker.host, session);
+  return { worker, client: new TimeSeriesWorkerClient(worker) };
+}
+
+describe("TimeSeriesWorkerClient and host", () => {
+  test("keeps one session and transport across load and repeated views", async () => {
+    const { worker, client } = loadedWorker();
+    const x = new Float64Array([1, 2, 3]);
+    const y = new Float64Array([10, 20, 30]);
+    const loading = client.load(x, y);
+    expect(x.byteLength).toBe(24);
+    expect(y.byteLength).toBe(24);
+    x.fill(99);
+    y.fill(99);
+    const loaded = await loading;
+
+    const first = await client.view({ xMin: 1, xMax: 2, widthCssPixels: 10 });
+    const second = await client.view({ xMin: 2, xMax: 3, widthCssPixels: 10 });
+
+    expect(loaded).toMatchObject({ requestId: 1, value: { sourceRevision: 1 } });
+    expect(Array.from(first.value.x)).toEqual([1, 2, 3]);
+    expect(Array.from(second.value.y)).toEqual([10, 20, 30]);
+    expect([first.requestId, second.requestId]).toEqual([2, 3]);
+    expect(worker.terminateCalls).toBe(0);
+  });
+
+  test("supports opt-in transfer only for separate dedicated buffers", async () => {
+    const { client } = loadedWorker();
+    const x = new Float64Array([1, 2, 3]);
+    const y = new Float64Array([10, 20, 30]);
+    const pending = client.load(x, y, { transfer: true });
+    expect(x.byteLength).toBe(0);
+    expect(y.byteLength).toBe(0);
+    await pending;
+
+    const other = loadedWorker().client;
+    const backing = new Float64Array([0, 1, 2, 3]);
+    const aliased = backing.subarray(1, 3);
+    const paired = new Float64Array([10, 20]);
+    await expect(other.load(aliased, paired, { transfer: true })).rejects.toThrow(/complete/);
+    expect(backing.byteLength).toBeGreaterThan(0);
+    expect(paired.byteLength).toBeGreaterThan(0);
+  });
+
+  test("rejects overlap before transferred inputs can detach", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const first = client.state();
+    const x = new Float64Array([1]);
+    const y = new Float64Array([2]);
+
+    await expect(client.load(x, y, { transfer: true })).rejects.toBeInstanceOf(
+      TimeSeriesWorkerBusyError,
+    );
+    expect(x.byteLength).toBe(8);
+    expect(y.byteLength).toBe(8);
+    worker.succeed(0, { retainedPoints: 0 });
+    await first;
+  });
+
+  test("settles pending work on runtime failure and never falls back", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const pending = client.state();
+    worker.onerror?.({ message: "startup failed" } as ErrorEvent);
+
+    await expect(pending).rejects.toThrow("startup failed");
+    await expect(pending).rejects.toMatchObject({ requestId: 1 });
+    await expect(client.state()).rejects.toBeInstanceOf(TimeSeriesWorkerDisposedError);
+    await client.dispose();
+    expect(worker.terminateCalls).toBe(1);
+  });
+
+  test("disposal rejects outstanding work, terminates once, and is idempotent", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const pending = client.state();
+    const disposal = client.dispose();
+
+    await expect(pending).rejects.toBeInstanceOf(TimeSeriesWorkerDisposedError);
+    await expect(pending).rejects.toMatchObject({ requestId: 1 });
+    await disposal;
+    await client.dispose();
+    expect(worker.terminateCalls).toBe(1);
+  });
+
+  test("asks an idle host to dispose before terminating the worker", async () => {
+    const { worker, client } = loadedWorker();
+    const first = client.dispose();
+    const second = client.dispose();
+
+    expect(second).toBe(first);
+    await first;
+    await expect(client.state()).rejects.toBeInstanceOf(TimeSeriesWorkerDisposedError);
+    expect(worker.terminateCalls).toBe(1);
+  });
+
+  test("host rejects overlapping protocol requests instead of queueing them", async () => {
+    const responses: Array<Record<string, unknown>> = [];
+    const scope: TimeSeriesWorkerHostScope = {
+      onmessage: null,
+      postMessage: (message) => responses.push(message as Record<string, unknown>),
+    };
+    const session = new TimeSeriesSession({ capacity: 10, maxOutputPoints: 2 });
+    session.load(new Float64Array([0, 1, 2]), new Float64Array([0, 1, 2]));
+    installTimeSeriesWorkerHost(scope, session);
+
+    const first = scope.onmessage?.({
+      data: {
+        type: "vizcrush:request",
+        requestId: 1,
+        operation: "view",
+        request: { xMin: 0, xMax: 2, widthCssPixels: 2 },
+      },
+    } as MessageEvent<unknown>);
+    scope.onmessage?.({
+      data: { type: "vizcrush:request", requestId: 2, operation: "state" },
+    } as MessageEvent<unknown>);
+    await first;
+
+    expect(responses).toHaveLength(2);
+    expect(responses[0]).toMatchObject({ requestId: 2, ok: false, error: { code: "busy" } });
+    expect(responses[1]).toMatchObject({ requestId: 1, ok: true });
+  });
+
+  test("turns host validation errors into identified client errors", async () => {
+    const { client } = loadedWorker();
+    await expect(
+      client.load(new Float64Array([2, 1]), new Float64Array([20, 10])),
+    ).rejects.toMatchObject({
+      name: TimeSeriesWorkerError.name,
+      code: "operation-error",
+      requestId: 1,
+    });
+  });
+
+  test("rejects and terminates on a malformed response instead of hanging", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const pending = client.state();
+    worker.onmessage?.({
+      data: { type: "vizcrush:response", requestId: 1, ok: false },
+    } as MessageEvent<unknown>);
+
+    await expect(pending).rejects.toMatchObject({
+      name: TimeSeriesWorkerError.name,
+      requestId: 1,
+    });
+    expect(worker.terminateCalls).toBe(1);
+  });
+});

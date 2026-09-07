@@ -1,13 +1,11 @@
 import type { KernelBackend } from "@vizcrush/core";
-import { TimeSeriesSession } from "@vizcrush/downsample/session";
+import {
+  TimeSeriesWorkerBusyError,
+  TimeSeriesWorkerClient,
+} from "@vizcrush/downsample/worker-client";
 import "./styles.css";
 
 const POINT_COUNT = 1_000_000;
-const session = new TimeSeriesSession({
-  capacity: POINT_COUNT,
-  maxOutputPoints: 20_000,
-  pointsPerPixel: 1,
-});
 const canvas = document.querySelector<HTMLCanvasElement>("#chart")!;
 const backend = document.querySelector<HTMLSelectElement>("#backend")!;
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -22,19 +20,7 @@ const fields = {
 
 let domainMin = 0;
 let domainMax = POINT_COUNT - 1;
-
-function makeSeries(): { x: Float64Array; y: Float64Array } {
-  const x = new Float64Array(POINT_COUNT);
-  const y = new Float64Array(POINT_COUNT);
-  let state = 7;
-  for (let index = 0; index < POINT_COUNT; index += 1) {
-    state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0;
-    x[index] = 1_700_000_000_000 + index * 100;
-    y[index] =
-      Math.sin(index / 7_000) * 16 + Math.sin(index / 311) * 2 + (state / 4_294_967_296 - 0.5);
-  }
-  return { x, y };
-}
+let client: TimeSeriesWorkerClient | null = null;
 
 function sourceX(index: number): number {
   return 1_700_000_000_000 + index * 100;
@@ -75,6 +61,7 @@ function draw(
 }
 
 async function render(): Promise<void> {
+  if (!client) throw new Error("Worker is not ready");
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   const width = Math.max(1, rect.width);
@@ -85,7 +72,7 @@ async function render(): Promise<void> {
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const started = performance.now();
-  const result = await session.view(
+  const { value: result } = await client.view(
     {
       xMin: sourceX(domainMin),
       xMax: sourceX(domainMax),
@@ -96,20 +83,26 @@ async function render(): Promise<void> {
   );
   draw(result.x, result.y, sourceX(domainMin), sourceX(domainMax), width, height);
 
-  fields.retained.textContent = session.state.retainedPoints.toLocaleString();
   fields.visible.textContent = result.visiblePoints.toLocaleString();
   fields.output.textContent = `${result.x.length.toLocaleString()} / ${result.pointBudget.toLocaleString()}`;
   fields.actualBackend.textContent = result.backend ?? "no kernel";
   fields.reason.textContent = result.reason;
   fields.domain.textContent = `${domainMin.toLocaleString()}–${domainMax.toLocaleString()}`;
-  status.textContent = `Rendered in the page's calling context in ${(performance.now() - started).toFixed(1)} ms. Result buffers are owned by the renderer.`;
+  status.textContent = `Worker round trip and page rendering completed in ${(performance.now() - started).toFixed(1)} ms. Result buffers are owned by the renderer.`;
 }
 
 function updateDomain(nextMin: number, nextMax: number): void {
   const span = Math.round(Math.min(POINT_COUNT - 1, Math.max(1, nextMax - nextMin)));
   domainMin = Math.max(0, Math.min(POINT_COUNT - 1 - span, Math.round(nextMin)));
   domainMax = domainMin + span;
-  void render();
+  void render().catch(showWorkerError);
+}
+
+function showWorkerError(error: unknown): void {
+  status.textContent =
+    error instanceof TimeSeriesWorkerBusyError
+      ? "Worker busy: this slice rejects overlapping navigation explicitly."
+      : `Worker error: ${error instanceof Error ? error.message : String(error)}`;
 }
 
 document.querySelector("#pan-left")!.addEventListener("click", () => {
@@ -133,13 +126,17 @@ document.querySelector("#zoom-out")!.addEventListener("click", () => {
 document.querySelector("#reset")!.addEventListener("click", () => {
   updateDomain(0, POINT_COUNT - 1);
 });
-backend.addEventListener("change", () => void render());
+backend.addEventListener("change", () => void render().catch(showWorkerError));
 
 async function initialize(): Promise<void> {
-  const input = makeSeries();
-  session.load(input.x, input.y);
+  status.textContent = "Generating and retaining 1,000,000 points in one persistent worker…";
+  const worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
+  client = new TimeSeriesWorkerClient(worker);
+  const { value: state } = await client.state();
+  fields.retained.textContent = state.retainedPoints.toLocaleString();
   await render();
-  new ResizeObserver(() => void render()).observe(canvas);
+  new ResizeObserver(() => void render().catch(showWorkerError)).observe(canvas);
 }
 
-void initialize();
+window.addEventListener("pagehide", () => void client?.dispose(), { once: true });
+void initialize().catch(showWorkerError);

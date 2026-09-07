@@ -1,0 +1,307 @@
+import type { KernelCallOptions } from "@vizcrush/core";
+import type { TimeSeriesSessionState, ViewportRequest, ViewportResult } from "./session.js";
+
+export interface TimeSeriesWorkerTransport {
+  postMessage(message: unknown, transfer?: Transferable[]): void;
+  terminate(): void;
+  onmessage: ((event: MessageEvent<unknown>) => void) | null;
+  onerror: ((event: ErrorEvent) => void) | null;
+  onmessageerror: ((event: MessageEvent<unknown>) => void) | null;
+}
+
+export interface WorkerOperationResult<T> {
+  requestId: number;
+  value: T;
+}
+
+export interface WorkerLoadOptions {
+  /**
+   * Detach and transfer both input buffers. Each typed array must cover its
+   * own complete ArrayBuffer. The safe default uses structured-clone copies.
+   */
+  transfer?: boolean;
+}
+
+interface WorkerSuccessResponse {
+  type: "vizcrush:response";
+  requestId: number;
+  ok: true;
+  value: unknown;
+}
+
+interface WorkerErrorResponse {
+  type: "vizcrush:response";
+  requestId: number;
+  ok: false;
+  error: { code: string; message: string };
+}
+
+type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
+
+interface PendingRequest {
+  requestId: number;
+  resolve(value: WorkerOperationResult<unknown>): void;
+  reject(reason: unknown): void;
+}
+
+export class TimeSeriesWorkerBusyError extends Error {
+  /** Create the error returned when an operation is already in flight. */
+  constructor() {
+    super("The time-series worker already has an operation in flight");
+    this.name = "TimeSeriesWorkerBusyError";
+  }
+}
+
+export class TimeSeriesWorkerDisposedError extends Error {
+  readonly requestId: number | null;
+
+  /** Create a disposal error, optionally for an operation cancelled by disposal. */
+  constructor(requestId: number | null = null) {
+    super("The time-series worker has been disposed");
+    this.name = "TimeSeriesWorkerDisposedError";
+    this.requestId = requestId;
+  }
+}
+
+export class TimeSeriesWorkerError extends Error {
+  readonly code: string;
+  readonly requestId: number | null;
+
+  /** Create an identified transport or host-operation failure. */
+  constructor(message: string, code = "worker-error", requestId: number | null = null) {
+    super(message);
+    this.name = "TimeSeriesWorkerError";
+    this.code = code;
+    this.requestId = requestId;
+  }
+}
+
+function isWorkerResponse(value: unknown): value is WorkerResponse {
+  if (value === null || typeof value !== "object") return false;
+  const response = value as {
+    type?: unknown;
+    requestId?: unknown;
+    ok?: unknown;
+    value?: unknown;
+    error?: unknown;
+  };
+  if (response.type !== "vizcrush:response" || !Number.isSafeInteger(response.requestId)) {
+    return false;
+  }
+  if (response.ok === true) return "value" in response;
+  if (response.ok !== false || response.error === null || typeof response.error !== "object") {
+    return false;
+  }
+  const error = response.error as { code?: unknown; message?: unknown };
+  return typeof error.code === "string" && typeof error.message === "string";
+}
+
+function assertTransferableInput(x: Float64Array, y: Float64Array): Transferable[] {
+  for (const [name, values] of [
+    ["x", x],
+    ["y", y],
+  ] as const) {
+    if (!(values.buffer instanceof ArrayBuffer)) {
+      throw new TypeError(`${name} must use an ArrayBuffer for transfer`);
+    }
+    if (values.byteOffset !== 0 || values.byteLength !== values.buffer.byteLength) {
+      throw new RangeError(`${name} must cover its complete dedicated ArrayBuffer for transfer`);
+    }
+  }
+  if (x.buffer === y.buffer) {
+    throw new RangeError("x and y must use separate dedicated ArrayBuffers for transfer");
+  }
+  return [x.buffer, y.buffer];
+}
+
+/**
+ * Owns one browser worker and permits one in-flight operation. It never falls
+ * back to processing in the caller when worker startup or execution fails.
+ */
+export class TimeSeriesWorkerClient {
+  readonly #worker: TimeSeriesWorkerTransport;
+  #nextRequestId = 1;
+  #pending: PendingRequest | null = null;
+  #disposed = false;
+  #disposing = false;
+  #disposePromise: Promise<void> | null = null;
+  #terminated = false;
+
+  /**
+   * Take ownership of a dedicated worker and its message handlers. The worker
+   * must install the matching host protocol from its consumer-owned entry.
+   */
+  constructor(worker: TimeSeriesWorkerTransport) {
+    this.#worker = worker;
+    worker.onmessage = (event) => this.#handleMessage(event);
+    worker.onerror = (event) => this.#fail(new Error(event.message));
+    worker.onmessageerror = () =>
+      this.#fail(new TimeSeriesWorkerError("The worker returned an unreadable message"));
+  }
+
+  /** Read session state, returning the identity assigned to this request. */
+  state(): Promise<WorkerOperationResult<TimeSeriesSessionState>> {
+    return this.#request("state", {});
+  }
+
+  /**
+   * Replace worker-resident history. Inputs are cloned by default; transfer
+   * mode detaches separate typed arrays that cover their complete buffers.
+   */
+  load(
+    x: Float64Array,
+    y: Float64Array,
+    options: WorkerLoadOptions = {},
+  ): Promise<WorkerOperationResult<TimeSeriesSessionState>> {
+    try {
+      this.#assertAvailable();
+      if (!(x instanceof Float64Array) || !(y instanceof Float64Array)) {
+        throw new TypeError("x and y must be Float64Array instances");
+      }
+      const transfer = options.transfer ? assertTransferableInput(x, y) : undefined;
+      return this.#sendRequest("load", { x, y }, transfer);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  /**
+   * Request one bounded viewport. Rejects while any operation is in flight and
+   * returns the request identity with caller-owned result buffers.
+   */
+  view(
+    request: ViewportRequest,
+    options: KernelCallOptions = {},
+  ): Promise<WorkerOperationResult<ViewportResult>> {
+    return this.#request("view", { request, options });
+  }
+
+  /**
+   * Dispose idempotently. An in-flight operation is rejected immediately and
+   * the owned worker is terminated; an idle host first acknowledges disposal.
+   */
+  dispose(): Promise<void> {
+    if (this.#disposePromise) return this.#disposePromise;
+    if (this.#disposed) {
+      this.#disposePromise = Promise.resolve();
+      return this.#disposePromise;
+    }
+    if (this.#pending) {
+      this.#disposed = true;
+      this.#pending.reject(new TimeSeriesWorkerDisposedError(this.#pending.requestId));
+      this.#pending = null;
+      this.#disposePromise = Promise.resolve();
+      this.#terminate();
+      return this.#disposePromise;
+    }
+
+    this.#disposing = true;
+    this.#disposePromise = this.#sendRequest<undefined>("dispose", {})
+      .then(() => undefined)
+      .finally(() => {
+        this.#disposing = false;
+        this.#disposed = true;
+        this.#terminate();
+      });
+    return this.#disposePromise;
+  }
+
+  #request<T>(
+    operation: string,
+    payload: object,
+    transfer?: Transferable[],
+  ): Promise<WorkerOperationResult<T>> {
+    try {
+      this.#assertAvailable();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    return this.#sendRequest(operation, payload, transfer);
+  }
+
+  #sendRequest<T>(
+    operation: string,
+    payload: object,
+    transfer?: Transferable[],
+  ): Promise<WorkerOperationResult<T>> {
+    const requestId = this.#nextRequestId;
+    this.#nextRequestId += 1;
+    const promise = new Promise<WorkerOperationResult<T>>((resolve, reject) => {
+      this.#pending = {
+        requestId,
+        resolve: resolve as (value: WorkerOperationResult<unknown>) => void,
+        reject,
+      };
+    });
+    try {
+      this.#worker.postMessage(
+        { type: "vizcrush:request", requestId, operation, ...payload },
+        transfer,
+      );
+    } catch (error) {
+      const pending = this.#pending;
+      this.#pending = null;
+      const failure = new TimeSeriesWorkerError(
+        error instanceof Error ? error.message : String(error),
+        "post-message-error",
+        requestId,
+      );
+      pending?.reject(failure);
+      this.#fail(failure);
+    }
+    return promise;
+  }
+
+  #assertAvailable(): void {
+    if (this.#disposed || this.#disposing) throw new TimeSeriesWorkerDisposedError();
+    if (this.#pending) throw new TimeSeriesWorkerBusyError();
+  }
+
+  #handleMessage(event: MessageEvent<unknown>): void {
+    if (this.#disposed) return;
+    const pending = this.#pending;
+    if (!pending) return;
+    if (!isWorkerResponse(event.data)) {
+      this.#fail(new Error("The worker returned a malformed response"));
+      return;
+    }
+    if (event.data.requestId !== pending.requestId) return;
+    this.#pending = null;
+    if (event.data.ok) {
+      pending.resolve({ requestId: event.data.requestId, value: event.data.value });
+    } else {
+      pending.reject(
+        new TimeSeriesWorkerError(
+          event.data.error.message,
+          event.data.error.code,
+          event.data.requestId,
+        ),
+      );
+    }
+  }
+
+  #fail(error: Error): void {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    const failure =
+      error instanceof TimeSeriesWorkerError && error.requestId !== null
+        ? error
+        : new TimeSeriesWorkerError(
+            error.message,
+            error instanceof TimeSeriesWorkerError ? error.code : "worker-error",
+            this.#pending?.requestId ?? null,
+          );
+    this.#pending?.reject(failure);
+    this.#pending = null;
+    this.#terminate();
+  }
+
+  #terminate(): void {
+    if (this.#terminated) return;
+    this.#terminated = true;
+    this.#worker.onmessage = null;
+    this.#worker.onerror = null;
+    this.#worker.onmessageerror = null;
+    this.#worker.terminate();
+  }
+}
