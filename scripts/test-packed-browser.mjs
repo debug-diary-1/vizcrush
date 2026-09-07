@@ -19,3 +19,11 @@ if (!result.parity) {
 if (result.retainedPoints !== 100_000 || result.requestIds.js <= result.requestIds.wasm) {
   throw new Error(`${browser}: persistent worker state or request identity was incorrect`);
 }
+if (
+  result.scheduling.obsolete !== "TimeSeriesWorkerSupersededError" ||
+  result.scheduling.replaced !== "TimeSeriesWorkerSupersededError" ||
+  result.scheduling.resetViewportId !== 3 ||
+  result.scheduling.resetOutputLength !== 100
+) {
+  throw new Error(`${browser}: bounded latest/reset scheduling was incorrect`);
+}

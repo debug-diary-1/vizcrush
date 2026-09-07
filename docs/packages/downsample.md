@@ -104,7 +104,7 @@ session.load(x, y);
 installTimeSeriesWorkerHost(self, session);
 ```
 
-One client owns one long-lived worker. Each operation returns its request identity, and the client allows one operation in flight. An overlap rejects with `TimeSeriesWorkerBusyError`; it is not queued. Startup, message, and runtime errors reject affected work and terminate the worker without falling back to the main thread. `dispose()` is idempotent and prevents later results from reaching the caller.
+One client owns one long-lived worker. Each viewport result includes transport, viewport, and session-generation identities. The client bounds navigation to one active request and one replaceable latest request. Replaced callers reject with `TimeSeriesWorkerSupersededError`; a running synchronous kernel is allowed to finish, but its obsolete result is suppressed. Other operations still reject overlap with `TimeSeriesWorkerBusyError`. Startup, message, and runtime errors reject affected work and terminate the worker without falling back to the main thread. `dispose()` is idempotent and prevents later results from reaching the caller.
 
 `client.load(x, y)` uses the structured-clone algorithm, so the caller keeps its input buffers. `client.load(x, y, { transfer: true })` opts into detachment and avoids that transport copy. Transfer mode requires each `Float64Array` to cover its own complete, separate `ArrayBuffer`; shared buffers, subarrays, and aliased layouts reject before either buffer is detached. The session still validates and owns its retained copy. Returned viewport buffers belong to the caller.
 
