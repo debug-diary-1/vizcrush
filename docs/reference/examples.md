@@ -6,9 +6,9 @@ vizcrush ships with 43 runnable example apps under `examples/`. Gallery cards di
 
 ### `viewport-session`
 
-Bounded million-point history with inclusive viewport selection, physical-pixel output budgets, pan, zoom, resize, and completed-call backend diagnostics.
+Persistent-worker million-point history with inclusive viewport selection, physical-pixel output budgets, pan, zoom, resize, and completed-call backend diagnostics.
 
-**vizcrush module:** `TimeSeriesSession`
+**vizcrush modules:** `TimeSeriesSession`, `TimeSeriesWorkerClient`
 
 **Folder:** `examples/viewport-session/`
 

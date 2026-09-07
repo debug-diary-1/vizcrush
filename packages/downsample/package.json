@@ -37,6 +37,14 @@
       "import": "./dist/session.js",
       "types": "./dist/session.d.ts"
     },
+    "./worker-client": {
+      "import": "./dist/worker-client.js",
+      "types": "./dist/worker-client.d.ts"
+    },
+    "./worker-host": {
+      "import": "./dist/worker-host.js",
+      "types": "./dist/worker-host.d.ts"
+    },
     "./wasm/*": "./wasm/*"
   },
   "scripts": {

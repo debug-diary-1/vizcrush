@@ -84,7 +84,29 @@ renderLine(visible.x, visible.y);
 
 The viewport domain is inclusive. The session includes an immediate source point outside each edge when available so a line can cross the viewport boundary, and those neighbors count against the total output budget. Zero CSS width returns no points. Positive sub-pixel targets return at most one point, while larger targets use LTTB only when reduction is needed. The result reports the source revision, selected and visible counts, edge-neighbor count, point budget, and completed-call backend diagnostics.
 
-Session work runs in its caller's context. Invoke it from a worker when preprocessing must stay off the main thread; the session itself does not silently create one.
+Session work runs in its caller's context. For a persistent browser worker, create the worker in your application so the bundler can discover its entry:
+
+```typescript
+// main.ts
+import { TimeSeriesWorkerClient } from "@vizcrush/downsample/worker-client";
+
+const worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
+const client = new TimeSeriesWorkerClient(worker);
+const { value: visible } = await client.view(viewport);
+renderLine(visible.x, visible.y);
+
+// worker.ts
+import { TimeSeriesSession } from "@vizcrush/downsample/session";
+import { installTimeSeriesWorkerHost } from "@vizcrush/downsample/worker-host";
+
+const session = new TimeSeriesSession({ capacity: 1_000_000, maxOutputPoints: 20_000 });
+session.load(x, y);
+installTimeSeriesWorkerHost(self, session);
+```
+
+One client owns one long-lived worker. Each operation returns its request identity, and the client allows one operation in flight. An overlap rejects with `TimeSeriesWorkerBusyError`; it is not queued. Startup, message, and runtime errors reject affected work and terminate the worker without falling back to the main thread. `dispose()` is idempotent and prevents later results from reaching the caller.
+
+`client.load(x, y)` uses the structured-clone algorithm, so the caller keeps its input buffers. `client.load(x, y, { transfer: true })` opts into detachment and avoids that transport copy. Transfer mode requires each `Float64Array` to cover its own complete, separate `ArrayBuffer`; shared buffers, subarrays, and aliased layouts reject before either buffer is detached. The session still validates and owns its retained copy. Returned viewport buffers belong to the caller.
 
 ## Performance
 

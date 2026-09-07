@@ -79,38 +79,42 @@ export async function runPackedBrowserSmoke({ browser }) {
     writeFileSync(
       join(fixtureDirectory, "main.js"),
       `
-        import { downsampleKernels } from "@vizcrush/downsample";
+        import { TimeSeriesWorkerClient } from "@vizcrush/downsample/worker-client";
 
-        const size = 100_000;
-        const x = new Float64Array(size);
-        const y = new Float64Array(size);
-        for (let index = 0; index < size; index++) {
-          x[index] = index;
-          y[index] = Math.sin(index / 100) + (index % 997 === 0 ? 5 : 0);
-        }
+        const worker = new Worker(new URL("./worker.js", import.meta.url), { type: "module" });
+        const client = new TimeSeriesWorkerClient(worker);
 
         async function measure(backend) {
-          await downsampleKernels.lttb.withBackend(x, y, 100, { backend });
+          await client.view(
+            { xMin: 0, xMax: 99_999, widthCssPixels: 100 },
+            { backend },
+          );
           const times = [];
           let latest;
           for (let run = 0; run < 5; run++) {
             const started = performance.now();
-            latest = await downsampleKernels.lttb.withBackend(x, y, 100, { backend });
+            latest = await client.view(
+              { xMin: 0, xMax: 99_999, widthCssPixels: 100 },
+              { backend },
+            );
             times.push(performance.now() - started);
           }
           return {
-            backend: latest.backend,
-            outputLength: latest.result.x.length,
-            x: Array.from(latest.result.x),
-            y: Array.from(latest.result.y),
+            backend: latest.value.backend,
+            outputLength: latest.value.x.length,
+            x: Array.from(latest.value.x),
+            y: Array.from(latest.value.y),
             bestMs: Math.min(...times),
+            requestId: latest.requestId,
           };
         }
 
         try {
+          const state = await client.state();
           const wasm = await measure("wasm");
           const js = await measure("js");
           globalThis.__vizcrushResult = {
+            retainedPoints: state.value.retainedPoints,
             wasm,
             js,
             parity:
@@ -120,7 +124,27 @@ export async function runPackedBrowserSmoke({ browser }) {
           };
         } catch (error) {
           globalThis.__vizcrushError = String(error?.stack ?? error);
+        } finally {
+          await client.dispose();
         }
+      `,
+    );
+    writeFileSync(
+      join(fixtureDirectory, "worker.js"),
+      `
+        import { TimeSeriesSession } from "@vizcrush/downsample/session";
+        import { installTimeSeriesWorkerHost } from "@vizcrush/downsample/worker-host";
+
+        const size = 100_000;
+        const x = new Float64Array(size);
+        const y = new Float64Array(size);
+        for (let index = 0; index < size; index++) {
+          x[index] = index;
+          y[index] = Math.sin(index / 100) + (index % 997 === 0 ? 5 : 0);
+        }
+        const session = new TimeSeriesSession({ capacity: size, maxOutputPoints: 100 });
+        session.load(x, y);
+        installTimeSeriesWorkerHost(self, session);
       `,
     );
 
@@ -143,6 +167,7 @@ export async function runPackedBrowserSmoke({ browser }) {
       root: fixtureDirectory,
       logLevel: "error",
       build: { target: "esnext" },
+      worker: { format: "es" },
     });
     viteServer = await preview({
       root: fixtureDirectory,
@@ -184,6 +209,8 @@ export async function runPackedBrowserSmoke({ browser }) {
         bestMs: result.js.bestMs,
       },
       parity: result.parity,
+      retainedPoints: result.retainedPoints,
+      requestIds: { wasm: result.wasm.requestId, js: result.js.requestId },
       diagnostics,
     };
 
