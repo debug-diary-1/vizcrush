@@ -16,6 +16,7 @@ export interface Capabilities {
 }
 
 export interface VizcrushContext {
+  /** Preferred backend from capability selection, not proof of per-call execution. */
   backend: Backend;
   capabilities: Capabilities;
 }

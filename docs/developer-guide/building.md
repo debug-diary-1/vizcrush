@@ -70,7 +70,7 @@ cargo test                                    # quick unit tests
 cargo build --release --target wasm32-unknown-unknown  # build WASM
 ```
 
-To match the `+simd128` flag the build script passes (note: per ADR 0002 the output is byte-identical to a scalar build — there are no SIMD intrinsics in the code):
+To match the `+simd128` flag the build script passes (note: this enables the target feature but does not prove that an algorithm's hot loop was vectorized; ADR 0002 found byte-identical output for its LTTB build, a differing aggregate binary, and no measured SIMD speedup):
 
 ```bash
 RUSTFLAGS="-C target-feature=+simd128" \

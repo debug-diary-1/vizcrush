@@ -4,12 +4,12 @@ vizcrush picks its compute backend at runtime. You usually don't have to think a
 
 ## The two backends
 
-| Backend    | What it is                         | When it's chosen                                               | Relative speed                                                                                                                        |
-| ---------- | ---------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **`wasm`** | WebAssembly build of the Rust core | WebAssembly is available (essentially everywhere modern)       | Engine- and version-dependent: ~1.1× faster in Chromium 149+ (was ~4× through 148); comparable to slower in Firefox/WebKit (ADR 0003) |
-| **`js`**   | Pure JavaScript core               | WASM unavailable (very old browsers / restricted environments) | Comparable — often faster in Firefox/Safari, and no cold-start module load                                                            |
+| Backend    | What it is                         | When it's chosen                                                                         | Relative speed                                                                                                                        |
+| ---------- | ---------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **`wasm`** | WebAssembly build of the Rust core | Above-threshold automatic calls or explicit WASM requests, when the package module loads | Engine- and version-dependent: ~1.1× faster in Chromium 149+ (was ~4× through 148); comparable to slower in Firefox/WebKit (ADR 0003) |
+| **`js`**   | Pure JavaScript core               | Small automatic calls, explicit JS requests, or unavailable package WASM                 | Comparable — often faster in Firefox/Safari, and no cold-start module load                                                            |
 
-A single WASM binary is built for every crate, so there is no separate scalar-WASM or `wasm-simd` path. (The build passes `+simd128`, but the output is byte-identical to a scalar build, so SIMD contributes no speedup today — see ADR 0002.) The selection is feature detection alone — there's no benchmarking. `webgpu` is not a selectable default backend. One operation — `bin2d` — has an opt-in WebGPU compute path (below); the other `.wgsl` files in `src/shaders/` remain unwired drafts.
+A single WASM binary is built for every crate, so there is no separate scalar-WASM or `wasm-simd` path. The build passes `+simd128`, but that alone does not mean an algorithm's hot loop uses SIMD. ADR 0002 found no measured SIMD speedup: its LTTB test binary was byte-identical to the scalar build, while its aggregate test binary differed without improving the measured operation. The automatic selection policy uses input size and WASM availability; it does not benchmark the current engine. `webgpu` is not a selectable default backend. One operation — `bin2d` — has an opt-in WebGPU compute path (below); the other `.wgsl` files in `src/shaders/` remain unwired drafts.
 
 ## Opt-in WebGPU for bin2d
 
@@ -65,6 +65,20 @@ const result = await bin2d(x, y, { xBins: 256, yBins: 256 }, { backend: "js" });
 ```
 
 Valid values: `"auto"` (default — run the JS core below a small size threshold, otherwise WASM), `"wasm"` (force WASM, falling back to JS only if the module is genuinely absent), `"js"` (force the pure-JS core).
+
+For completed-call diagnostics, use the kernel's `withBackend()` method. It returns the requested mode, the actual backend, and a stable reason:
+
+```typescript
+const execution = await downsampleKernels.lttb.withBackend(x, y, 2_000, {
+  backend: "wasm",
+});
+
+console.log(execution.requestedBackend); // "wasm"
+console.log(execution.backend); // "wasm" or "js"
+console.log(execution.reason); // "explicit-wasm" or "wasm-unavailable"
+```
+
+The complete reason vocabulary is `explicit-js`, `explicit-wasm`, `auto-size-threshold`, `auto-wasm`, and `wasm-unavailable`. These values describe a completed kernel call. `init()` and `detectCapabilities()` describe runtime capability and do not prove that a particular operation ran in WASM.
 
 ## Typed arrays at the WASM boundary
 

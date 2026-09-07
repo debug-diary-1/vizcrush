@@ -1,6 +1,14 @@
 export { detectCapabilities, selectBackend } from "./backend.js";
 export { defineKernel, createWasmLoader, DEFAULT_AUTO_THRESHOLD } from "./kernel.js";
-export type { Kernel, KernelSpec, KernelBackend, KernelCallOptions, WasmLoader } from "./kernel.js";
+export type {
+  Kernel,
+  KernelSpec,
+  KernelBackend,
+  KernelBackendReason,
+  KernelCallOptions,
+  KernelExecution,
+  WasmLoader,
+} from "./kernel.js";
 export type {
   Backend,
   Capabilities,
@@ -17,8 +25,9 @@ import { detectCapabilities, selectBackend } from "./backend.js";
 import type { VizcrushContext } from "./types.js";
 
 /**
- * Initialize vizcrush. Probes capabilities and returns a context whose
- * `backend` reports the path that will actually run.
+ * Initialize vizcrush. Probes capabilities and returns the preferred backend.
+ * Per-call thresholds, overrides, and module loading still determine which
+ * path executes; use a kernel's `withBackend()` for completed-call diagnostics.
  *
  * ```ts
  * const gpu = await init();
