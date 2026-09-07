@@ -17,7 +17,7 @@ Browse the [live gallery](https://debug-diary-1.github.io/vizcrush/examples/) or
 | [`streaming-dashboard`](./streaming-dashboard/)               | How to combine rolling statistics with LTTB in a live view           |
 | [`react-echarts-dashboard`](./react-echarts-dashboard/)       | How to use vizcrush React hooks with an ECharts renderer             |
 | [`worker-pipeline`](./worker-pipeline/)                       | How to transfer typed arrays through a Web Worker                    |
-| [`viewport-session`](./viewport-session/)                     | How to keep bounded viewport history in one persistent worker        |
+| [`viewport-session`](./viewport-session/)                     | Primary path for a measured, bounded live time-series viewport       |
 | [`deckgl-density-lod`](./deckgl-density-lod/)                 | How to aggregate density before constructing deck.gl render objects  |
 | [`observable-plot-timeseries`](./observable-plot-timeseries/) | How to bound SVG marks before Observable Plot rendering              |
 | [`arrow-data-pipeline`](./arrow-data-pipeline/)               | How to process numeric columns decoded from Arrow IPC                |

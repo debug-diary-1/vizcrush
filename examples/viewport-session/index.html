@@ -49,6 +49,24 @@
       </section>
       <canvas id="chart" height="480" aria-label="Downsampled time-series viewport"></canvas>
       <p id="status" class="note">Generating a deterministic million-point history…</p>
+      <section class="scenario" aria-labelledby="scenario-heading">
+        <div>
+          <p class="eyebrow">Local evidence</p>
+          <h2 id="scenario-heading">Measure the complete path</h2>
+          <p class="note">
+            Runs seeded JS and WASM views through this worker and Canvas renderer, including a
+            navigation burst, real Canvas resizes, and streaming after retention is full. Absolute
+            timing is descriptive for this browser and device, never a portable gate.
+          </p>
+        </div>
+        <div class="controls">
+          <button id="run-scenario" type="button">Run measured scenario</button>
+          <button id="export-results" type="button" disabled>Download raw JSON</button>
+        </div>
+        <p id="scenario-status" class="note" aria-live="polite">
+          Run the measured scenario to create a local export.
+        </p>
+      </section>
     </main>
     <script type="module" src="./src/main.ts"></script>
   </body>

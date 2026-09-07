@@ -50,6 +50,7 @@ export function installTimeSeriesWorkerHost(
       return;
     }
     busy = true;
+    const processingStarted = performance.now();
     try {
       let value: TimeSeriesSessionState | ViewportResult | undefined;
       let transfer: Transferable[] | undefined;
@@ -74,7 +75,16 @@ export function installTimeSeriesWorkerHost(
       } else {
         throw new RangeError(`Unknown worker operation: ${operation}`);
       }
-      scope.postMessage({ type: "vizcrush:response", requestId, ok: true, value }, transfer);
+      scope.postMessage(
+        {
+          type: "vizcrush:response",
+          requestId,
+          ok: true,
+          value,
+          workerProcessingMs: performance.now() - processingStarted,
+        },
+        transfer,
+      );
     } catch (error) {
       scope.postMessage(errorResponse(requestId, error));
     } finally {

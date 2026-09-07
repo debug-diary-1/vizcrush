@@ -6,7 +6,7 @@ Use vizcrush as the compute stage between data ingestion and rendering. The prod
 typed arrays → reduce/index with vizcrush → adapt the bounded result → render
 ```
 
-Start with [`financial-timeseries`](https://debug-diary-1.github.io/vizcrush/examples/financial-timeseries/) for the full million-point flow, then choose the renderer adapter below.
+For a bounded live series, start with the [streaming viewport adoption guide](streaming-viewport.md) and its [million-point worker example](https://debug-diary-1.github.io/vizcrush/examples/viewport-session/). For a static primitive-to-renderer flow, use [`financial-timeseries`](https://debug-diary-1.github.io/vizcrush/examples/financial-timeseries/), then choose the renderer adapter below.
 
 ## 1. Bound work to visible pixels
 

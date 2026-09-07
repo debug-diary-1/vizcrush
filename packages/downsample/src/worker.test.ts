@@ -63,7 +63,7 @@ class ControlledWorker implements TimeSeriesWorkerTransport {
   succeed(index: number, value: unknown): void {
     const requestId = this.sent[index].message.requestId;
     this.onmessage?.({
-      data: { type: "vizcrush:response", requestId, ok: true, value },
+      data: { type: "vizcrush:response", requestId, ok: true, value, workerProcessingMs: 0.25 },
     } as MessageEvent<unknown>);
   }
 }
@@ -91,6 +91,7 @@ describe("TimeSeriesWorkerClient and host", () => {
     const second = await client.view({ xMin: 2, xMax: 3, widthCssPixels: 10 });
 
     expect(loaded).toMatchObject({ requestId: 1, value: { sourceRevision: 1 } });
+    expect(loaded.workerProcessingMs).toBeGreaterThanOrEqual(0);
     expect(Array.from(first.value.x)).toEqual([1, 2, 3]);
     expect(Array.from(second.value.y)).toEqual([10, 20, 30]);
     expect([first.requestId, second.requestId]).toEqual([2, 3]);
@@ -298,6 +299,22 @@ describe("TimeSeriesWorkerClient and host", () => {
       code: "operation-error",
       requestId: 1,
     });
+  });
+
+  test("keeps host validation atomic after an accepted append transfer", async () => {
+    const { client } = loadedWorker();
+    const x = new Float64Array([2, 1]);
+    const y = new Float64Array([20, 10]);
+    const append = client.append(x, y, { transfer: true });
+    expect(x.byteLength).toBe(0);
+    expect(y.byteLength).toBe(0);
+
+    await expect(append).rejects.toMatchObject({
+      name: TimeSeriesWorkerError.name,
+      code: "operation-error",
+      requestId: 1,
+    });
+    await expect(client.state()).resolves.toMatchObject({ value: { sourceRevision: 0 } });
   });
 
   test("rejects and terminates on a malformed response instead of hanging", async () => {
