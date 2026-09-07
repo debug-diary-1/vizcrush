@@ -15,11 +15,11 @@
         reduced arrays and diagnostics return to this page.
       </p>
       <div class="controls" aria-label="Viewport controls">
-        <button id="pan-left" type="button">Pan left</button>
-        <button id="pan-right" type="button">Pan right</button>
-        <button id="zoom-in" type="button">Zoom in</button>
-        <button id="zoom-out" type="button">Zoom out</button>
-        <button id="reset" type="button">Reset view</button>
+        <button id="pan-left" type="button" aria-keyshortcuts="ArrowLeft">Pan left</button>
+        <button id="pan-right" type="button" aria-keyshortcuts="ArrowRight">Pan right</button>
+        <button id="zoom-in" type="button" aria-keyshortcuts="+">Zoom in</button>
+        <button id="zoom-out" type="button" aria-keyshortcuts="-">Zoom out</button>
+        <button id="reset" type="button" aria-keyshortcuts="0">Reset view</button>
         <label>
           Backend
           <select id="backend">
@@ -29,6 +29,7 @@
           </select>
         </label>
       </div>
+      <p class="note">Keyboard: ←/→ pan, +/- zoom, 0 reset.</p>
       <section class="metrics" aria-live="polite">
         <article><span>Retained</span><strong id="retained">—</strong></article>
         <article><span>Visible source</span><strong id="visible">—</strong></article>

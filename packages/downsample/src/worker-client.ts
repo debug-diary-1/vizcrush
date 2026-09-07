@@ -14,6 +14,11 @@ export interface WorkerOperationResult<T> {
   value: T;
 }
 
+export interface WorkerViewportResult extends WorkerOperationResult<ViewportResult> {
+  viewportId: number;
+  generation: number;
+}
+
 export interface WorkerLoadOptions {
   /**
    * Detach and transfer both input buffers. Each typed array must cover its
@@ -40,7 +45,16 @@ type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
 
 interface PendingRequest {
   requestId: number;
+  operation: string;
   resolve(value: WorkerOperationResult<unknown>): void;
+  reject(reason: unknown): void;
+}
+
+interface ScheduledViewport {
+  viewportId: number;
+  request: ViewportRequest;
+  options: KernelCallOptions;
+  resolve(value: WorkerViewportResult): void;
   reject(reason: unknown): void;
 }
 
@@ -60,6 +74,19 @@ export class TimeSeriesWorkerDisposedError extends Error {
     super("The time-series worker has been disposed");
     this.name = "TimeSeriesWorkerDisposedError";
     this.requestId = requestId;
+  }
+}
+
+export class TimeSeriesWorkerSupersededError extends Error {
+  readonly viewportId: number;
+  readonly supersededBy: number;
+
+  /** Create the explicit settlement for a viewport replaced by a newer one. */
+  constructor(viewportId: number, supersededBy: number) {
+    super(`Viewport ${viewportId} was superseded by viewport ${supersededBy}`);
+    this.name = "TimeSeriesWorkerSupersededError";
+    this.viewportId = viewportId;
+    this.supersededBy = supersededBy;
   }
 }
 
@@ -121,7 +148,11 @@ function assertTransferableInput(x: Float64Array, y: Float64Array): Transferable
 export class TimeSeriesWorkerClient {
   readonly #worker: TimeSeriesWorkerTransport;
   #nextRequestId = 1;
+  #nextViewportId = 1;
+  #generation = 1;
   #pending: PendingRequest | null = null;
+  #activeView: ScheduledViewport | null = null;
+  #queuedView: ScheduledViewport | null = null;
   #disposed = false;
   #disposing = false;
   #disposePromise: Promise<void> | null = null;
@@ -159,21 +190,49 @@ export class TimeSeriesWorkerClient {
         throw new TypeError("x and y must be Float64Array instances");
       }
       const transfer = options.transfer ? assertTransferableInput(x, y) : undefined;
-      return this.#sendRequest("load", { x, y }, transfer);
+      return this.#sendRequest<TimeSeriesSessionState>("load", { x, y }, transfer).then(
+        (result) => {
+          this.#generation += 1;
+          return result;
+        },
+      );
     } catch (error) {
       return Promise.reject(error);
     }
   }
 
   /**
-   * Request one bounded viewport. Rejects while any operation is in flight and
-   * returns the request identity with caller-owned result buffers.
+   * Request one bounded viewport. One request may run and one latest request
+   * may wait; replacing the waiting viewport rejects it explicitly. Results
+   * carry transport, viewport, and session-generation identities.
    */
-  view(
-    request: ViewportRequest,
-    options: KernelCallOptions = {},
-  ): Promise<WorkerOperationResult<ViewportResult>> {
-    return this.#request("view", { request, options });
+  view(request: ViewportRequest, options: KernelCallOptions = {}): Promise<WorkerViewportResult> {
+    if (this.#disposed || this.#disposing) {
+      return Promise.reject(new TimeSeriesWorkerDisposedError());
+    }
+    if (this.#pending && this.#pending.operation !== "view") {
+      return Promise.reject(new TimeSeriesWorkerBusyError());
+    }
+    const viewportId = this.#nextViewportId;
+    this.#nextViewportId += 1;
+    const scheduled = {
+      viewportId,
+      request: { ...request },
+      options: { ...options },
+    } as ScheduledViewport;
+    const promise = new Promise<WorkerViewportResult>((resolve, reject) => {
+      scheduled.resolve = resolve;
+      scheduled.reject = reject;
+    });
+    if (!this.#activeView) {
+      this.#dispatchViewport(scheduled);
+    } else {
+      this.#queuedView?.reject(
+        new TimeSeriesWorkerSupersededError(this.#queuedView.viewportId, viewportId),
+      );
+      this.#queuedView = scheduled;
+    }
+    return promise;
   }
 
   /**
@@ -186,10 +245,14 @@ export class TimeSeriesWorkerClient {
       this.#disposePromise = Promise.resolve();
       return this.#disposePromise;
     }
-    if (this.#pending) {
+    if (this.#pending || this.#activeView) {
       this.#disposed = true;
-      this.#pending.reject(new TimeSeriesWorkerDisposedError(this.#pending.requestId));
+      this.#pending?.reject(new TimeSeriesWorkerDisposedError(this.#pending.requestId));
+      this.#activeView?.reject(new TimeSeriesWorkerDisposedError(this.#pending?.requestId ?? null));
+      this.#queuedView?.reject(new TimeSeriesWorkerDisposedError());
       this.#pending = null;
+      this.#activeView = null;
+      this.#queuedView = null;
       this.#disposePromise = Promise.resolve();
       this.#terminate();
       return this.#disposePromise;
@@ -229,6 +292,7 @@ export class TimeSeriesWorkerClient {
     const promise = new Promise<WorkerOperationResult<T>>((resolve, reject) => {
       this.#pending = {
         requestId,
+        operation,
         resolve: resolve as (value: WorkerOperationResult<unknown>) => void,
         reject,
       };
@@ -254,7 +318,37 @@ export class TimeSeriesWorkerClient {
 
   #assertAvailable(): void {
     if (this.#disposed || this.#disposing) throw new TimeSeriesWorkerDisposedError();
-    if (this.#pending) throw new TimeSeriesWorkerBusyError();
+    if (this.#pending || this.#activeView) throw new TimeSeriesWorkerBusyError();
+  }
+
+  #dispatchViewport(scheduled: ScheduledViewport): void {
+    this.#activeView = scheduled;
+    void this.#sendRequest<ViewportResult>("view", {
+      request: scheduled.request,
+      options: scheduled.options,
+    })
+      .then((result) => {
+        if (this.#queuedView) {
+          scheduled.reject(
+            new TimeSeriesWorkerSupersededError(scheduled.viewportId, this.#queuedView.viewportId),
+          );
+        } else {
+          scheduled.resolve({
+            ...result,
+            viewportId: scheduled.viewportId,
+            generation: this.#generation,
+          });
+        }
+      })
+      .catch((error) => scheduled.reject(error))
+      .finally(() => {
+        if (this.#activeView !== scheduled) return;
+        this.#activeView = null;
+        const next = this.#queuedView;
+        this.#queuedView = null;
+        if (next && !this.#disposed) this.#dispatchViewport(next);
+        else if (next) next.reject(new TimeSeriesWorkerDisposedError());
+      });
   }
 
   #handleMessage(event: MessageEvent<unknown>): void {
@@ -292,7 +386,11 @@ export class TimeSeriesWorkerClient {
             this.#pending?.requestId ?? null,
           );
     this.#pending?.reject(failure);
+    this.#activeView?.reject(failure);
+    this.#queuedView?.reject(failure);
     this.#pending = null;
+    this.#activeView = null;
+    this.#queuedView = null;
     this.#terminate();
   }
 
