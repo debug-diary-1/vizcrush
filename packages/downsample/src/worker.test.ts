@@ -5,6 +5,7 @@ import {
   TimeSeriesWorkerClient,
   TimeSeriesWorkerDisposedError,
   TimeSeriesWorkerError,
+  TimeSeriesWorkerSupersededError,
   type TimeSeriesWorkerTransport,
 } from "./worker-client.js";
 import { installTimeSeriesWorkerHost, type TimeSeriesWorkerHostScope } from "./worker-host.js";
@@ -90,6 +91,7 @@ describe("TimeSeriesWorkerClient and host", () => {
     expect(Array.from(first.value.x)).toEqual([1, 2, 3]);
     expect(Array.from(second.value.y)).toEqual([10, 20, 30]);
     expect([first.requestId, second.requestId]).toEqual([2, 3]);
+    expect([first.generation, second.generation]).toEqual([2, 2]);
     expect(worker.terminateCalls).toBe(0);
   });
 
@@ -216,5 +218,82 @@ describe("TimeSeriesWorkerClient and host", () => {
       requestId: 1,
     });
     expect(worker.terminateCalls).toBe(1);
+  });
+
+  test("keeps one active and one replaceable latest viewport", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const first = client.view({ xMin: 0, xMax: 10, widthCssPixels: 10 });
+    const replaced = client.view({ xMin: 10, xMax: 20, widthCssPixels: 10 });
+    const latest = client.view({ xMin: 20, xMax: 30, widthCssPixels: 10 });
+
+    await expect(replaced).rejects.toMatchObject({
+      name: TimeSeriesWorkerSupersededError.name,
+      viewportId: 2,
+      supersededBy: 3,
+    });
+    expect(worker.sent).toHaveLength(1);
+    worker.succeed(0, { x: new Float64Array([0]), y: new Float64Array([0]) });
+    await expect(first).rejects.toMatchObject({ viewportId: 1, supersededBy: 3 });
+    await Promise.resolve();
+    expect(worker.sent).toHaveLength(2);
+    worker.succeed(1, { x: new Float64Array([30]), y: new Float64Array([3]) });
+
+    await expect(latest).resolves.toMatchObject({
+      requestId: 2,
+      viewportId: 3,
+      generation: 1,
+      value: { x: new Float64Array([30]) },
+    });
+  });
+
+  test("ignores delayed old responses and applies a reset viewport", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const old = client.view({ xMin: 40, xMax: 50, widthCssPixels: 10 });
+    const reset = client.view({ xMin: 0, xMax: 100, widthCssPixels: 10 });
+    worker.succeed(0, { x: new Float64Array([40]), y: new Float64Array([4]) });
+    await expect(old).rejects.toBeInstanceOf(TimeSeriesWorkerSupersededError);
+    await Promise.resolve();
+
+    worker.succeed(0, { x: new Float64Array([999]), y: new Float64Array([999]) });
+    worker.succeed(1, { x: new Float64Array([0, 100]), y: new Float64Array([0, 10]) });
+    await expect(reset).resolves.toMatchObject({
+      viewportId: 2,
+      value: { x: new Float64Array([0, 100]) },
+    });
+  });
+
+  test("disposal settles active and queued viewport requests", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const active = client.view({ xMin: 0, xMax: 10, widthCssPixels: 10 });
+    const queued = client.view({ xMin: 10, xMax: 20, widthCssPixels: 10 });
+    await client.dispose();
+
+    await expect(active).rejects.toBeInstanceOf(TimeSeriesWorkerDisposedError);
+    await expect(queued).rejects.toBeInstanceOf(TimeSeriesWorkerDisposedError);
+    expect(worker.terminateCalls).toBe(1);
+  });
+
+  test("snapshots queued viewport inputs at call time", async () => {
+    const worker = new ControlledWorker();
+    const client = new TimeSeriesWorkerClient(worker);
+    const active = client.view({ xMin: 0, xMax: 10, widthCssPixels: 10 });
+    const request = { xMin: 20, xMax: 30, widthCssPixels: 50 };
+    const options: { backend: "js" | "wasm" } = { backend: "js" };
+    const queued = client.view(request, options);
+    request.xMin = 999;
+    options.backend = "wasm";
+
+    worker.succeed(0, { x: new Float64Array([0]), y: new Float64Array([0]) });
+    await expect(active).rejects.toBeInstanceOf(TimeSeriesWorkerSupersededError);
+    await Promise.resolve();
+    expect(worker.sent[1].message).toMatchObject({
+      request: { xMin: 20, xMax: 30, widthCssPixels: 50 },
+      options: { backend: "js" },
+    });
+    worker.succeed(1, { x: new Float64Array([20]), y: new Float64Array([2]) });
+    await queued;
   });
 });

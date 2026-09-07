@@ -2,6 +2,7 @@ import type { KernelBackend } from "@vizcrush/core";
 import {
   TimeSeriesWorkerBusyError,
   TimeSeriesWorkerClient,
+  TimeSeriesWorkerSupersededError,
 } from "@vizcrush/downsample/worker-client";
 import "./styles.css";
 
@@ -99,6 +100,7 @@ function updateDomain(nextMin: number, nextMax: number): void {
 }
 
 function showWorkerError(error: unknown): void {
+  if (error instanceof TimeSeriesWorkerSupersededError) return;
   status.textContent =
     error instanceof TimeSeriesWorkerBusyError
       ? "Worker busy: this slice rejects overlapping navigation explicitly."
@@ -127,6 +129,24 @@ document.querySelector("#reset")!.addEventListener("click", () => {
   updateDomain(0, POINT_COUNT - 1);
 });
 backend.addEventListener("change", () => void render().catch(showWorkerError));
+document.addEventListener("keydown", (event) => {
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
+  const control =
+    event.key === "ArrowLeft"
+      ? "#pan-left"
+      : event.key === "ArrowRight"
+        ? "#pan-right"
+        : event.key === "+" || event.key === "="
+          ? "#zoom-in"
+          : event.key === "-"
+            ? "#zoom-out"
+            : event.key === "0"
+              ? "#reset"
+              : null;
+  if (!control) return;
+  event.preventDefault();
+  document.querySelector<HTMLButtonElement>(control)!.click();
+});
 
 async function initialize(): Promise<void> {
   status.textContent = "Generating and retaining 1,000,000 points in one persistent worker…";

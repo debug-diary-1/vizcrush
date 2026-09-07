@@ -111,10 +111,25 @@ export async function runPackedBrowserSmoke({ browser }) {
 
         try {
           const state = await client.state();
+          const obsolete = client.view({ xMin: 40_000, xMax: 60_000, widthCssPixels: 100 });
+          const replaced = client.view({ xMin: 20_000, xMax: 30_000, widthCssPixels: 100 });
+          const reset = client.view({ xMin: 0, xMax: 99_999, widthCssPixels: 100 });
+          const [obsoleteOutcome, replacedOutcome, resetOutcome] = await Promise.allSettled([
+            obsolete,
+            replaced,
+            reset,
+          ]);
+          if (resetOutcome.status !== "fulfilled") throw resetOutcome.reason;
           const wasm = await measure("wasm");
           const js = await measure("js");
           globalThis.__vizcrushResult = {
             retainedPoints: state.value.retainedPoints,
+            scheduling: {
+              obsolete: obsoleteOutcome.reason?.name,
+              replaced: replacedOutcome.reason?.name,
+              resetViewportId: resetOutcome.value.viewportId,
+              resetOutputLength: resetOutcome.value.value.x.length,
+            },
             wasm,
             js,
             parity:
@@ -211,6 +226,7 @@ export async function runPackedBrowserSmoke({ browser }) {
       parity: result.parity,
       retainedPoints: result.retainedPoints,
       requestIds: { wasm: result.wasm.requestId, js: result.js.requestId },
+      scheduling: result.scheduling,
       diagnostics,
     };
 
