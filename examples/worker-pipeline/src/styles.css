@@ -31,6 +31,22 @@ h1 {
   color: #9db8b2;
   line-height: 1.6;
 }
+main > label {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  margin-right: 12px;
+  color: #9db8b2;
+  font-weight: 700;
+}
+select {
+  border: 1px solid #2b574e;
+  border-radius: 7px;
+  padding: 10px 12px;
+  background: #0c1e1a;
+  color: #eef7f5;
+  font: inherit;
+}
 button {
   margin: 22px 0;
   border: 0;

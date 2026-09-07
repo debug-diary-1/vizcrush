@@ -15,7 +15,7 @@ import { init, detectCapabilities, selectBackend } from "@vizcrush/core";
 ```typescript
 const ctx = await init();
 // {
-//   backend: "wasm" | "js",   // the path that actually runs
+//   backend: "wasm" | "js",   // preferred from runtime capability
 //   capabilities: {
 //     webgpu: boolean,        // raw probes, for reporting only
 //     wasmSimd: boolean,
@@ -25,7 +25,9 @@ const ctx = await init();
 // }
 ```
 
-`backend` is `"wasm"` when WebAssembly is available and `"js"` otherwise. The `capabilities` object still reports the raw WebGPU/SIMD/SharedArrayBuffer probes, but a single SIMD-enabled WASM binary is always built, so those probes do not name distinct selectable backends. (The opt-in WebGPU path on `@vizcrush/bin`’s bin2d is requested per call, not selected here — ADR 0004.)
+`backend` is `"wasm"` when WebAssembly is available and `"js"` otherwise. It is a capability-based preference, not proof that a particular operation used that path: automatic size thresholds, per-call overrides, and package WASM loading still participate in dispatch. Use a kernel's `withBackend()` result when you need the requested mode, actual backend, and decision reason for a completed call.
+
+The `capabilities` object reports the raw WebGPU/SIMD/SharedArrayBuffer probes, but those probes do not name distinct selectable default backends. The opt-in WebGPU path on `@vizcrush/bin`’s bin2d is requested per call, not selected here (ADR 0004).
 
 ## `detectCapabilities()`
 
@@ -38,7 +40,7 @@ if (!caps.wasm) {
 }
 ```
 
-Note that `webgpu`, `wasmSimd`, and `sharedArrayBuffer` are informational probes only — they never change which backend runs. In particular, the shipped WASM binary is identical whether or not the engine supports SIMD (see ADR 0002).
+Note that `webgpu`, `wasmSimd`, and `sharedArrayBuffer` are informational probes only — they do not change the default capability preference. Passing `+simd128` does not prove that a hot loop was vectorized: ADR 0002 found byte-identical SIMD/scalar LTTB binaries, differing aggregate binaries, and no measured speedup for either tested operation.
 
 Detection is cheap and runs the same checks as `init()` internally. Use it if you want to gate UI features on backend availability before committing to load any algorithms.
 
@@ -79,7 +81,7 @@ Each describes a typed-array result shape (for example, `DownsampleResult = { x:
 
 - **In a top-level module** for vanilla apps: `await init()` once at startup, then call algorithm packages without worrying about backend.
 - **In a React app**: use the [`useVizcrush` hook](../user-guide/react.md) — it caches the context across renders.
-- **In a Node script**: same as vanilla apps — Node supports WebAssembly, so the backend will be `wasm`.
+- **In a Node script**: same as vanilla apps — Node supports WebAssembly, so `init()` reports a `wasm` preference; individual calls can still select JS.
 
 ## See also
 
