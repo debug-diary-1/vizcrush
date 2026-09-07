@@ -58,20 +58,33 @@ const result = lttbSync(x, y, 1_000);
 
 `lttbSync()` always runs the pure-JavaScript core. It is useful when an asynchronous call does not fit the surrounding control flow.
 
-## Viewport pattern
+## Bounded viewport session
 
-Filter to the visible x range before downsampling to the display width:
+Use the `session` subpath when one owner should validate paired history, retain a fixed capacity, select an inclusive viewport, and reduce to a physical-pixel budget:
 
 ```typescript
-import { filterRange } from "@vizcrush/transform";
-import { lttb } from "@vizcrush/downsample";
+import { TimeSeriesSession } from "@vizcrush/downsample/session";
 
-async function onZoom(visibleMin: number, visibleMax: number) {
-  const sliced = filterRange(x, y, visibleMin, visibleMax);
-  const visible = await lttb(sliced.x, sliced.y, canvas.width);
-  renderLine(visible.x, visible.y);
-}
+const session = new TimeSeriesSession({
+  capacity: 1_000_000,
+  maxOutputPoints: 20_000,
+});
+session.load(x, y);
+
+const visible = await session.view({
+  xMin: visibleMin,
+  xMax: visibleMax,
+  widthCssPixels: canvas.clientWidth,
+  devicePixelRatio: window.devicePixelRatio,
+});
+renderLine(visible.x, visible.y);
 ```
+
+`load()` accepts equal-length `Float64Array` inputs whose coordinates are finite and whose x values are nondecreasing. Duplicate timestamps preserve input order. Validation covers the complete input before history changes; oversized valid inputs retain their newest `capacity` points. Inputs are copied, and every viewport result owns independent buffers.
+
+The viewport domain is inclusive. The session includes an immediate source point outside each edge when available so a line can cross the viewport boundary, and those neighbors count against the total output budget. Zero CSS width returns no points. Positive sub-pixel targets return at most one point, while larger targets use LTTB only when reduction is needed. The result reports the source revision, selected and visible counts, edge-neighbor count, point budget, and completed-call backend diagnostics.
+
+Session work runs in its caller's context. Invoke it from a worker when preprocessing must stay off the main thread; the session itself does not silently create one.
 
 ## Performance
 

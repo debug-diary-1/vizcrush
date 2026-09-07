@@ -1,8 +1,16 @@
 # Examples Gallery
 
-vizcrush ships with 42 runnable example apps under `examples/`. Gallery cards distinguish examples that import vizcrush from adjacent graphics demos that teach browser rendering techniques. For a guided route through the collection, start with the [examples README](https://github.com/debug-diary-1/vizcrush/tree/main/examples).
+vizcrush ships with 43 runnable example apps under `examples/`. Gallery cards distinguish examples that import vizcrush from adjacent graphics demos that teach browser rendering techniques. For a guided route through the collection, start with the [examples README](https://github.com/debug-diary-1/vizcrush/tree/main/examples).
 
 ## Time-Series
+
+### `viewport-session`
+
+Bounded million-point history with inclusive viewport selection, physical-pixel output budgets, pan, zoom, resize, and completed-call backend diagnostics.
+
+**vizcrush module:** `TimeSeriesSession`
+
+**Folder:** `examples/viewport-session/`
 
 ### `financial-timeseries`
 
