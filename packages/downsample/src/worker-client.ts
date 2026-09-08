@@ -12,6 +12,8 @@ export interface TimeSeriesWorkerTransport {
 export interface WorkerOperationResult<T> {
   requestId: number;
   value: T;
+  /** Time spent handling this operation inside the worker, excluding message transit. */
+  workerProcessingMs: number;
 }
 
 export interface WorkerViewportResult extends WorkerOperationResult<ViewportResult> {
@@ -34,6 +36,7 @@ interface WorkerSuccessResponse {
   requestId: number;
   ok: true;
   value: unknown;
+  workerProcessingMs: number;
 }
 
 interface WorkerErrorResponse {
@@ -125,7 +128,12 @@ function isWorkerResponse(value: unknown): value is WorkerResponse {
   if (response.type !== "vizcrush:response" || !Number.isSafeInteger(response.requestId)) {
     return false;
   }
-  if (response.ok === true) return "value" in response;
+  if (response.ok === true) {
+    return (
+      "value" in response &&
+      typeof (response as { workerProcessingMs?: unknown }).workerProcessingMs === "number"
+    );
+  }
   if (response.ok !== false || response.error === null || typeof response.error !== "object") {
     return false;
   }
@@ -462,7 +470,11 @@ export class TimeSeriesWorkerClient {
     if (event.data.requestId !== pending.requestId) return;
     this.#pending = null;
     if (event.data.ok) {
-      pending.resolve({ requestId: event.data.requestId, value: event.data.value });
+      pending.resolve({
+        requestId: event.data.requestId,
+        value: event.data.value,
+        workerProcessingMs: event.data.workerProcessingMs,
+      });
     } else {
       pending.reject(
         new TimeSeriesWorkerError(

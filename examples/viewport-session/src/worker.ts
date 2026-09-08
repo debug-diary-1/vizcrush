@@ -1,5 +1,8 @@
 import { TimeSeriesSession } from "@vizcrush/downsample/session";
-import { installTimeSeriesWorkerHost } from "@vizcrush/downsample/worker-host";
+import {
+  installTimeSeriesWorkerHost,
+  type TimeSeriesWorkerHostScope,
+} from "@vizcrush/downsample/worker-host";
 
 const POINT_COUNT = 1_000_000;
 const x = new Float64Array(POINT_COUNT);
@@ -19,4 +22,4 @@ const session = new TimeSeriesSession({
   pointsPerPixel: 1,
 });
 session.load(x, y);
-installTimeSeriesWorkerHost(self, session);
+installTimeSeriesWorkerHost(self as unknown as TimeSeriesWorkerHostScope, session);

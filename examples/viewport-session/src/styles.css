@@ -25,6 +25,10 @@ h1 {
   font-size: clamp(2.2rem, 6vw, 4.8rem);
   letter-spacing: -0.05em;
 }
+h2 {
+  margin: 4px 0;
+  font-size: 1.5rem;
+}
 .lede,
 .note {
   max-width: 800px;
@@ -98,6 +102,20 @@ canvas {
   border: 1px solid #1d3d36;
   border-radius: 12px;
   background: #071412;
+}
+.scenario {
+  margin-top: 32px;
+  padding: 24px;
+  border: 1px solid #1d3d36;
+  border-radius: 12px;
+  background: #091914;
+}
+.scenario .controls {
+  margin: 16px 0;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 @media (max-width: 640px) {
   label {
