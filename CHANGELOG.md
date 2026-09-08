@@ -1,5 +1,15 @@
 # Changelog
 
+## @vizcrush/downsample v1.1.0 (2026-09-07)
+
+### Bounded streaming viewport sessions
+
+- Adds `@vizcrush/downsample/session`, a renderer-independent time-series session with validated paired `Float64Array` input, fixed-capacity circular retention, inclusive viewport selection, continuity neighbors, and pixel-bounded LTTB output.
+- Adds `@vizcrush/downsample/worker-client` and `@vizcrush/downsample/worker-host` for persistent browser-worker ownership, bounded latest-request scheduling, source/request identity, explicit lifecycle failures, and separate worker-processing timing.
+- Adds acknowledged streaming ingestion with safe-copy and explicit-transfer modes, one-unacknowledged-batch backpressure, atomic host validation, and named typed-array buffer accounting.
+- Existing primitive signatures and global backend-selection behavior are unchanged.
+- The million-point Canvas example and adoption guide document ownership, follow-latest behavior, cleanup, actual JS/WASM execution, reproducible local measurement/export, and renderer integration. Packaged artifacts and the complete demo flow are verified in Chromium, Firefox, and WebKit.
+
 ## Reliability and adoption hardening (2026-08-29)
 
 ### `@vizcrush/mcp-server` v1.1.0
