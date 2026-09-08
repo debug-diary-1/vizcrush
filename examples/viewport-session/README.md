@@ -10,6 +10,10 @@ The producer permits one unacknowledged append. It waits for acknowledgement bef
 
 The metrics separate retained source bytes, fixed source/scratch/pending/output capacity bounds, and each caller-owned result. These are deterministic typed-array accounting figures, not a bound on total browser heap or a claim of zero allocation.
 
+The measured scenario resets to the same seeded million-point state on every run. It uses the same public worker client, ResizeObserver path, and Canvas renderer as the interactive controls, then runs warm viewport requests, a navigation burst, real Canvas resizes, and steady streaming after retention is full. Forced JS and WASM requests share the same source revision and are compared numerically before timing is summarized. Worker round trip, Canvas renderer work, caller-to-render completion, and observed frame gaps include separate p50/p95 summaries and raw samples.
+
+Choose **Download raw JSON** to save the samples, scenario parameters, generator identifiers, package/browser environment, actual backends, source revisions, parity result, and named buffer accounting locally. No telemetry is sent. The displayed 100 ms p95 target is provisional and device-specific; neither a pass nor a miss is a universal performance claim.
+
 ```bash
 pnpm install
 pnpm --dir examples/viewport-session dev

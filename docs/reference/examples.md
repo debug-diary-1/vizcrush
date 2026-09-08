@@ -6,11 +6,13 @@ vizcrush ships with 43 runnable example apps under `examples/`. Gallery cards di
 
 ### `viewport-session`
 
-Persistent-worker million-point history with inclusive viewport selection, physical-pixel output budgets, pan, zoom, resize, and completed-call backend diagnostics.
+The primary large streaming time-series adoption path: persistent-worker million-point circular history, bounded ingestion and viewport queues, follow/pan/pause/reset controls, completed-call backend diagnostics, and downloadable local JS/WASM scenario evidence.
 
 **vizcrush modules:** `TimeSeriesSession`, `TimeSeriesWorkerClient`
 
 **Folder:** `examples/viewport-session/`
+
+**Guide:** [Streaming viewport adoption](../user-guide/streaming-viewport.md)
 
 ### `financial-timeseries`
 

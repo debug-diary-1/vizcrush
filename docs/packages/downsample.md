@@ -67,6 +67,7 @@ import { TimeSeriesSession } from "@vizcrush/downsample/session";
 
 const session = new TimeSeriesSession({
   capacity: 1_000_000,
+  maxIngestionBatchPoints: 65_536,
   maxOutputPoints: 20_000,
 });
 session.load(x, y);
@@ -99,14 +100,20 @@ renderLine(visible.x, visible.y);
 import { TimeSeriesSession } from "@vizcrush/downsample/session";
 import { installTimeSeriesWorkerHost } from "@vizcrush/downsample/worker-host";
 
-const session = new TimeSeriesSession({ capacity: 1_000_000, maxOutputPoints: 20_000 });
+const session = new TimeSeriesSession({
+  capacity: 1_000_000,
+  maxIngestionBatchPoints: 65_536,
+  maxOutputPoints: 20_000,
+});
 session.load(x, y);
 installTimeSeriesWorkerHost(self, session);
 ```
 
-One client owns one long-lived worker. Each viewport result includes transport, viewport, and session-generation identities. The client bounds navigation to one active request and one replaceable latest request. Replaced callers reject with `TimeSeriesWorkerSupersededError`; a running synchronous kernel is allowed to finish, but its obsolete result is suppressed. Other operations still reject overlap with `TimeSeriesWorkerBusyError`. Startup, message, and runtime errors reject affected work and terminate the worker without falling back to the main thread. `dispose()` is idempotent and prevents later results from reaching the caller.
+One client owns one long-lived worker. Each viewport result includes transport, viewport, and session-generation identities, plus worker processing time separately from caller round trip. The client bounds navigation to one active request and one replaceable latest request. Replaced callers reject with `TimeSeriesWorkerSupersededError`; a running synchronous kernel is allowed to finish, but its obsolete result is suppressed. Startup, message, and runtime errors reject affected work and terminate the worker without falling back to the main thread. `dispose()` is idempotent and prevents later results from reaching the caller.
 
 `client.load(x, y)` uses the structured-clone algorithm, so the caller keeps its input buffers. `client.load(x, y, { transfer: true })` opts into detachment and avoids that transport copy. Transfer mode requires each `Float64Array` to cover its own complete, separate `ArrayBuffer`; shared buffers, subarrays, and aliased layouts reject before either buffer is detached. The session still validates and owns its retained copy. Returned viewport buffers belong to the caller.
+
+`session.append(x, y)` and `client.append(x, y)` retain ordered batches through fixed-capacity circular storage. The client snapshots safe-copy inputs when accepted; `{ transfer: true }` detaches valid dedicated inputs immediately. Only one append may be unacknowledged, and a second append rejects with `TimeSeriesWorkerBusyError` before ownership changes. State reports retained range, source revision, and separate source/scratch/pending/output byte bounds.
 
 ## Performance
 
@@ -116,4 +123,5 @@ Absolute timings vary by browser, hardware, input shape, and cold versus warm ca
 
 - [Quickstart](../user-guide/quickstart.md)
 - [Backends & Capabilities](../user-guide/backends.md)
+- [Streaming viewport adoption](../user-guide/streaming-viewport.md)
 - [Algorithms reference](../reference/algorithms.md#downsampling)

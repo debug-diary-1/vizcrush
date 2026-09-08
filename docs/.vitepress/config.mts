@@ -45,6 +45,7 @@ export default defineConfig({
             { text: "Installation", link: "/user-guide/installation" },
             { text: "Quickstart", link: "/user-guide/quickstart" },
             { text: "Production Adoption", link: "/user-guide/production-adoption" },
+            { text: "Streaming Viewport", link: "/user-guide/streaming-viewport" },
             {
               text: "Backends & Capabilities",
               link: "/user-guide/backends",
