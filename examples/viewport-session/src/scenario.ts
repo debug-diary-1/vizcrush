@@ -1,6 +1,8 @@
 import type { KernelBackend } from "@vizcrush/core";
 import type { TimeSeriesSessionState } from "@vizcrush/downsample/session";
 
+export const DOWNSAMPLE_PACKAGE_VERSION = "1.1.0" as const;
+
 export interface InitializationMeasurement {
   label: "cold";
   workerSetupAndInitialLoadMs: number;
@@ -43,7 +45,7 @@ interface Percentiles {
 export interface ScenarioReport {
   schemaVersion: 1;
   generatedAt: string;
-  package: { name: "@vizcrush/downsample"; version: "1.0.0" };
+  package: { name: "@vizcrush/downsample"; version: typeof DOWNSAMPLE_PACKAGE_VERSION };
   environment: {
     userAgent: string;
     language: string;

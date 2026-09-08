@@ -7,6 +7,7 @@ import {
 } from "@vizcrush/downsample/worker-client";
 import {
   compareOutputs,
+  DOWNSAMPLE_PACKAGE_VERSION,
   downloadScenarioReport,
   startFrameGapRecording,
   summarizeMeasurements,
@@ -410,7 +411,7 @@ async function runMeasuredScenario(): Promise<void> {
     latestScenarioReport = {
       schemaVersion: 1,
       generatedAt: new Date().toISOString(),
-      package: { name: "@vizcrush/downsample", version: "1.0.0" },
+      package: { name: "@vizcrush/downsample", version: DOWNSAMPLE_PACKAGE_VERSION },
       environment: {
         userAgent: navigator.userAgent,
         language: navigator.language,
