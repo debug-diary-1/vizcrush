@@ -6,10 +6,10 @@ Everything you need to build vizcrush locally — Rust crates → WASM → TypeS
 
 | Tool                    | Version                                      | How                                                                                                            |
 | ----------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Node.js                 | 24+                                          | `mise install` (recommended; reads the pin in `mise.toml`) or `nvm install 24`                                 |
-| pnpm                    | 11.25+                                       | `mise install` (pinned in `mise.toml`) or `corepack enable` (uses the `packageManager` pin)                    |
-| Rust toolchain          | 1.94.1, with `wasm32-unknown-unknown` target | `rustup toolchain install 1.94.1 && rustup target add --toolchain 1.94.1 wasm32-unknown-unknown`               |
-| `wasm-bindgen-cli`      | 0.2.115, matching `wasm-bindgen`             | `cargo install wasm-bindgen-cli --version 0.2.115 --locked`                                                    |
+| Node.js                 | 26+                                          | `mise install` (recommended; reads the pin in `mise.toml`) or `nvm install 26`                                 |
+| pnpm                    | 12.3+                                        | `mise install` (pinned in `mise.toml`) or `corepack enable` (uses the `packageManager` pin)                    |
+| Rust toolchain          | 1.98.1, with `wasm32-unknown-unknown` target | `rustup toolchain install 1.98.1 && rustup target add --toolchain 1.98.1 wasm32-unknown-unknown`               |
+| `wasm-bindgen-cli`      | 0.2.128, matching `wasm-bindgen`             | `cargo install wasm-bindgen-cli --version 0.2.128 --locked`                                                    |
 | `wasm-opt` _(optional)_ | latest                                       | `brew install binaryen` or download from [binaryen releases](https://github.com/WebAssembly/binaryen/releases) |
 
 The repo's `mise.toml` pins the exact Node and pnpm versions. With [mise](https://mise.jdx.dev/) activated in your shell, `cd`'ing into the repo selects both automatically; run `mise install` once to fetch them. Volta is unmaintained and its `package.json` pin has been removed.
@@ -158,13 +158,13 @@ CI runs the same `mkdocs build --strict` and deploys to GitHub Pages on push to 
 Run `rustup target add wasm32-unknown-unknown` to install the target. The `+simd128` target feature also requires Rust 1.78+.
 
 ??? note "`wasm-bindgen` version mismatch"
-The CLI must match the `wasm-bindgen` version in `Cargo.lock`. Install the pinned release from its lockfile: `cargo install wasm-bindgen-cli --version 0.2.115 --locked`.
+The CLI must match the `wasm-bindgen` version in `Cargo.lock`. Install the pinned release from its lockfile: `cargo install wasm-bindgen-cli --version 0.2.128 --locked`.
 
 ??? note "`pnpm install` warns about engines"
-`engines.node` requires Node 24. Install Node 24 (`mise install` in the repo root, or `nvm install 24`). The warning is non-fatal but several deps assume Node 24+.
+`engines.node` requires Node 26. Install Node 26 (`mise install` in the repo root, or `nvm install 26`). The warning is non-fatal but several development dependencies assume Node 26+.
 
 ??? note "`Ignored build scripts: esbuild`"
-pnpm sandboxes postinstall scripts by default, and pnpm 11 fails the install when a dependency ships an unreviewed build script. The repo's `pnpm-workspace.yaml` lists the reviewed ones under `allowBuilds` (esbuild is allowed). When a new dependency adds a build script, add it there as `true` or `false`; `pnpm approve-builds` writes that entry for you.
+pnpm sandboxes postinstall scripts by default, and pnpm 12 fails the install when a dependency ships an unreviewed build script. The repo's `pnpm-workspace.yaml` lists the reviewed ones under `allowBuilds` (esbuild is allowed). When a new dependency adds a build script, add it there as `true` or `false`; `pnpm approve-builds` writes that entry for you.
 
 ## See also
 

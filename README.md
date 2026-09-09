@@ -103,7 +103,7 @@ For vulnerabilities, follow the private reporting process in [SECURITY.md](SECUR
 ## Development
 
 ```bash
-# Prerequisites: Rust, Node.js 24+, pnpm 11+
+# Prerequisites: Rust, Node.js 26+, pnpm 12+
 pnpm install
 pnpm build
 pnpm test:all

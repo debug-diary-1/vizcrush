@@ -1,5 +1,12 @@
 # Changelog
 
+## Dependency and toolchain refresh (2026-09-09)
+
+- Updates every direct npm and Rust dependency to its latest stable release, including Vite 8, Vitest 5, TypeScript 7, Zod 4, deck.gl 9.4, Three.js r186, and wasm-bindgen 0.2.128.
+- Moves repository development and CI to Node.js 26, pnpm 12.3.4, and Rust 1.98.1, and refreshes pinned GitHub Actions.
+- Adopts current optimized APIs: Zod's compiled schemas and `z.int()`, Vitest's persistent transform cache, deck.gl's WebGL-only export condition, and Three.js's WebGPU renderer with asynchronous initialization.
+- Pins patched transitive `hono` and `qs` releases used by the MCP SDK; the production dependency audit reports no known vulnerabilities.
+
 ## @vizcrush/downsample v1.1.0 (2026-09-07)
 
 ### Bounded streaming viewport sessions

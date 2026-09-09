@@ -38,7 +38,7 @@ The JavaScript fallback is used if a WASM module cannot load. Use [Backend Lab](
 
 ## Building from source
 
-Contributors need Rust, the `wasm32-unknown-unknown` target, Node.js 24+, and pnpm 11+:
+Contributors need Rust, the `wasm32-unknown-unknown` target, Node.js 26+, and pnpm 12+:
 
 ```bash
 git clone https://github.com/debug-diary-1/vizcrush.git
@@ -63,7 +63,7 @@ The [Backends & Capabilities](backends.md) guide explains how to inspect and for
 
 ### Node reports an engine mismatch
 
-The repository's development toolchain requires Node.js 24. Use the version pinned in the root `mise.toml`, for example with [mise](https://mise.jdx.dev/) or another version manager.
+The repository's development toolchain requires Node.js 26. Use the version pinned in the root `mise.toml`, for example with [mise](https://mise.jdx.dev/) or another version manager.
 
 ### A source build cannot find the WASM target
 

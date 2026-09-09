@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from "three/webgpu";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { init } from "@vizcrush/core";
 import { buildOctree, queryRange3d, queryNearest3d } from "@vizcrush/spatial3d";
@@ -54,7 +54,10 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(200, 150, 200);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+// The universal renderer selects WebGPU when available and falls back to
+// WebGL2, so this large point-cloud example exercises Three's current renderer
+// without dropping compatibility.
+const renderer = new THREE.WebGPURenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
@@ -223,7 +226,7 @@ function updateLOD() {
   posAttr.needsUpdate = true;
   colAttr.needsUpdate = true;
 
-  statRendered.textContent = `${writeIdx.toLocaleString()} / ${pointCount.toLocaleString()} (LOD)`;
+  statTotal.textContent = `${writeIdx.toLocaleString()} / ${pointCount.toLocaleString()} (LOD)`;
 }
 
 // ── Hover: vizcrush kNN vs brute force ──
@@ -522,7 +525,6 @@ let lastCamX = 0,
 let lodFrameSkip = 0;
 
 function animate() {
-  requestAnimationFrame(animate);
   controls.update();
 
   // Update LOD when camera moves (check every 5 frames to avoid overhead)
@@ -554,10 +556,11 @@ function animate() {
 
 // ── Bootstrap ──
 async function bootstrap() {
+  await renderer.init();
   const gpu = await init();
   statBackend.textContent = gpu.backend;
   await rebuild(pointCount);
-  animate();
+  renderer.setAnimationLoop(animate);
 }
 
 bootstrap();

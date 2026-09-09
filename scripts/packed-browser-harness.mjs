@@ -29,7 +29,7 @@ export function createPackedFixturePackageJson(coreTarball, downsampleTarball) {
   };
 }
 
-// pnpm 11 reads overrides only from pnpm-workspace.yaml, never from a
+// pnpm 12 reads overrides only from pnpm-workspace.yaml, never from a
 // package.json "pnpm" field, so the fixture pins its transitive core here.
 export function createPackedFixtureWorkspaceYaml(coreTarball) {
   return `overrides:\n  "@vizcrush/core": ${JSON.stringify(`file:${coreTarball}`)}\n`;
