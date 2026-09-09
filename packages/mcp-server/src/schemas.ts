@@ -1,9 +1,10 @@
+import "zod/compile";
 import { z } from "zod";
 
 export const DownsampleInput = z.object({
   x: z.array(z.number()).describe("X values (timestamps). Must be strictly increasing."),
   y: z.array(z.number()).describe("Y values (metrics). Same length as x."),
-  target_points: z.number().int().min(2).describe("Desired output count"),
+  target_points: z.int().min(2).describe("Desired output count"),
   backend: z
     .enum(["auto", "wasm", "js"])
     .default("auto")
@@ -17,7 +18,7 @@ export const DownsampleInput = z.object({
 export const AutoDownsampleInput = z.object({
   x: z.array(z.number()).describe("X values"),
   y: z.array(z.number()).describe("Y values"),
-  target_points: z.number().int().min(2).describe("Desired output count"),
+  target_points: z.int().min(2).describe("Desired output count"),
   data_hint: z
     .enum(["time_series", "scatter", "financial", "sensor"])
     .optional()
@@ -26,15 +27,15 @@ export const AutoDownsampleInput = z.object({
 
 export const HistogramInput = z.object({
   data: z.array(z.number()).describe("Input values"),
-  bins: z.number().int().min(1).default(50).describe("Number of bins"),
+  bins: z.int().min(1).default(50).describe("Number of bins"),
   range: z.tuple([z.number(), z.number()]).optional().describe("Custom range [min, max]"),
 });
 
 export const Bin2dInput = z.object({
   x: z.array(z.number()).describe("X coordinates"),
   y: z.array(z.number()).describe("Y coordinates"),
-  x_bins: z.number().int().min(1).default(256).describe("Horizontal bins"),
-  y_bins: z.number().int().min(1).default(256).describe("Vertical bins"),
+  x_bins: z.int().min(1).default(256).describe("Horizontal bins"),
+  y_bins: z.int().min(1).default(256).describe("Vertical bins"),
   x_range: z.tuple([z.number(), z.number()]).optional().describe("Custom x range"),
   y_range: z.tuple([z.number(), z.number()]).optional().describe("Custom y range"),
 });
@@ -54,7 +55,7 @@ export const SortInput = z.object({
 });
 
 export const BenchmarkInput = z.object({
-  data_size: z.number().int().min(100).default(100000).describe("Points to benchmark"),
+  data_size: z.int().min(100).default(100000).describe("Points to benchmark"),
   algorithms: z.array(z.string()).default(["lttb", "bin2d"]).describe("Algorithms to benchmark"),
 });
 
@@ -77,8 +78,8 @@ export const QueryRangeInput = z.object({
   x_max: z.number().describe("Right bound"),
   y_min: z.number().describe("Bottom bound"),
   y_max: z.number().describe("Top bound"),
-  offset: z.number().int().min(0).default(0).describe("Result offset for pagination"),
-  limit: z.number().int().min(1).max(10_000).default(10_000).describe("Maximum indices returned"),
+  offset: z.int().min(0).default(0).describe("Result offset for pagination"),
+  limit: z.int().min(1).max(10_000).default(10_000).describe("Maximum indices returned"),
 });
 
 export const DeleteIndexInput = z.object({
@@ -97,7 +98,6 @@ export const FileInput = z.object({
   y_column: z.string().optional().describe("Column name for Y values"),
   delimiter: z.string().default(",").describe("CSV delimiter"),
   max_rows: z
-    .number()
     .int()
     .min(1)
     .max(1_000_000)
@@ -120,17 +120,17 @@ export const QueryRange3dInput = z.object({
   y_max: z.number(),
   z_min: z.number(),
   z_max: z.number(),
-  offset: z.number().int().min(0).default(0).describe("Result offset for pagination"),
-  limit: z.number().int().min(1).max(10_000).default(10_000).describe("Maximum indices returned"),
+  offset: z.int().min(0).default(0).describe("Result offset for pagination"),
+  limit: z.int().min(1).max(10_000).default(10_000).describe("Maximum indices returned"),
 });
 
 export const Bin3dInput = z.object({
   x: z.array(z.number()).describe("X coordinates"),
   y: z.array(z.number()).describe("Y coordinates"),
   z: z.array(z.number()).describe("Z coordinates"),
-  x_bins: z.number().int().min(1).default(32).describe("X grid divisions"),
-  y_bins: z.number().int().min(1).default(32).describe("Y grid divisions"),
-  z_bins: z.number().int().min(1).default(32).describe("Z grid divisions"),
+  x_bins: z.int().min(1).default(32).describe("X grid divisions"),
+  y_bins: z.int().min(1).default(32).describe("Y grid divisions"),
+  z_bins: z.int().min(1).default(32).describe("Z grid divisions"),
 });
 
 export const FrustumCullInput = z.object({
@@ -163,12 +163,12 @@ export const DetectAnomaliesInput = z.object({
 export const AutoOptimizeInput = z.object({
   x: z.array(z.number()).describe("X values"),
   y: z.array(z.number()).describe("Y values"),
-  screen_width: z.number().int().optional().describe("Target screen width in pixels"),
+  screen_width: z.int().optional().describe("Target screen width in pixels"),
 });
 
 export const ParseQueryInput = z.object({
   query: z.string().describe("Natural language query about the data"),
-  data_length: z.number().int().describe("Number of data points"),
+  data_length: z.int().describe("Number of data points"),
 });
 
 export const ShapeSimilarityInput = z.object({

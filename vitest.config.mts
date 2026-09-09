@@ -12,6 +12,7 @@ export default defineConfig({
       "scripts/**/*.test.mjs",
       "test/**/*.test.ts",
     ],
+    fsModuleCache: true,
     globals: true,
     testTimeout: 30000,
   },

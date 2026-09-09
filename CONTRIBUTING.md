@@ -4,11 +4,11 @@ Thanks for your interest in contributing! This guide covers everything you need 
 
 ## Prerequisites
 
-- **Rust 1.94.1** — `rustup toolchain install 1.94.1`
-- **wasm32 target** — `rustup target add --toolchain 1.94.1 wasm32-unknown-unknown`
+- **Rust 1.98.1** — `rustup toolchain install 1.98.1`
+- **wasm32 target** — `rustup target add --toolchain 1.98.1 wasm32-unknown-unknown`
 - **Node.js 24+** (see `engines` in `package.json`)
-- **pnpm 10+** — `npm install -g pnpm`
-- **wasm-bindgen-cli 0.2.115** (optional, for WASM builds) — `cargo install wasm-bindgen-cli --version 0.2.115 --locked`
+- **pnpm 12+** — `npm install -g pnpm`
+- **wasm-bindgen-cli 0.2.128** (optional, for WASM builds) — `cargo install wasm-bindgen-cli --version 0.2.128 --locked`
 
 ## Project Structure
 
@@ -83,7 +83,7 @@ Property-based tests use [fast-check](https://github.com/dubzzz/fast-check) to v
 
 ### Dependency updates
 
-The workspace centralizes npm versions in the pnpm catalog. Review npm updates manually and regenerate the lockfile with pnpm 11.25.0; Dependabot npm updates are disabled because its catalog output is not frozen-lockfile compatible. Every dependency PR must pass:
+The workspace centralizes npm versions in the pnpm catalog. Review npm updates manually and regenerate the lockfile with pnpm 12.3.4; Dependabot npm updates are disabled because its catalog output is not frozen-lockfile compatible. Every dependency PR must pass:
 
 ```bash
 pnpm install --frozen-lockfile

@@ -45,7 +45,7 @@
     "@vizcrush/transform": "workspace:*"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "jsdom": "^30.0.1",

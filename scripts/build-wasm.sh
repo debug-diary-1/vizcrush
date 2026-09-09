@@ -16,7 +16,7 @@ echo "==> WASM build complete."
 
 # Check if wasm-bindgen CLI is available
 if ! command -v wasm-bindgen &> /dev/null; then
-  echo "==> wasm-bindgen-cli not found. Install with: cargo install wasm-bindgen-cli --version 0.2.115 --locked"
+  echo "==> wasm-bindgen-cli not found. Install with: cargo install wasm-bindgen-cli --version 0.2.128 --locked"
   echo "    Skipping bindgen step."
   exit 0
 fi
