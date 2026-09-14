@@ -32,8 +32,12 @@ export default defineConfig({
       { text: "Reference", link: "/reference/algorithms" },
       { text: "Book", link: "https://debug-diary-1.github.io/vizcrush-book/" },
       // Built by scripts/build-examples.sh into dist/examples, so it is a
-      // plain link rather than a VitePress route.
-      { text: "Examples", link: "/examples/" },
+      // full document navigation rather than a VitePress client route.
+      {
+        text: "Examples",
+        link: "https://debug-diary-1.github.io/vizcrush/examples/",
+        target: "_self",
+      },
     ],
 
     sidebar: {
