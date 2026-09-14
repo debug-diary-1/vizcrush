@@ -11,7 +11,10 @@ hero:
       link: /user-guide/getting-started
     - theme: alt
       text: Try Live Examples
-      link: /examples/
+      # The gallery is a separate Vite app in the Pages artifact. An internal
+      # VitePress route renders its client-side 404 until a hard refresh.
+      link: https://debug-diary-1.github.io/vizcrush/examples/
+      target: _self
     - theme: alt
       text: View on GitHub
       link: https://github.com/debug-diary-1/vizcrush
