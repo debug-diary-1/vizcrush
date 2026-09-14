@@ -1,7 +1,7 @@
 const DEFAULT_MAX_STORED_INDEXES = 16;
 export const DEFAULT_QUERY_LIMIT = 10_000;
 
-function configuredIndexLimit(): number {
+export function configuredIndexLimit(): number {
   const parsed = Number.parseInt(
     process.env.VIZCRUSH_MAX_STORED_INDEXES ?? String(DEFAULT_MAX_STORED_INDEXES),
     10,
@@ -13,8 +13,10 @@ export class BoundedIndexStore<T> {
   private entriesById = new Map<string, { value: T; lastAccessed: number }>();
   private accessCounter = 0;
 
+  constructor(private readonly maxEntries = configuredIndexLimit()) {}
+
   set(id: string, value: T): void {
-    if (!this.entriesById.has(id) && this.entriesById.size >= configuredIndexLimit()) {
+    if (!this.entriesById.has(id) && this.entriesById.size >= this.maxEntries) {
       let oldestId: string | undefined;
       let oldestAccess = Infinity;
       for (const [candidateId, entry] of this.entriesById) {

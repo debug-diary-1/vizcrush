@@ -1,10 +1,13 @@
 import { describe, test, expect } from "vitest";
-import { loadWasmForParity } from "@vizcrush/core/parity";
-import { buildOctreeCore, queryRange3dCore, frustumCullCore } from "./cores.js";
+import { injectWasmModuleForTesting, loadWasmForParity, parityMode } from "@vizcrush/core/parity";
+import { frustumCullCore } from "./cores.js";
+import { queryRange3d, spatial3dKernels } from "./index.js";
 
 // Load the REAL wasm-bindgen module once. If the build is absent, the parity
 // tests skip rather than fail (CI builds wasm; local runs may not).
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_spatial3d");
+const mode = parityMode(wasm, "vizcrush_spatial3d");
+if (wasm) injectWasmModuleForTesting("vizcrush_spatial3d", wasm);
 
 function makePoints(n: number) {
   const x = new Float64Array(n);
@@ -29,7 +32,7 @@ function expectSameIndexSet(actual: ArrayLike<number>, expected: ArrayLike<numbe
   }
 }
 
-describe.runIf(wasm !== null)("spatial3d JS ≡ WASM parity", () => {
+describe.runIf(mode === "run")("spatial3d JS ≡ WASM parity", () => {
   const sizes = [{ n: 1000 }, { n: 4096 }, { n: 333 }];
 
   describe("octree range query", () => {
@@ -38,20 +41,17 @@ describe.runIf(wasm !== null)("spatial3d JS ≡ WASM parity", () => {
       { xMin: -1e6, xMax: 1e6, yMin: -1e6, yMax: 1e6, zMin: -1e6, zMax: 1e6 }, // full
       { xMin: 500, xMax: 600, yMin: 500, yMax: 600, zMin: 500, zMax: 600 }, // empty
     ];
-    test.each(sizes)("n=$n", ({ n }) => {
+    test.each(sizes)("n=$n", async ({ n }) => {
       const { x, y, z } = makePoints(n);
-      const jsTree = buildOctreeCore(x, y, z);
-      const wasmTree = (wasm as any).build_octree(x, y, z);
+      const jsTree = await spatial3dKernels.buildOctree.withBackend(x, y, z, { backend: "js" });
+      const wasmTree = await spatial3dKernels.buildOctree.withBackend(x, y, z, {
+        backend: "wasm",
+      });
+      expect(jsTree.backend).toBe("js");
+      expect(wasmTree.backend).toBe("wasm");
       for (const b of boxes) {
-        const js = queryRange3dCore(jsTree, b);
-        const w = wasmTree.query_range(
-          b.xMin,
-          b.xMax,
-          b.yMin,
-          b.yMax,
-          b.zMin,
-          b.zMax,
-        ) as Uint32Array;
+        const js = queryRange3d(jsTree.result, b);
+        const w = queryRange3d(wasmTree.result, b);
         expectSameIndexSet(w, js, `octree-range n=${n}`);
       }
     });

@@ -46,6 +46,7 @@ import {
   handleParseQuery,
   handleShapeSimilarity,
 } from "./tools/ai.js";
+import { SpatialIndexRegistry } from "./tools/spatial-index-registry.js";
 
 /**
  * Declarative description of one MCP tool. `registerTool` is the one place
@@ -67,180 +68,189 @@ function registerTool(server: McpServer, tool: ToolDescriptor): void {
   }));
 }
 
-export const TOOLS: ToolDescriptor[] = [
-  // ── Downsampling Tools ──
-  {
-    name: "vizcrush_lttb",
-    description:
-      "Downsample time-series data using Largest-Triangle-Three-Buckets. Preserves visual shape.",
-    schema: DownsampleInput.shape,
-    handler: handleLttb,
-  },
-  {
-    name: "vizcrush_minmax_lttb",
-    description:
-      "MinMax pre-selection + LTTB downsampling. Better for spiky data (financial, IoT).",
-    schema: DownsampleInput.shape,
-    handler: handleMinMaxLttb,
-  },
-  {
-    name: "vizcrush_auto_downsample",
-    description:
-      "Intelligently selects the best downsampling algorithm based on data characteristics.",
-    schema: AutoDownsampleInput.shape,
-    handler: handleAutoDownsample,
-  },
-
-  // ── Binning Tools ──
-  {
-    name: "vizcrush_histogram",
-    description: "1D histogram binning. Returns bin counts and edges.",
-    schema: HistogramInput.shape,
-    handler: handleHistogram,
-  },
-  {
-    name: "vizcrush_bin2d",
-    description: "Compute a 2D density grid (heatmap) from scatter data.",
-    schema: Bin2dInput.shape,
-    handler: handleBin2d,
-  },
-
-  // ── Spatial Indexing Tools ──
-  {
-    name: "vizcrush_build_index",
-    description: "Build a spatial index (quadtree) over 2D point data for fast range queries.",
-    schema: BuildIndexInput.shape,
-    handler: handleBuildIndex,
-  },
-  {
-    name: "vizcrush_query_range",
-    description: "Find all points within a bounding box using a previously built spatial index.",
-    schema: QueryRangeInput.shape,
-    handler: handleQueryRange,
-  },
-  {
-    name: "vizcrush_delete_index",
-    description: "Delete a stored 2D or 3D spatial index and release its memory.",
-    schema: DeleteIndexInput.shape,
-    handler: handleDeleteIndex,
-  },
-
-  // ── 3D Spatial Tools ──
-  {
-    name: "vizcrush_build_index_3d",
-    description: "Build a 3D spatial index (octree) over 3D point data for range queries.",
-    schema: BuildIndex3dInput.shape,
-    handler: handleBuildIndex3d,
-  },
-  {
-    name: "vizcrush_query_range_3d",
-    description: "Find all points within a 3D bounding box using a previously built octree.",
-    schema: QueryRange3dInput.shape,
-    handler: handleQueryRange3d,
-  },
-  {
-    name: "vizcrush_bin3d",
-    description: "Compute a 3D voxel density grid from point cloud data.",
-    schema: Bin3dInput.shape,
-    handler: handleBin3d,
-  },
-  {
-    name: "vizcrush_frustum_cull",
-    description: "Cull 3D points outside a camera frustum defined by a 4x4 MVP matrix.",
-    schema: FrustumCullInput.shape,
-    handler: handleFrustumCull,
-  },
-
-  // ── Statistics & Transform Tools ──
-  {
-    name: "vizcrush_stats",
-    description:
-      "Compute summary statistics (count, min, max, mean, std_dev, percentiles) over a numeric array.",
-    schema: StatsInput.shape,
-    handler: handleStats,
-  },
-  {
-    name: "vizcrush_normalize",
-    description: "Min-max normalize values to [0, 1].",
-    schema: NormalizeInput.shape,
-    handler: handleNormalize,
-  },
-  {
-    name: "vizcrush_sort",
-    description: "Sort a numeric array. Uses radix sort in WASM, Array.sort in JS fallback.",
-    schema: SortInput.shape,
-    handler: handleSort,
-  },
-
-  // ── Utility Tools ──
-  {
-    name: "vizcrush_capabilities",
-    description: "Report environment GPU/WASM capabilities.",
-    schema: {},
-    handler: () => handleCapabilities(),
-  },
-  {
-    name: "vizcrush_benchmark",
-    description: "Quick benchmark comparing backends on the current hardware.",
-    schema: BenchmarkInput.shape,
-    handler: handleBenchmark,
-  },
-
-  // ── File Input Tools (v0.4) ──
-  {
-    name: "vizcrush_load_file",
-    description: "Load a CSV file into numeric arrays for use with other vizcrush tools.",
-    schema: FileInput.shape,
-    handler: handleFileLoad,
-  },
-  {
-    name: "vizcrush_inspect_file",
-    description:
-      "Inspect a CSV file: show columns, row count, detect numeric columns, preview sample rows.",
-    schema: {
-      file_path: z.string().describe("Path to file"),
-      delimiter: z.string().default(",").describe("CSV delimiter"),
+function createTools(registry: SpatialIndexRegistry): ToolDescriptor[] {
+  return [
+    // ── Downsampling Tools ──
+    {
+      name: "vizcrush_lttb",
+      description:
+        "Downsample time-series data using Largest-Triangle-Three-Buckets. Preserves visual shape.",
+      schema: DownsampleInput.shape,
+      handler: handleLttb,
     },
-    handler: handleFileInspect,
-  },
+    {
+      name: "vizcrush_minmax_lttb",
+      description:
+        "MinMax pre-selection + LTTB downsampling. Better for spiky data (financial, IoT).",
+      schema: DownsampleInput.shape,
+      handler: handleMinMaxLttb,
+    },
+    {
+      name: "vizcrush_auto_downsample",
+      description:
+        "Intelligently selects the best downsampling algorithm based on data characteristics.",
+      schema: AutoDownsampleInput.shape,
+      handler: handleAutoDownsample,
+    },
 
-  // ── AI Tools ──
-  {
-    name: "vizcrush_summarize",
-    description:
-      "Summarize a numeric dataset: trend, distribution, spikes, anomalies, and a human-readable paragraph for LLM context.",
-    schema: SummarizeInput.shape,
-    handler: handleSummarize,
-  },
-  {
-    name: "vizcrush_detect_anomalies",
-    description:
-      "Detect statistical anomalies (spikes, dips, shifts) using robust MAD-based Z-scores.",
-    schema: DetectAnomaliesInput.shape,
-    handler: handleDetectAnomalies,
-  },
-  {
-    name: "vizcrush_ai_auto_optimize",
-    description:
-      "Analyze data characteristics and recommend optimal vizcrush algorithm, target points, and backend settings.",
-    schema: AutoOptimizeInput.shape,
-    handler: handleAutoOptimize,
-  },
-  {
-    name: "vizcrush_parse_query",
-    description:
-      "Parse a natural language query about data into a structured operation (filter, anomaly, downsample, summarize).",
-    schema: ParseQueryInput.shape,
-    handler: handleParseQuery,
-  },
-  {
-    name: "vizcrush_shape_similarity",
-    description:
-      "Compute shape similarity between two time-series using feature embeddings and cosine similarity.",
-    schema: ShapeSimilarityInput.shape,
-    handler: handleShapeSimilarity,
-  },
-];
+    // ── Binning Tools ──
+    {
+      name: "vizcrush_histogram",
+      description: "1D histogram binning. Returns bin counts and edges.",
+      schema: HistogramInput.shape,
+      handler: handleHistogram,
+    },
+    {
+      name: "vizcrush_bin2d",
+      description: "Compute a 2D density grid (heatmap) from scatter data.",
+      schema: Bin2dInput.shape,
+      handler: handleBin2d,
+    },
+
+    // ── Spatial Indexing Tools ──
+    {
+      name: "vizcrush_build_index",
+      description: "Build a spatial index (quadtree) over 2D point data for fast range queries.",
+      schema: BuildIndexInput.shape,
+      handler: (input) => handleBuildIndex(registry, input),
+    },
+    {
+      name: "vizcrush_query_range",
+      description: "Find all points within a bounding box using a previously built spatial index.",
+      schema: QueryRangeInput.shape,
+      handler: (input) => handleQueryRange(registry, input),
+    },
+    {
+      name: "vizcrush_delete_index",
+      description: "Delete a stored 2D or 3D spatial index and release its memory.",
+      schema: DeleteIndexInput.shape,
+      handler: (input) => handleDeleteIndex(registry, input),
+    },
+
+    // ── 3D Spatial Tools ──
+    {
+      name: "vizcrush_build_index_3d",
+      description: "Build a 3D spatial index (octree) over 3D point data for range queries.",
+      schema: BuildIndex3dInput.shape,
+      handler: (input) => handleBuildIndex3d(registry, input),
+    },
+    {
+      name: "vizcrush_query_range_3d",
+      description: "Find all points within a 3D bounding box using a previously built octree.",
+      schema: QueryRange3dInput.shape,
+      handler: (input) => handleQueryRange3d(registry, input),
+    },
+    {
+      name: "vizcrush_bin3d",
+      description: "Compute a 3D voxel density grid from point cloud data.",
+      schema: Bin3dInput.shape,
+      handler: handleBin3d,
+    },
+    {
+      name: "vizcrush_frustum_cull",
+      description: "Cull 3D points outside a camera frustum defined by a 4x4 MVP matrix.",
+      schema: FrustumCullInput.shape,
+      handler: handleFrustumCull,
+    },
+
+    // ── Statistics & Transform Tools ──
+    {
+      name: "vizcrush_stats",
+      description:
+        "Compute summary statistics (count, min, max, mean, std_dev, percentiles) over a numeric array.",
+      schema: StatsInput.shape,
+      handler: handleStats,
+    },
+    {
+      name: "vizcrush_normalize",
+      description: "Min-max normalize values to [0, 1].",
+      schema: NormalizeInput.shape,
+      handler: handleNormalize,
+    },
+    {
+      name: "vizcrush_sort",
+      description: "Sort a numeric array. Uses radix sort in WASM, Array.sort in JS fallback.",
+      schema: SortInput.shape,
+      handler: handleSort,
+    },
+
+    // ── Utility Tools ──
+    {
+      name: "vizcrush_capabilities",
+      description: "Report environment GPU/WASM capabilities.",
+      schema: {},
+      handler: () => handleCapabilities(),
+    },
+    {
+      name: "vizcrush_benchmark",
+      description: "Quick benchmark comparing backends on the current hardware.",
+      schema: BenchmarkInput.shape,
+      handler: handleBenchmark,
+    },
+
+    // ── File Input Tools (v0.4) ──
+    {
+      name: "vizcrush_load_file",
+      description: "Load a CSV file into numeric arrays for use with other vizcrush tools.",
+      schema: FileInput.shape,
+      handler: handleFileLoad,
+    },
+    {
+      name: "vizcrush_inspect_file",
+      description:
+        "Inspect a CSV file: show columns, row count, detect numeric columns, preview sample rows.",
+      schema: {
+        file_path: z.string().describe("Path to file"),
+        delimiter: z.string().default(",").describe("CSV delimiter"),
+      },
+      handler: handleFileInspect,
+    },
+
+    // ── AI Tools ──
+    {
+      name: "vizcrush_summarize",
+      description:
+        "Summarize a numeric dataset: trend, distribution, spikes, anomalies, and a human-readable paragraph for LLM context.",
+      schema: SummarizeInput.shape,
+      handler: handleSummarize,
+    },
+    {
+      name: "vizcrush_detect_anomalies",
+      description:
+        "Detect statistical anomalies (spikes, dips, shifts) using robust MAD-based Z-scores.",
+      schema: DetectAnomaliesInput.shape,
+      handler: handleDetectAnomalies,
+    },
+    {
+      name: "vizcrush_ai_auto_optimize",
+      description:
+        "Analyze data characteristics and recommend optimal vizcrush algorithm, target points, and backend settings.",
+      schema: AutoOptimizeInput.shape,
+      handler: handleAutoOptimize,
+    },
+    {
+      name: "vizcrush_parse_query",
+      description:
+        "Parse a natural language query about data into a structured operation (filter, anomaly, downsample, summarize).",
+      schema: ParseQueryInput.shape,
+      handler: handleParseQuery,
+    },
+    {
+      name: "vizcrush_shape_similarity",
+      description:
+        "Compute shape similarity between two time-series using feature embeddings and cosine similarity.",
+      schema: ShapeSimilarityInput.shape,
+      handler: handleShapeSimilarity,
+    },
+  ];
+}
+
+/**
+ * Backward-compatible descriptor inventory. Servers do not register these
+ * stateful handler instances; `createServer` constructs descriptors around its
+ * own registry below.
+ */
+export const TOOLS: ToolDescriptor[] = createTools(new SpatialIndexRegistry());
 
 /**
  * The package's real version — read at runtime so it can't drift from
@@ -249,21 +259,20 @@ export const TOOLS: ToolDescriptor[] = [
 const PACKAGE_VERSION: string = createRequire(import.meta.url)("../package.json").version;
 
 export function createServer(): McpServer {
+  const registry = new SpatialIndexRegistry();
   const server = new McpServer({
     name: "vizcrush",
     version: PACKAGE_VERSION,
   });
 
-  for (const tool of TOOLS) {
+  for (const tool of createTools(registry)) {
     registerTool(server, tool);
   }
 
   // ── MCP Resources (v1.0) — expose spatial indexes ──
 
   server.resource("spatial-indexes", "vizcrush://indexes", async (uri) => {
-    // Import the spatial tool module to access the index store
-    const { getIndexList } = await import("./tools/spatial.js");
-    const indexes = getIndexList();
+    const indexes = registry.list2d();
     return {
       contents: [
         {
@@ -283,9 +292,8 @@ export function createServer(): McpServer {
   });
 
   server.resource("spatial-index-detail", "vizcrush://indexes/{index_id}", async (uri, params) => {
-    const { getIndexDetail } = await import("./tools/spatial.js");
     const indexId = (params as any).index_id;
-    const detail = getIndexDetail(indexId);
+    const detail = registry.detail2d(indexId);
     return {
       contents: [
         {

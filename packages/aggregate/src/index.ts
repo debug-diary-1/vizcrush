@@ -1,6 +1,7 @@
 import type { StatsResult, DownsampleResult, KernelCallOptions } from "@vizcrush/core";
 import { defineKernel, createWasmLoader } from "@vizcrush/core";
 import { statsCore, percentileCore } from "./cores.js";
+import { createDDSketchImpl, type DDSketchImpl } from "./sketch-adapters.js";
 
 export { statsCore, percentileCore } from "./cores.js";
 
@@ -296,122 +297,42 @@ export class ReservoirSampler {
  * one-shot kernel call can; see `WasmLoader.moduleSync`.
  */
 export class DDSketch {
-  private _alpha: number;
-  private _gamma: number;
-  private _lnGamma: number;
-  private _positiveBuckets: Map<number, number>;
-  private _negativeBuckets: Map<number, number>;
-  private _zeroCount: number;
-  private _totalCount: number;
-  private _min: number;
-  private _max: number;
-  private _wasm?: any;
+  readonly #impl: DDSketchImpl;
 
   constructor(relativeAccuracy: number = 0.01) {
-    this._alpha = Math.max(1e-6, Math.min(1, relativeAccuracy));
-    this._gamma = (1 + this._alpha) / (1 - this._alpha);
-    this._lnGamma = Math.log(this._gamma);
-    this._positiveBuckets = new Map();
-    this._negativeBuckets = new Map();
-    this._zeroCount = 0;
-    this._totalCount = 0;
-    this._min = Infinity;
-    this._max = -Infinity;
-
-    const mod = loader.moduleSync as any;
-    if (mod) {
-      this._wasm = new mod.DDSketch(relativeAccuracy);
-    }
-  }
-
-  private _bucketIndex(v: number): number {
-    return Math.ceil(Math.log(v) / this._lnGamma);
+    this.#impl = createDDSketchImpl(loader.moduleSync, relativeAccuracy);
   }
 
   add(value: number): void {
-    if (this._wasm) {
-      this._wasm.add(value);
-      return;
-    }
-    if (!isFinite(value)) return;
-    this._totalCount++;
-    if (value < this._min) this._min = value;
-    if (value > this._max) this._max = value;
-
-    if (value > 0) {
-      const idx = this._bucketIndex(value);
-      this._positiveBuckets.set(idx, (this._positiveBuckets.get(idx) || 0) + 1);
-    } else if (value < 0) {
-      const idx = this._bucketIndex(-value);
-      this._negativeBuckets.set(idx, (this._negativeBuckets.get(idx) || 0) + 1);
-    } else {
-      this._zeroCount++;
-    }
+    this.#impl.add(value);
   }
 
   addBatch(values: Float64Array | number[]): void {
-    if (this._wasm) {
-      this._wasm.add_batch(values instanceof Float64Array ? values : Float64Array.from(values));
-      return;
-    }
-    for (let i = 0; i < values.length; i++) {
-      this.add(values[i] as number);
-    }
+    this.#impl.addBatch(values);
   }
 
   quantile(q: number): number {
-    if (this._wasm) return this._wasm.quantile(q);
-
-    if (this._totalCount === 0) return NaN;
-    q = Math.max(0, Math.min(1, q));
-    const targetRank = q * this._totalCount;
-
-    // Walk negative buckets in descending key order (most negative first)
-    const negKeys = Array.from(this._negativeBuckets.keys()).sort((a, b) => b - a);
-    let cumulative = 0;
-    for (const key of negKeys) {
-      cumulative += this._negativeBuckets.get(key)!;
-      if (cumulative >= targetRank) {
-        return -Math.pow(this._gamma, key) * (2 / (this._gamma + 1));
-      }
-    }
-
-    // Zero bucket
-    cumulative += this._zeroCount;
-    if (cumulative >= targetRank) return 0;
-
-    // Walk positive buckets in ascending key order
-    const posKeys = Array.from(this._positiveBuckets.keys()).sort((a, b) => a - b);
-    for (const key of posKeys) {
-      cumulative += this._positiveBuckets.get(key)!;
-      if (cumulative >= targetRank) {
-        return Math.pow(this._gamma, key) * (2 / (this._gamma + 1));
-      }
-    }
-
-    return this._max;
+    return this.#impl.quantile(q);
   }
 
   percentiles(pcts: number[]): number[] {
-    if (this._wasm)
-      return Array.from(this._wasm.percentiles(Float64Array.from(pcts)) as Float64Array);
-    return pcts.map((p) => this.quantile(p / 100));
+    return this.#impl.percentiles(pcts);
   }
 
   get count(): number {
-    return this._wasm ? this._wasm.count : this._totalCount;
+    return this.#impl.count;
   }
 
   get min(): number {
-    return this._wasm ? this._wasm.min : this._min;
+    return this.#impl.min;
   }
 
   get max(): number {
-    return this._wasm ? this._wasm.max : this._max;
+    return this.#impl.max;
   }
 
   get relativeAccuracy(): number {
-    return this._wasm ? this._wasm.relative_accuracy : this._alpha;
+    return this.#impl.relativeAccuracy;
   }
 }
 
@@ -426,7 +347,17 @@ export class KllSketch {
   private _min: number;
   private _max: number;
   private _compactOffset: number;
-  private _wasm?: any;
+  readonly #impl: {
+    add(value: number): void;
+    addBatch(values: Float64Array | number[]): void;
+    quantile(q: number): number;
+    rank(value: number): number;
+    cdf(splitPoints: number[]): number[];
+    readonly count: number;
+    readonly min: number;
+    readonly max: number;
+    readonly numRetained: number;
+  };
 
   constructor(k: number = 200) {
     this._k = Math.max(8, k | 0);
@@ -435,10 +366,57 @@ export class KllSketch {
     this._min = Infinity;
     this._max = -Infinity;
     this._compactOffset = 0;
+    const count = () => this._totalCount;
+    const min = () => this._min;
+    const max = () => this._max;
+    const numRetained = () => this.#numRetainedJs();
 
     const mod = loader.moduleSync as any;
     if (mod) {
-      this._wasm = new mod.KllSketch(this._k);
+      const sketch = new mod.KllSketch(this._k);
+      this.#impl = {
+        add: (value) => sketch.add(value),
+        addBatch: (values) =>
+          sketch.add_batch(values instanceof Float64Array ? values : Float64Array.from(values)),
+        quantile: (q) => sketch.quantile(q),
+        rank: (value) => sketch.rank(value),
+        cdf: (splitPoints) =>
+          Array.from(sketch.cdf(Float64Array.from(splitPoints)) as Float64Array),
+        get count() {
+          return sketch.count;
+        },
+        get min() {
+          return sketch.min;
+        },
+        get max() {
+          return sketch.max;
+        },
+        get numRetained() {
+          return sketch.num_retained;
+        },
+      };
+    } else {
+      this.#impl = {
+        add: (value) => this.#addJs(value),
+        addBatch: (values) => {
+          for (let index = 0; index < values.length; index++) this.#addJs(values[index] as number);
+        },
+        quantile: (q) => this.#quantileJs(q),
+        rank: (value) => this.#rankJs(value),
+        cdf: (splitPoints) => splitPoints.map((point) => this.#rankJs(point)),
+        get count() {
+          return count();
+        },
+        get min() {
+          return min();
+        },
+        get max() {
+          return max();
+        },
+        get numRetained() {
+          return numRetained();
+        },
+      };
     }
   }
 
@@ -474,10 +452,10 @@ export class KllSketch {
   }
 
   add(value: number): void {
-    if (this._wasm) {
-      this._wasm.add(value);
-      return;
-    }
+    this.#impl.add(value);
+  }
+
+  #addJs(value: number): void {
     if (!isFinite(value)) return;
     this._totalCount++;
     if (value < this._min) this._min = value;
@@ -490,18 +468,14 @@ export class KllSketch {
   }
 
   addBatch(values: Float64Array | number[]): void {
-    if (this._wasm) {
-      this._wasm.add_batch(values instanceof Float64Array ? values : Float64Array.from(values));
-      return;
-    }
-    for (let i = 0; i < values.length; i++) {
-      this.add(values[i] as number);
-    }
+    this.#impl.addBatch(values);
   }
 
   quantile(q: number): number {
-    if (this._wasm) return this._wasm.quantile(q);
+    return this.#impl.quantile(q);
+  }
 
+  #quantileJs(q: number): number {
     if (this._totalCount === 0) return NaN;
     q = Math.max(0, Math.min(1, q));
 
@@ -525,8 +499,10 @@ export class KllSketch {
   }
 
   rank(value: number): number {
-    if (this._wasm) return this._wasm.rank(value);
+    return this.#impl.rank(value);
+  }
 
+  #rankJs(value: number): number {
     if (this._totalCount === 0) return NaN;
     let below = 0;
     for (let level = 0; level < this._levels.length; level++) {
@@ -539,26 +515,26 @@ export class KllSketch {
   }
 
   cdf(splitPoints: number[]): number[] {
-    if (this._wasm) {
-      return Array.from(this._wasm.cdf(Float64Array.from(splitPoints)) as Float64Array);
-    }
-    return splitPoints.map((sp) => this.rank(sp));
+    return this.#impl.cdf(splitPoints);
   }
 
   get count(): number {
-    return this._wasm ? this._wasm.count : this._totalCount;
+    return this.#impl.count;
   }
 
   get min(): number {
-    return this._wasm ? this._wasm.min : this._min;
+    return this.#impl.min;
   }
 
   get max(): number {
-    return this._wasm ? this._wasm.max : this._max;
+    return this.#impl.max;
   }
 
   get numRetained(): number {
-    if (this._wasm) return this._wasm.num_retained;
+    return this.#impl.numRetained;
+  }
+
+  #numRetainedJs(): number {
     let total = 0;
     for (const level of this._levels) {
       total += level.length;
@@ -590,24 +566,58 @@ export class HyperLogLog {
   private _precision: number;
   private _m: number;
   private _registers: Uint8Array;
-  private _wasm?: any;
+  readonly #impl: {
+    add(value: number): void;
+    addBatch(values: Float64Array | number[]): void;
+    estimate(): number;
+    readonly precision: number;
+    readonly stdError: number;
+  };
 
   constructor(precision: number = 14) {
     this._precision = Math.max(4, Math.min(18, precision | 0));
     this._m = 1 << this._precision;
     this._registers = new Uint8Array(this._m);
 
+    const precisionValue = () => this._precision;
+    const stdError = () => 1.04 / Math.sqrt(this._m);
     const mod = loader.moduleSync as any;
     if (mod) {
-      this._wasm = new mod.HyperLogLog(this._precision);
+      const sketch = new mod.HyperLogLog(this._precision);
+      this.#impl = {
+        add: (value) => sketch.add(value),
+        addBatch: (values) =>
+          sketch.add_batch(values instanceof Float64Array ? values : Float64Array.from(values)),
+        estimate: () => sketch.estimate(),
+        get precision() {
+          return sketch.precision;
+        },
+        get stdError() {
+          return sketch.std_error;
+        },
+      };
+    } else {
+      this.#impl = {
+        add: (value) => this.#addJs(value),
+        addBatch: (values) => {
+          for (let index = 0; index < values.length; index++) this.#addJs(values[index] as number);
+        },
+        estimate: () => this.#estimateJs(),
+        get precision() {
+          return precisionValue();
+        },
+        get stdError() {
+          return stdError();
+        },
+      };
     }
   }
 
   add(value: number): void {
-    if (this._wasm) {
-      this._wasm.add(value);
-      return;
-    }
+    this.#impl.add(value);
+  }
+
+  #addJs(value: number): void {
     if (!isFinite(value)) return;
     const h = _hash64(value);
     const p = this._precision;
@@ -620,18 +630,14 @@ export class HyperLogLog {
   }
 
   addBatch(values: Float64Array | number[]): void {
-    if (this._wasm) {
-      this._wasm.add_batch(values instanceof Float64Array ? values : Float64Array.from(values));
-      return;
-    }
-    for (let i = 0; i < values.length; i++) {
-      this.add(values[i] as number);
-    }
+    this.#impl.addBatch(values);
   }
 
   estimate(): number {
-    if (this._wasm) return this._wasm.estimate();
+    return this.#impl.estimate();
+  }
 
+  #estimateJs(): number {
     const m = this._m;
 
     // Compute alpha_m
@@ -660,11 +666,11 @@ export class HyperLogLog {
   }
 
   get precision(): number {
-    return this._wasm ? this._wasm.precision : this._precision;
+    return this.#impl.precision;
   }
 
   get stdError(): number {
-    return this._wasm ? this._wasm.std_error : 1.04 / Math.sqrt(this._m);
+    return this.#impl.stdError;
   }
 }
 
@@ -678,7 +684,15 @@ export class CountMinSketch {
   private _table: Uint32Array;
   private _seeds: Uint32Array;
   private _totalCount: number;
-  private _wasm?: any;
+  readonly #impl: {
+    add(value: number): void;
+    addWithCount(value: number, count: number): void;
+    addBatch(values: Float64Array | number[]): void;
+    estimate(value: number): number;
+    readonly count: number;
+    readonly width: number;
+    readonly depth: number;
+  };
 
   constructor(width: number = 1024, depth: number = 5) {
     this._width = Math.max(1, width | 0);
@@ -695,9 +709,46 @@ export class CountMinSketch {
     }
     this._totalCount = 0;
 
+    const count = () => this._totalCount;
+    const widthValue = () => this._width;
+    const depthValue = () => this._depth;
     const mod = loader.moduleSync as any;
     if (mod) {
-      this._wasm = new mod.CountMinSketch(this._width, this._depth);
+      const sketch = new mod.CountMinSketch(this._width, this._depth);
+      this.#impl = {
+        add: (value) => sketch.add(value),
+        addWithCount: (value, count) => sketch.add_with_count(value, BigInt(Math.round(count))),
+        addBatch: (values) =>
+          sketch.add_batch(values instanceof Float64Array ? values : Float64Array.from(values)),
+        estimate: (value) => Number(sketch.estimate(value) as bigint),
+        get count() {
+          return sketch.count;
+        },
+        get width() {
+          return sketch.width;
+        },
+        get depth() {
+          return sketch.depth;
+        },
+      };
+    } else {
+      this.#impl = {
+        add: (value) => this.#addJs(value),
+        addWithCount: (value, count) => this.#addWithCountJs(value, count),
+        addBatch: (values) => {
+          for (let index = 0; index < values.length; index++) this.#addJs(values[index] as number);
+        },
+        estimate: (value) => this.#estimateJs(value),
+        get count() {
+          return count();
+        },
+        get width() {
+          return widthValue();
+        },
+        get depth() {
+          return depthValue();
+        },
+      };
     }
   }
 
@@ -709,10 +760,10 @@ export class CountMinSketch {
   }
 
   add(value: number): void {
-    if (this._wasm) {
-      this._wasm.add(value);
-      return;
-    }
+    this.#impl.add(value);
+  }
+
+  #addJs(value: number): void {
     if (!isFinite(value)) return;
     this._totalCount++;
     for (let d = 0; d < this._depth; d++) {
@@ -722,10 +773,10 @@ export class CountMinSketch {
   }
 
   addWithCount(value: number, count: number): void {
-    if (this._wasm) {
-      this._wasm.add_with_count(value, BigInt(Math.round(count)));
-      return;
-    }
+    this.#impl.addWithCount(value, count);
+  }
+
+  #addWithCountJs(value: number, count: number): void {
     if (!isFinite(value)) return;
     this._totalCount += count;
     for (let d = 0; d < this._depth; d++) {
@@ -735,18 +786,14 @@ export class CountMinSketch {
   }
 
   addBatch(values: Float64Array | number[]): void {
-    if (this._wasm) {
-      this._wasm.add_batch(values instanceof Float64Array ? values : Float64Array.from(values));
-      return;
-    }
-    for (let i = 0; i < values.length; i++) {
-      this.add(values[i] as number);
-    }
+    this.#impl.addBatch(values);
   }
 
   estimate(value: number): number {
-    if (this._wasm) return Number(this._wasm.estimate(value) as bigint);
+    return this.#impl.estimate(value);
+  }
 
+  #estimateJs(value: number): number {
     let min = Infinity;
     for (let d = 0; d < this._depth; d++) {
       const col = this._hashForDepth(value, d);
@@ -757,14 +804,14 @@ export class CountMinSketch {
   }
 
   get count(): number {
-    return this._wasm ? this._wasm.count : this._totalCount;
+    return this.#impl.count;
   }
 
   get width(): number {
-    return this._wasm ? this._wasm.width : this._width;
+    return this.#impl.width;
   }
 
   get depth(): number {
-    return this._wasm ? this._wasm.depth : this._depth;
+    return this.#impl.depth;
   }
 }
