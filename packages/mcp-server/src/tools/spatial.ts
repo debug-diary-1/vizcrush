@@ -5,24 +5,20 @@
  * here is deleted.
  */
 
-import { buildQuadtreeSync, queryRange, type QuadtreeHandle } from "@vizcrush/spatial";
-import { BoundedIndexStore, paginateIndices } from "./bounded-index-store.js";
+import { buildQuadtreeSync, queryRange } from "@vizcrush/spatial";
+import { paginateIndices } from "./bounded-index-store.js";
+import type { SpatialIndexRegistry } from "./spatial-index-registry.js";
 
-const spatialIndexes = new BoundedIndexStore<{
-  x: number[];
-  y: number[];
-  handle: QuadtreeHandle;
-}>();
-
-let indexCounter = 0;
-
-export function handleBuildIndex(input: { x: number[]; y: number[]; index_id?: string }) {
+export function handleBuildIndex(
+  registry: SpatialIndexRegistry,
+  input: { x: number[]; y: number[]; index_id?: string },
+) {
   const start = performance.now();
   const { x, y } = input;
-  const id = input.index_id ?? `idx_${indexCounter++}`;
+  const id = input.index_id ?? registry.nextId("2d");
 
   const handle = buildQuadtreeSync(new Float64Array(x), new Float64Array(y));
-  spatialIndexes.set(id, { x, y, handle });
+  registry.set2d(id, { x, y, handle });
   const elapsed = performance.now() - start;
 
   const b = handle.bounds;
@@ -34,16 +30,19 @@ export function handleBuildIndex(input: { x: number[]; y: number[]; index_id?: s
   };
 }
 
-export function handleQueryRange(input: {
-  index_id: string;
-  x_min: number;
-  x_max: number;
-  y_min: number;
-  y_max: number;
-  offset?: number;
-  limit?: number;
-}) {
-  const entry = spatialIndexes.get(input.index_id);
+export function handleQueryRange(
+  registry: SpatialIndexRegistry,
+  input: {
+    index_id: string;
+    x_min: number;
+    x_max: number;
+    y_min: number;
+    y_max: number;
+    offset?: number;
+    limit?: number;
+  },
+) {
+  const entry = registry.get2d(input.index_id);
   if (!entry) {
     return { error: `Index '${input.index_id}' not found` };
   }
@@ -64,41 +63,5 @@ export function handleQueryRange(input: {
   return {
     ...page,
     elapsed_ms: Math.round(elapsed * 100) / 100,
-  };
-}
-
-export function deleteIndex(indexId: string): boolean {
-  return spatialIndexes.delete(indexId);
-}
-
-// ── MCP Resource helpers (v1.0) ──
-
-export function getIndexList() {
-  return spatialIndexes.entries().map(([id, entry]) => ({
-    index_id: id,
-    point_count: entry.handle.pointCount,
-    bounds: entry.handle.bounds,
-  }));
-}
-
-export function getIndexDetail(indexId: string) {
-  const entry = spatialIndexes.get(indexId);
-  if (!entry) {
-    return { error: `Index '${indexId}' not found` };
-  }
-
-  // Sample first 10 points
-  const sampleSize = Math.min(10, entry.x.length);
-  const sample = Array.from({ length: sampleSize }, (_, i) => ({
-    index: i,
-    x: entry.x[i],
-    y: entry.y[i],
-  }));
-
-  return {
-    index_id: indexId,
-    point_count: entry.handle.pointCount,
-    bounds: entry.handle.bounds,
-    sample_points: sample,
   };
 }

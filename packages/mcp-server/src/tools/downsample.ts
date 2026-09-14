@@ -1,17 +1,18 @@
 import { lttbCore, minMaxLttbCore, m4Core, downsampleKernels } from "@vizcrush/downsample";
 import type { DownsampleInputType, AutoDownsampleInputType } from "../schemas.js";
+import { timedKernelExecution } from "./kernel-execution.js";
 
 export async function handleLttb(input: DownsampleInputType) {
   const x = new Float64Array(input.x);
   const y = new Float64Array(input.y);
-  const start = performance.now();
   // Dispatches through the real kernel (WASM above the size threshold, JS
   // below it) instead of always running the JS core, so `input.backend` is
   // honoured and `backend_used` reports what actually ran.
-  const { result, backend } = await downsampleKernels.lttb.withBackend(x, y, input.target_points, {
-    backend: input.backend,
-  });
-  const elapsed = performance.now() - start;
+  const { result, backend_used, reason, elapsed_ms } = await timedKernelExecution(() =>
+    downsampleKernels.lttb.withBackend(x, y, input.target_points, {
+      backend: input.backend,
+    }),
+  );
 
   return {
     x: Array.from(result.x),
@@ -19,22 +20,20 @@ export async function handleLttb(input: DownsampleInputType) {
     original_length: input.x.length,
     output_length: result.x.length,
     algorithm: "lttb",
-    backend_used: backend,
-    elapsed_ms: Math.round(elapsed * 100) / 100,
+    backend_used,
+    reason,
+    elapsed_ms,
   };
 }
 
 export async function handleMinMaxLttb(input: DownsampleInputType) {
   const x = new Float64Array(input.x);
   const y = new Float64Array(input.y);
-  const start = performance.now();
-  const { result, backend } = await downsampleKernels.minMaxLttb.withBackend(
-    x,
-    y,
-    input.target_points,
-    { backend: input.backend },
+  const { result, backend_used, reason, elapsed_ms } = await timedKernelExecution(() =>
+    downsampleKernels.minMaxLttb.withBackend(x, y, input.target_points, {
+      backend: input.backend,
+    }),
   );
-  const elapsed = performance.now() - start;
 
   return {
     x: Array.from(result.x),
@@ -42,8 +41,9 @@ export async function handleMinMaxLttb(input: DownsampleInputType) {
     original_length: input.x.length,
     output_length: result.x.length,
     algorithm: "minmax_lttb",
-    backend_used: backend,
-    elapsed_ms: Math.round(elapsed * 100) / 100,
+    backend_used,
+    reason,
+    elapsed_ms,
   };
 }
 

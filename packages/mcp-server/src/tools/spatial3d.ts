@@ -6,34 +6,25 @@
  */
 
 import { bin3dCore } from "@vizcrush/bin3d";
-import {
-  buildOctreeSync,
-  queryRange3d,
-  frustumCullSync,
-  type OctreeHandle,
-} from "@vizcrush/spatial3d";
-import { BoundedIndexStore, paginateIndices } from "./bounded-index-store.js";
+import { buildOctreeSync, queryRange3d, frustumCullSync } from "@vizcrush/spatial3d";
+import { paginateIndices } from "./bounded-index-store.js";
+import type { SpatialIndexRegistry } from "./spatial-index-registry.js";
 
-const indexes3d = new BoundedIndexStore<{
-  x: number[];
-  y: number[];
-  z: number[];
-  handle: OctreeHandle;
-}>();
-let counter3d = 0;
-
-export function handleBuildIndex3d(input: {
-  x: number[];
-  y: number[];
-  z: number[];
-  index_id?: string;
-}) {
+export function handleBuildIndex3d(
+  registry: SpatialIndexRegistry,
+  input: {
+    x: number[];
+    y: number[];
+    z: number[];
+    index_id?: string;
+  },
+) {
   const start = performance.now();
   const { x, y, z } = input;
-  const id = input.index_id ?? `oct_${counter3d++}`;
+  const id = input.index_id ?? registry.nextId("3d");
 
   const handle = buildOctreeSync(new Float64Array(x), new Float64Array(y), new Float64Array(z));
-  indexes3d.set(id, { x, y, z, handle });
+  registry.set3d(id, { x, y, z, handle });
 
   const b = handle.bounds;
   return {
@@ -51,18 +42,21 @@ export function handleBuildIndex3d(input: {
   };
 }
 
-export function handleQueryRange3d(input: {
-  index_id: string;
-  x_min: number;
-  x_max: number;
-  y_min: number;
-  y_max: number;
-  z_min: number;
-  z_max: number;
-  offset?: number;
-  limit?: number;
-}) {
-  const entry = indexes3d.get(input.index_id);
+export function handleQueryRange3d(
+  registry: SpatialIndexRegistry,
+  input: {
+    index_id: string;
+    x_min: number;
+    x_max: number;
+    y_min: number;
+    y_max: number;
+    z_min: number;
+    z_max: number;
+    offset?: number;
+    limit?: number;
+  },
+) {
+  const entry = registry.get3d(input.index_id);
   if (!entry) return { error: `3D index '${input.index_id}' not found` };
 
   const start = performance.now();
@@ -83,10 +77,6 @@ export function handleQueryRange3d(input: {
     ...page,
     elapsed_ms: Math.round((performance.now() - start) * 100) / 100,
   };
-}
-
-export function deleteIndex3d(indexId: string): boolean {
-  return indexes3d.delete(indexId);
 }
 
 export function handleBin3d(input: {

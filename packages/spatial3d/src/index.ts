@@ -6,7 +6,6 @@ import {
   queryNearest3dCore,
   frustumCullCore,
   type BBox3d,
-  type OctreeCore,
 } from "./cores.js";
 
 export {
@@ -49,7 +48,10 @@ export interface OctreeHandle {
  * stay plain serializable metadata; the adapter object lives here, keyed by
  * handle identity, so no caller can branch on the backing adapter again.
  */
-type OctreeBacking = { kind: "js"; core: OctreeCore } | { kind: "wasm"; tree: any };
+interface OctreeBacking {
+  queryRange(bbox: BBox3d): Uint32Array;
+  queryNearest(px: number, py: number, pz: number, k: number): Uint32Array;
+}
 const octreeBacking = new WeakMap<OctreeHandle, OctreeBacking>();
 
 function octreeBackingOf(tree: OctreeHandle): OctreeBacking {
@@ -87,7 +89,10 @@ const buildOctreeKernel = defineKernel<
       pointCount: core.pointCount,
       bounds: core.bounds,
     };
-    octreeBacking.set(handle, { kind: "js", core });
+    octreeBacking.set(handle, {
+      queryRange: (bbox) => queryRange3dCore(core, bbox),
+      queryNearest: (px, py, pz, k) => queryNearest3dCore(core, px, py, pz, k),
+    });
     return handle;
   },
   marshal: (x, y, z) => [x, y, z],
@@ -98,7 +103,11 @@ const buildOctreeKernel = defineKernel<
       pointCount: x.length,
       bounds: { xMin: b[0], xMax: b[1], yMin: b[2], yMax: b[3], zMin: b[4], zMax: b[5] },
     };
-    octreeBacking.set(handle, { kind: "wasm", tree: wasmTree });
+    octreeBacking.set(handle, {
+      queryRange: (bbox) =>
+        wasmTree.query_range(bbox.xMin, bbox.xMax, bbox.yMin, bbox.yMax, bbox.zMin, bbox.zMax),
+      queryNearest: (px, py, pz, k) => wasmTree.query_nearest(px, py, pz, k),
+    });
     return handle;
   },
   // The wasm build_octree returns an opaque tree object regardless of size;
@@ -154,10 +163,7 @@ export function buildOctreeSync(x: Float64Array, y: Float64Array, z: Float64Arra
  * Find all points within a 3D bounding box.
  */
 export function queryRange3d(tree: OctreeHandle, bbox: BBox3d): Uint32Array {
-  const b = octreeBackingOf(tree);
-  return b.kind === "wasm"
-    ? b.tree.query_range(bbox.xMin, bbox.xMax, bbox.yMin, bbox.yMax, bbox.zMin, bbox.zMax)
-    : queryRange3dCore(b.core, bbox);
+  return octreeBackingOf(tree).queryRange(bbox);
 }
 
 /**
@@ -170,10 +176,7 @@ export function queryNearest3d(
   pz: number,
   k: number,
 ): Uint32Array {
-  const b = octreeBackingOf(tree);
-  return b.kind === "wasm"
-    ? b.tree.query_nearest(px, py, pz, k)
-    : queryNearest3dCore(b.core, px, py, pz, k);
+  return octreeBackingOf(tree).queryNearest(px, py, pz, k);
 }
 
 /**

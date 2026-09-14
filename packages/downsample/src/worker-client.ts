@@ -1,5 +1,6 @@
 import type { KernelCallOptions } from "@vizcrush/core";
 import type { TimeSeriesSessionState, ViewportRequest, ViewportResult } from "./session.js";
+import { isWorkerResponse, workerRequest, type WorkerOperation } from "./worker-protocol.js";
 
 export interface TimeSeriesWorkerTransport {
   postMessage(message: unknown, transfer?: Transferable[]): void;
@@ -31,26 +32,9 @@ export interface WorkerLoadOptions {
 
 export type WorkerAppendOptions = WorkerLoadOptions;
 
-interface WorkerSuccessResponse {
-  type: "vizcrush:response";
-  requestId: number;
-  ok: true;
-  value: unknown;
-  workerProcessingMs: number;
-}
-
-interface WorkerErrorResponse {
-  type: "vizcrush:response";
-  requestId: number;
-  ok: false;
-  error: { code: string; message: string };
-}
-
-type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
-
 interface PendingRequest {
   requestId: number;
-  operation: string;
+  operation: WorkerOperation;
   resolve(value: WorkerOperationResult<unknown>): void;
   reject(reason: unknown): void;
 }
@@ -114,31 +98,6 @@ export class TimeSeriesWorkerError extends Error {
     this.code = code;
     this.requestId = requestId;
   }
-}
-
-function isWorkerResponse(value: unknown): value is WorkerResponse {
-  if (value === null || typeof value !== "object") return false;
-  const response = value as {
-    type?: unknown;
-    requestId?: unknown;
-    ok?: unknown;
-    value?: unknown;
-    error?: unknown;
-  };
-  if (response.type !== "vizcrush:response" || !Number.isSafeInteger(response.requestId)) {
-    return false;
-  }
-  if (response.ok === true) {
-    return (
-      "value" in response &&
-      typeof (response as { workerProcessingMs?: unknown }).workerProcessingMs === "number"
-    );
-  }
-  if (response.ok !== false || response.error === null || typeof response.error !== "object") {
-    return false;
-  }
-  const error = response.error as { code?: unknown; message?: unknown };
-  return typeof error.code === "string" && typeof error.message === "string";
 }
 
 function assertTransferableInput(x: Float64Array, y: Float64Array): Transferable[] {
@@ -344,7 +303,7 @@ export class TimeSeriesWorkerClient {
   }
 
   #request<T>(
-    operation: string,
+    operation: WorkerOperation,
     payload: object,
     transfer?: Transferable[],
   ): Promise<WorkerOperationResult<T>> {
@@ -357,7 +316,7 @@ export class TimeSeriesWorkerClient {
   }
 
   #sendRequest<T>(
-    operation: string,
+    operation: WorkerOperation,
     payload: object,
     transfer?: Transferable[],
   ): Promise<WorkerOperationResult<T>> {
@@ -372,10 +331,7 @@ export class TimeSeriesWorkerClient {
       };
     });
     try {
-      this.#worker.postMessage(
-        { type: "vizcrush:request", requestId, operation, ...payload },
-        transfer,
-      );
+      this.#worker.postMessage(workerRequest(requestId, operation, payload), transfer);
     } catch (error) {
       const pending = this.#pending;
       this.#pending = null;

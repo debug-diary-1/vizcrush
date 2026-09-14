@@ -1,10 +1,10 @@
-import { afterEach, describe, test, expect } from "vitest";
+import { afterEach, beforeEach, describe, test, expect } from "vitest";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { createServer, TOOLS } from "./index.js";
+import { createServer, createTools } from "./index.js";
 import { handleLttb, handleMinMaxLttb, handleAutoDownsample } from "./tools/downsample.js";
 import { handleHistogram, handleBin2d } from "./tools/bin.js";
 import { handleBin3d } from "./tools/spatial3d.js";
@@ -12,13 +12,9 @@ import { bin1dCore, bin2dCore } from "@vizcrush/bin";
 import { bin3dCore } from "@vizcrush/bin3d";
 import { handleStats, handleNormalize, handleSort } from "./tools/stats.js";
 import { handleCapabilities, handleBenchmark } from "./tools/utils.js";
-import {
-  handleBuildIndex,
-  handleQueryRange,
-  getIndexList,
-  getIndexDetail,
-} from "./tools/spatial.js";
+import { handleBuildIndex, handleQueryRange } from "./tools/spatial.js";
 import { handleDeleteIndex } from "./tools/index-lifecycle.js";
+import { SpatialIndexRegistry } from "./tools/spatial-index-registry.js";
 import { handleFileInspect, handleFileLoad } from "./tools/file-input.js";
 
 const temporaryDirectories: string[] = [];
@@ -32,7 +28,7 @@ afterEach(() => {
 
 describe("MCP tool registry wiring", () => {
   test("every descriptor has a unique name", () => {
-    const names = TOOLS.map((t) => t.name);
+    const names = createTools(new SpatialIndexRegistry()).map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);
     expect(names.length).toBe(24);
   });
@@ -45,7 +41,11 @@ describe("MCP tool registry wiring", () => {
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(TOOLS.map((t) => t.name).sort());
+    expect(tools.map((t) => t.name).sort()).toEqual(
+      createTools(new SpatialIndexRegistry())
+        .map((t) => t.name)
+        .sort(),
+    );
 
     const x = Array.from({ length: 100 }, (_, i) => i);
     const y = Array.from({ length: 100 }, (_, i) => Math.sin(i * 0.1));
@@ -72,6 +72,7 @@ describe("MCP downsample tools", () => {
     expect(result.original_length).toBe(100);
     expect(result.output_length).toBe(20);
     expect(result.algorithm).toBe("lttb");
+    expect(result.reason).toBe("auto-size-threshold");
     expect(typeof result.elapsed_ms).toBe("number");
     expect(result.x[0]).toBe(0); // first preserved
     expect(result.x[19]).toBe(99); // last preserved
@@ -228,15 +229,34 @@ describe("MCP utility tools", () => {
 });
 
 describe("MCP spatial tools", () => {
+  let registry: SpatialIndexRegistry;
+
+  beforeEach(() => {
+    registry = new SpatialIndexRegistry();
+  });
+
+  test("registries isolate server state and id counters", () => {
+    const other = new SpatialIndexRegistry();
+    const first = handleBuildIndex(registry, { x: [0], y: [0] });
+    const second = handleBuildIndex(other, { x: [1], y: [1] });
+
+    expect(first.index_id).toBe("idx_0");
+    expect(second.index_id).toBe("idx_0");
+    expect(registry.list2d()).toHaveLength(1);
+    expect(other.list2d()).toHaveLength(1);
+    expect(registry.detail2d(second.index_id)).toMatchObject({ sample_points: [{ x: 0 }] });
+    expect(other.detail2d(first.index_id)).toMatchObject({ sample_points: [{ x: 1 }] });
+  });
+
   test("build_index + query_range round-trip", () => {
     const x = Array.from({ length: 100 }, (_, i) => i);
     const y = Array.from({ length: 100 }, (_, i) => i);
 
-    const buildResult = handleBuildIndex({ x, y, index_id: "test_idx" });
+    const buildResult = handleBuildIndex(registry, { x, y, index_id: "test_idx" });
     expect(buildResult.index_id).toBe("test_idx");
     expect(buildResult.point_count).toBe(100);
 
-    const queryResult = handleQueryRange({
+    const queryResult = handleQueryRange(registry, {
       index_id: "test_idx",
       x_min: 10,
       x_max: 20,
@@ -252,7 +272,7 @@ describe("MCP spatial tools", () => {
   });
 
   test("query_range with invalid index returns error", () => {
-    const result = handleQueryRange({
+    const result = handleQueryRange(registry, {
       index_id: "nonexistent",
       x_min: 0,
       x_max: 1,
@@ -263,16 +283,16 @@ describe("MCP spatial tools", () => {
   });
 
   test("getIndexList returns array", () => {
-    const list = getIndexList();
+    const list = registry.list2d();
     expect(Array.isArray(list)).toBe(true);
   });
 
   test("getIndexDetail returns info", () => {
     const x = Array.from({ length: 10 }, (_, i) => i);
     const y = Array.from({ length: 10 }, (_, i) => i);
-    handleBuildIndex({ x, y, index_id: "detail_test" });
+    handleBuildIndex(registry, { x, y, index_id: "detail_test" });
 
-    const detail = getIndexDetail("detail_test");
+    const detail = registry.detail2d("detail_test");
     expect(detail.point_count).toBe(10);
     expect(detail.sample_points!.length).toBe(10);
   });
@@ -280,9 +300,9 @@ describe("MCP spatial tools", () => {
   test("range queries paginate large result sets", () => {
     const x = Array.from({ length: 100 }, (_, i) => i);
     const y = Array.from({ length: 100 }, (_, i) => i);
-    handleBuildIndex({ x, y, index_id: "paginated" });
+    handleBuildIndex(registry, { x, y, index_id: "paginated" });
 
-    const result = handleQueryRange({
+    const result = handleQueryRange(registry, {
       index_id: "paginated",
       x_min: 0,
       x_max: 99,
@@ -300,14 +320,14 @@ describe("MCP spatial tools", () => {
   });
 
   test("stored indexes can be explicitly deleted", () => {
-    handleBuildIndex({ x: [0, 1], y: [0, 1], index_id: "delete-me" });
+    handleBuildIndex(registry, { x: [0, 1], y: [0, 1], index_id: "delete-me" });
 
-    expect(handleDeleteIndex({ index_id: "delete-me", dimension: "2d" })).toEqual({
+    expect(handleDeleteIndex(registry, { index_id: "delete-me", dimension: "2d" })).toEqual({
       index_id: "delete-me",
       deleted: true,
     });
     expect(
-      handleQueryRange({
+      handleQueryRange(registry, {
         index_id: "delete-me",
         x_min: 0,
         x_max: 1,

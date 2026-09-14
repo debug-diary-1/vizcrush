@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll } from "vitest";
 import { loadWasmForParity, parityMode, injectWasmModuleForTesting } from "@vizcrush/core/parity";
 import { DDSketch, KllSketch, HyperLogLog, CountMinSketch } from "./index.js";
+import { createDDSketchImpl } from "./sketch-adapters.js";
 
 // Load the REAL wasm-bindgen module from disk (Node can't run bindgen's
 // import.meta fetch). It is NOT registered as the loaders' transport yet —
@@ -10,6 +11,9 @@ import { DDSketch, KllSketch, HyperLogLog, CountMinSketch } from "./index.js";
 // otherwise.
 const wasm = await loadWasmForParity(import.meta.url, "vizcrush_aggregate");
 const mode = parityMode(wasm, "vizcrush_aggregate");
+const jsParityKll = new KllSketch(200);
+const jsParityHll = new HyperLogLog(14);
+const jsParityCms = new CountMinSketch(1024, 5);
 
 // These describes run before the "WASM dispatch" block below injects the
 // module, so every sketch constructed here uses the JS core — the same
@@ -88,53 +92,67 @@ describe.runIf(mode === "run")("sketch WASM dispatch", () => {
     // sketch constructed afterward in this describe picks up
     // `loader.moduleSync` (shared with stats()/percentile()) and dispatches
     // to the real WASM adapter for its whole lifetime. Each test asserts
-    // `_wasm` is set — a sketch silently staying on JS here would mean these
-    // "WASM dispatch" tests exercised nothing.
+    // The adapter-level comparisons below exercise the real WASM objects
+    // without reaching through the public sketches' private state.
     injectWasmModuleForTesting("vizcrush_aggregate", wasm);
   });
 
   test("DDSketch uses the WASM adapter once the module is resident", () => {
-    const sketch = new DDSketch(0.01) as unknown as { _wasm?: unknown };
-    expect(sketch._wasm).toBeTruthy();
-    const s = sketch as unknown as DDSketch;
+    const js = createDDSketchImpl(null, 0.01);
+    const wasmImpl = createDDSketchImpl(wasm, 0.01);
+    expect(js.backend).toBe("js");
+    expect(wasmImpl.backend).toBe("wasm");
+    const s = new DDSketch(0.01);
     for (let i = 1; i <= 100; i++) s.add(i);
     expect(s.count).toBe(100);
     expect(s.min).toBe(1);
     expect(s.max).toBe(100);
     expect(s.quantile(0.5)).toBeGreaterThan(0);
+
+    const values = Float64Array.from({ length: 100 }, (_, index) => index + 1);
+    js.addBatch(values);
+    wasmImpl.addBatch(values);
+    expect(wasmImpl.count).toBe(js.count);
+    expect(wasmImpl.min).toBe(js.min);
+    expect(wasmImpl.max).toBe(js.max);
+    expect(wasmImpl.quantile(0.5)).toBeCloseTo(js.quantile(0.5), 10);
   });
 
   test("KllSketch uses the WASM adapter once the module is resident", () => {
-    const sketch = new KllSketch(200) as unknown as { _wasm?: unknown };
-    expect(sketch._wasm).toBeTruthy();
-    const s = sketch as unknown as KllSketch;
-    for (let i = 1; i <= 100; i++) s.add(i);
+    const s = new KllSketch(200);
+    for (let i = 1; i <= 100; i++) {
+      s.add(i);
+      jsParityKll.add(i);
+    }
     expect(s.count).toBe(100);
     expect(s.quantile(0.5)).toBeGreaterThan(0);
+    expect(s.count).toBe(jsParityKll.count);
+    expect(s.min).toBe(jsParityKll.min);
+    expect(s.max).toBe(jsParityKll.max);
   });
 
   test("HyperLogLog uses the WASM adapter once the module is resident", () => {
-    const hll = new HyperLogLog(14) as unknown as { _wasm?: unknown };
-    expect(hll._wasm).toBeTruthy();
-    const h = hll as unknown as HyperLogLog;
-    for (let i = 0; i < 1000; i++) h.add(i);
+    const h = new HyperLogLog(14);
+    for (let i = 0; i < 1000; i++) {
+      h.add(i);
+      jsParityHll.add(i);
+    }
     const est = h.estimate();
     expect(est).toBeGreaterThan(900);
     expect(est).toBeLessThan(1100);
+    expect(Math.abs(est - jsParityHll.estimate()) / jsParityHll.estimate()).toBeLessThan(0.03);
   });
 
   test("CountMinSketch uses the WASM adapter once the module is resident", () => {
-    const cms = new CountMinSketch(1024, 5) as unknown as { _wasm?: unknown };
-    expect(cms._wasm).toBeTruthy();
-    const c = cms as unknown as CountMinSketch;
+    const c = new CountMinSketch(1024, 5);
     c.addWithCount(42, 10);
+    jsParityCms.addWithCount(42, 10);
     expect(c.estimate(42)).toBeGreaterThanOrEqual(10);
+    expect(c.estimate(42)).toBe(jsParityCms.estimate(42));
   });
 
   test("CountMinSketch.addWithCount accepts a fractional count on the WASM adapter", () => {
-    const cms = new CountMinSketch(1024, 5) as unknown as { _wasm?: unknown };
-    expect(cms._wasm).toBeTruthy();
-    const c = cms as unknown as CountMinSketch;
+    const c = new CountMinSketch(1024, 5);
     expect(() => c.addWithCount(7, 2.5)).not.toThrow();
     expect(c.estimate(7)).toBeGreaterThanOrEqual(2);
   });

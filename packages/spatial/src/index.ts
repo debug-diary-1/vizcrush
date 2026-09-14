@@ -9,8 +9,6 @@ import {
   hashGridQueryRadiusCore,
   hashGridQueryRangeCore,
   type BBox,
-  type QuadtreeCore,
-  type SpatialHashGridCore,
 } from "./cores.js";
 
 export {
@@ -57,7 +55,10 @@ export interface QuadtreeHandle {
  * stay plain serializable metadata; the adapter object lives here, keyed by
  * handle identity, so no caller can branch on `_core` / `_wasmTree` again.
  */
-type QuadtreeBacking = { kind: "js"; core: QuadtreeCore } | { kind: "wasm"; tree: any };
+interface QuadtreeBacking {
+  queryRange(bbox: BBox): Uint32Array;
+  queryNearest(px: number, py: number, k: number): Uint32Array;
+}
 const quadtreeBacking = new WeakMap<QuadtreeHandle, QuadtreeBacking>();
 
 function quadtreeBackingOf(tree: QuadtreeHandle): QuadtreeBacking {
@@ -96,7 +97,10 @@ const buildQuadtreeKernel = defineKernel<
       pointCount: core.pointCount,
       bounds: core.bounds,
     };
-    quadtreeBacking.set(handle, { kind: "js", core });
+    quadtreeBacking.set(handle, {
+      queryRange: (bbox) => queryRangeCore(core, bbox),
+      queryNearest: (px, py, k) => queryNearestCore(core, px, py, k),
+    });
     return handle;
   },
   marshal: (x, y) => [x, y],
@@ -107,7 +111,10 @@ const buildQuadtreeKernel = defineKernel<
       pointCount: x.length,
       bounds: { xMin: b[0], xMax: b[1], yMin: b[2], yMax: b[3] },
     };
-    quadtreeBacking.set(handle, { kind: "wasm", tree: wasmTree });
+    quadtreeBacking.set(handle, {
+      queryRange: (bbox) => wasmTree.query_range(bbox.xMin, bbox.xMax, bbox.yMin, bbox.yMax),
+      queryNearest: (px, py, k) => wasmTree.query_nearest(px, py, k),
+    });
     return handle;
   },
   // The wasm build_quadtree returns an opaque tree object regardless of size;
@@ -157,18 +164,14 @@ export function buildQuadtreeSync(x: Float64Array, y: Float64Array): QuadtreeHan
  * Find all points within a bounding box.
  */
 export function queryRange(tree: QuadtreeHandle, bbox: BBox): Uint32Array {
-  const b = quadtreeBackingOf(tree);
-  return b.kind === "wasm"
-    ? b.tree.query_range(bbox.xMin, bbox.xMax, bbox.yMin, bbox.yMax)
-    : queryRangeCore(b.core, bbox);
+  return quadtreeBackingOf(tree).queryRange(bbox);
 }
 
 /**
  * k-nearest neighbor search.
  */
 export function queryNearest(tree: QuadtreeHandle, px: number, py: number, k: number): Uint32Array {
-  const b = quadtreeBackingOf(tree);
-  return b.kind === "wasm" ? b.tree.query_nearest(px, py, k) : queryNearestCore(b.core, px, py, k);
+  return quadtreeBackingOf(tree).queryNearest(px, py, k);
 }
 
 /**
@@ -196,7 +199,10 @@ export interface SpatialHashGridHandle {
 }
 
 /** Adapter backing for hash-grid handles; same privacy story as quadtrees. */
-type HashGridBacking = { kind: "js"; core: SpatialHashGridCore } | { kind: "wasm"; grid: any };
+interface HashGridBacking {
+  queryRadius(px: number, py: number, radius: number): Uint32Array;
+  queryRange(xMin: number, xMax: number, yMin: number, yMax: number): Uint32Array;
+}
 const hashGridBacking = new WeakMap<SpatialHashGridHandle, HashGridBacking>();
 
 function hashGridBackingOf(handle: SpatialHashGridHandle): HashGridBacking {
@@ -232,7 +238,10 @@ const buildHashGridKernel = defineKernel<
       count: core.xData.length,
       cellCount: core.cellCount,
     };
-    hashGridBacking.set(handle, { kind: "js", core });
+    hashGridBacking.set(handle, {
+      queryRadius: (px, py, radius) => hashGridQueryRadiusCore(core, px, py, radius),
+      queryRange: (xMin, xMax, yMin, yMax) => hashGridQueryRangeCore(core, xMin, xMax, yMin, yMax),
+    });
     return handle;
   },
   marshal: (x, y, cellSize) => [x, y, cellSize],
@@ -242,7 +251,10 @@ const buildHashGridKernel = defineKernel<
       count: wasmGrid.count,
       cellCount: wasmGrid.cell_count,
     };
-    hashGridBacking.set(handle, { kind: "wasm", grid: wasmGrid });
+    hashGridBacking.set(handle, {
+      queryRadius: (px, py, radius) => wasmGrid.query_radius(px, py, radius),
+      queryRange: (xMin, xMax, yMin, yMax) => wasmGrid.query_range(xMin, xMax, yMin, yMax),
+    });
     return handle;
   },
   // The wasm grid returns an opaque handle regardless of size; dispatch is
@@ -284,10 +296,7 @@ export function hashGridQueryRadius(
   py: number,
   radius: number,
 ): Uint32Array {
-  const b = hashGridBackingOf(handle);
-  return b.kind === "wasm"
-    ? b.grid.query_radius(px, py, radius)
-    : hashGridQueryRadiusCore(b.core, px, py, radius);
+  return hashGridBackingOf(handle).queryRadius(px, py, radius);
 }
 
 /**
@@ -300,10 +309,7 @@ export function hashGridQueryRange(
   yMin: number,
   yMax: number,
 ): Uint32Array {
-  const b = hashGridBackingOf(handle);
-  return b.kind === "wasm"
-    ? b.grid.query_range(xMin, xMax, yMin, yMax)
-    : hashGridQueryRangeCore(b.core, xMin, xMax, yMin, yMax);
+  return hashGridBackingOf(handle).queryRange(xMin, xMax, yMin, yMax);
 }
 
 /** The WASM-backed kernels, exposed for the shared parity harness. */

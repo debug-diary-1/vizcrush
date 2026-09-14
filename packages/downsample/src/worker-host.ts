@@ -1,37 +1,14 @@
 import { TimeSeriesSession, type TimeSeriesSessionState, type ViewportResult } from "./session.js";
+import {
+  isWorkerRequest,
+  resultTransferables,
+  workerErrorResponse,
+  type WorkerSuccessResponse,
+} from "./worker-protocol.js";
 
 export interface TimeSeriesWorkerHostScope {
   postMessage(message: unknown, transfer?: Transferable[]): void;
   onmessage: ((event: MessageEvent<unknown>) => void) | null;
-}
-
-interface WorkerRequest {
-  type: "vizcrush:request";
-  requestId: number;
-  operation: string;
-  x?: Float64Array;
-  y?: Float64Array;
-  request?: Parameters<TimeSeriesSession["view"]>[0];
-  options?: Parameters<TimeSeriesSession["view"]>[1];
-}
-
-function isWorkerRequest(value: unknown): value is WorkerRequest {
-  if (value === null || typeof value !== "object") return false;
-  const request = value as Partial<WorkerRequest>;
-  return request.type === "vizcrush:request" && Number.isSafeInteger(request.requestId);
-}
-
-function errorResponse(requestId: number, error: unknown, code = "operation-error") {
-  return {
-    type: "vizcrush:response",
-    requestId,
-    ok: false,
-    error: { code, message: error instanceof Error ? error.message : String(error) },
-  } as const;
-}
-
-function transferResult(result: ViewportResult): Transferable[] {
-  return [result.x.buffer as ArrayBuffer, result.y.buffer as ArrayBuffer];
 }
 
 /** Install the session protocol in a consumer-owned worker entry. */
@@ -46,7 +23,7 @@ export function installTimeSeriesWorkerHost(
     if (!isWorkerRequest(event.data) || disposed) return;
     const { requestId, operation } = event.data;
     if (busy) {
-      scope.postMessage(errorResponse(requestId, "The worker host is busy", "busy"));
+      scope.postMessage(workerErrorResponse(requestId, "The worker host is busy", "busy"));
       return;
     }
     busy = true;
@@ -69,24 +46,22 @@ export function installTimeSeriesWorkerHost(
       } else if (operation === "view") {
         if (!event.data.request) throw new TypeError("view requires a viewport request");
         value = await session.view(event.data.request, event.data.options);
-        transfer = transferResult(value);
+        transfer = resultTransferables(value);
       } else if (operation === "dispose") {
         disposed = true;
       } else {
         throw new RangeError(`Unknown worker operation: ${operation}`);
       }
-      scope.postMessage(
-        {
-          type: "vizcrush:response",
-          requestId,
-          ok: true,
-          value,
-          workerProcessingMs: performance.now() - processingStarted,
-        },
-        transfer,
-      );
+      const response: WorkerSuccessResponse = {
+        type: "vizcrush:response",
+        requestId,
+        ok: true,
+        value,
+        workerProcessingMs: performance.now() - processingStarted,
+      };
+      scope.postMessage(response, transfer);
     } catch (error) {
-      scope.postMessage(errorResponse(requestId, error));
+      scope.postMessage(workerErrorResponse(requestId, error));
     } finally {
       busy = false;
     }
