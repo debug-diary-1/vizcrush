@@ -68,7 +68,7 @@ function registerTool(server: McpServer, tool: ToolDescriptor): void {
   }));
 }
 
-export function createTools(registry: SpatialIndexRegistry): ToolDescriptor[] {
+function createTools(registry: SpatialIndexRegistry): ToolDescriptor[] {
   return [
     // ── Downsampling Tools ──
     {
@@ -244,6 +244,13 @@ export function createTools(registry: SpatialIndexRegistry): ToolDescriptor[] {
     },
   ];
 }
+
+/**
+ * Backward-compatible descriptor inventory. Servers do not register these
+ * stateful handler instances; `createServer` constructs descriptors around its
+ * own registry below.
+ */
+export const TOOLS: ToolDescriptor[] = createTools(new SpatialIndexRegistry());
 
 /**
  * The package's real version — read at runtime so it can't drift from

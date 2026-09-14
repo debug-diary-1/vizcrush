@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { createServer, createTools } from "./index.js";
+import { createServer, TOOLS } from "./index.js";
 import { handleLttb, handleMinMaxLttb, handleAutoDownsample } from "./tools/downsample.js";
 import { handleHistogram, handleBin2d } from "./tools/bin.js";
 import { handleBin3d } from "./tools/spatial3d.js";
@@ -28,7 +28,7 @@ afterEach(() => {
 
 describe("MCP tool registry wiring", () => {
   test("every descriptor has a unique name", () => {
-    const names = createTools(new SpatialIndexRegistry()).map((t) => t.name);
+    const names = TOOLS.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);
     expect(names.length).toBe(24);
   });
@@ -41,11 +41,7 @@ describe("MCP tool registry wiring", () => {
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(
-      createTools(new SpatialIndexRegistry())
-        .map((t) => t.name)
-        .sort(),
-    );
+    expect(tools.map((t) => t.name).sort()).toEqual(TOOLS.map((t) => t.name).sort());
 
     const x = Array.from({ length: 100 }, (_, i) => i);
     const y = Array.from({ length: 100 }, (_, i) => Math.sin(i * 0.1));
