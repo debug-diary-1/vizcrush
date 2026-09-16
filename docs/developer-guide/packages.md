@@ -74,14 +74,15 @@ The packages form a small DAG:
     ├──── @vizcrush/bin         │
     ├──── @vizcrush/bin3d       │
     ├──── @vizcrush/spatial     │
-    ├──── @vizcrush/spatial3d   │
-    └──── @vizcrush/ai          │
+    └──── @vizcrush/spatial3d   │
                                 │
-@vizcrush/react ◄────────── (uses all of the above)
-@vizcrush/mcp-server ◄────── (uses all of the above)
+@vizcrush/ai (standalone JS)    │
+                                │
+@vizcrush/react ◄────────── (uses its exposed algorithm packages)
+@vizcrush/mcp-server ◄────── (uses every algorithm package)
 ```
 
-`@vizcrush/core` is the only mandatory dependency for the algorithm packages. The integration packages (`react`, `mcp-server`) depend on whichever algorithm packages they expose.
+`@vizcrush/core` is the mandatory dependency for WASM/JS-dispatched algorithm packages. `@vizcrush/ai` is a standalone pure-JavaScript package with its own statistical contract. The integration packages (`react`, `mcp-server`) depend on whichever algorithm packages they expose.
 
 ## Adding a new package
 

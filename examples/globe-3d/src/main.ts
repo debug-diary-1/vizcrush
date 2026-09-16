@@ -112,7 +112,7 @@ function getColor(type: typeof dataType, value: number, visible: boolean): strin
 /* ------------------------------------------------------------------ */
 async function bootstrap() {
   const gpu = await init();
-  statBackend.textContent = gpu.backend;
+  statBackend.textContent = gpu.preferredBackend;
   await rebuild();
 }
 

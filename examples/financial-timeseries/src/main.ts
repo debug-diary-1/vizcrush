@@ -87,7 +87,7 @@ async function run() {
     // Stats
     const reduction = ((1 - target / n) * 100).toFixed(1);
     document.getElementById("stats")!.innerHTML = `
-      <div class="stat"><div class="stat-label">Backend</div><div class="stat-value">${gpu.backend}</div></div>
+      <div class="stat"><div class="stat-label">Preferred backend</div><div class="stat-value">${gpu.preferredBackend}</div></div>
       <div class="stat"><div class="stat-label">Input</div><div class="stat-value">${n.toLocaleString()}</div></div>
       <div class="stat"><div class="stat-label">Output</div><div class="stat-value">${target.toLocaleString()}</div></div>
       <div class="stat"><div class="stat-label">Reduction</div><div class="stat-value">${reduction}%</div></div>

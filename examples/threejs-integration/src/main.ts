@@ -558,7 +558,7 @@ function animate() {
 async function bootstrap() {
   await renderer.init();
   const gpu = await init();
-  statBackend.textContent = gpu.backend;
+  statBackend.textContent = gpu.preferredBackend;
   await rebuild(pointCount);
   renderer.setAnimationLoop(animate);
 }

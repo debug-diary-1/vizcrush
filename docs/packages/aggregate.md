@@ -20,10 +20,12 @@ const result = await stats(data);
 //   min: 1,
 //   max: 5,
 //   mean: 3,
-//   stdDev: 1.4142...,
-//   variance: 2,
+//   stdDev: 1.5811...,
+//   variance: 2.5,
 // }
 ```
+
+`stats()` reports **sample variance** with an `n - 1` denominator and omits non-finite values. This is intentionally different from `@vizcrush/ai`, which uses population variance for the complete supplied analysis window.
 
 **Why Welford?** Naïve `sum / n` then subtract-the-mean variance loses precision catastrophically on large or skewed datasets. Welford is numerically stable and runs in a single pass over the input — same memory cost as a single accumulator regardless of data size.
 

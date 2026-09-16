@@ -16,7 +16,7 @@ npm install @vizcrush/react
 ```typescript
 import { useVizcrush, useDownsample } from "@vizcrush/react";
 
-const ctx = useVizcrush(); // { backend: 'wasm' | 'js', capabilities } | null
+const ctx = useVizcrush(); // { preferredBackend: 'wasm' | 'js', capabilities, ... } | null
 const { data, loading } = useDownsample(x, y, { threshold: 1920 });
 ```
 

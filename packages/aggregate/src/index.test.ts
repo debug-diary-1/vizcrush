@@ -38,6 +38,15 @@ describe("stats", () => {
     expect(result.stdDev).toBe(0);
   });
 
+  test("omits non-finite values while retaining sample variance", async () => {
+    const result = await stats(new Float64Array([1, NaN, 3, Infinity, 5]));
+
+    expect(result.count).toBe(3);
+    expect(result.mean).toBe(3);
+    expect(result.variance).toBe(4);
+    expect(result.stdDev).toBe(2);
+  });
+
   test("large array of 10000 values has approximately correct mean", async () => {
     const size = 10_000;
     const data = new Float64Array(size);

@@ -17,6 +17,8 @@ export interface Capabilities {
 
 export interface VizcrushContext {
   /** Preferred backend from capability selection, not proof of per-call execution. */
+  preferredBackend: Backend;
+  /** @deprecated Use `preferredBackend`. This alias will be removed in the next major release. */
   backend: Backend;
   capabilities: Capabilities;
 }

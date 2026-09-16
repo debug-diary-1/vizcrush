@@ -31,11 +31,16 @@ import type { VizcrushContext } from "./types.js";
  *
  * ```ts
  * const gpu = await init();
- * console.log(gpu.backend); // 'wasm' | 'js'
+ * console.log(gpu.preferredBackend); // 'wasm' | 'js'
  * ```
  */
 export async function init(): Promise<VizcrushContext> {
   const capabilities = await detectCapabilities();
-  const backend = selectBackend(capabilities);
-  return { backend, capabilities };
+  const preferredBackend = selectBackend(capabilities);
+  return {
+    preferredBackend,
+    // Backward-compatible alias. Remove in the next major release.
+    backend: preferredBackend,
+    capabilities,
+  };
 }

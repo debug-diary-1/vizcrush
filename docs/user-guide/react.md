@@ -22,7 +22,7 @@ function App() {
 
   return (
     <div>
-      <div>Backend: {ctx.backend}</div>
+      <div>Preferred backend: {ctx.preferredBackend}</div>
       <Chart />
     </div>
   );

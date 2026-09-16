@@ -4,6 +4,19 @@ AI-native data analysis primitives. Anomaly detection, changepoint detection, au
 
 These functions are designed to be **cheap to call** so you can sprinkle them throughout your app: detect anomalies on every new batch of data, ask "what algorithm should I use?" before each render, generate a summary string to feed to an LLM, etc.
 
+## Statistical contract
+
+The AI module describes and standardizes the supplied analysis window; it does not estimate an unseen population. Variance, standard deviation, Z-score thresholds, and derived features therefore use **population variance** with an `n` denominator. This intentionally differs from `@vizcrush/aggregate`'s sample-variance summary (`n - 1` denominator).
+
+All numeric AI functions treat `NaN`, `Infinity`, and `-Infinity` as missing observations:
+
+- single-series functions omit each non-finite value;
+- paired `(x, y)` functions omit the whole pair when either coordinate is non-finite;
+- anomaly and changepoint indices still refer to positions in the original input;
+- all-non-finite input behaves like empty input.
+
+The two packages retain separate implementations because their numerical contracts are different.
+
 ## Import
 
 ```typescript

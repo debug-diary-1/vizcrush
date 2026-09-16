@@ -4,6 +4,8 @@ vizcrush ships with a small but powerful set of AI-native data analysis primitiv
 
 This guide walks through the most common AI patterns end-to-end. For full API details see the **[@vizcrush/ai package reference](../packages/ai.md)**.
 
+The AI functions use population variance for the supplied analysis window and omit non-finite observations. Paired functions omit an entire `(x, y)` pair if either value is non-finite, while anomaly and changepoint results retain original input indices. See the package reference for the complete statistical contract.
+
 ## Pattern 1: Anomaly detection on a fresh dataset
 
 ```typescript

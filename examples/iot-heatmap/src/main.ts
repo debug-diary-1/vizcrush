@@ -62,7 +62,7 @@ async function render(bins: number) {
   const pctMs = performance.now() - t1;
 
   document.getElementById("stats")!.innerHTML = `
-    <div class="stat"><div class="stat-label">Backend</div><div class="stat-value">${gpu.backend}</div></div>
+    <div class="stat"><div class="stat-label">Preferred backend</div><div class="stat-value">${gpu.preferredBackend}</div></div>
     <div class="stat"><div class="stat-label">Points</div><div class="stat-value">${N.toLocaleString()}</div></div>
     <div class="stat"><div class="stat-label">Grid</div><div class="stat-value">${bins}x${bins}</div></div>
     <div class="stat"><div class="stat-label">bin2d</div><div class="stat-value">${binMs.toFixed(1)}ms</div></div>
