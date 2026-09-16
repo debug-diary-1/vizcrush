@@ -103,6 +103,60 @@ export function parseDataQuery(
   };
 }
 
+interface FiniteSeries {
+  values: Float64Array;
+  sourceIndices: Uint32Array | null;
+}
+
+/**
+ * AI analysis treats non-finite observations as gaps. Keep the original array
+ * on the fast path and retain an index map only when compaction is necessary.
+ */
+function finiteSeries(data: Float64Array): FiniteSeries {
+  let finiteCount = 0;
+  for (let i = 0; i < data.length; i++) {
+    if (Number.isFinite(data[i])) finiteCount++;
+  }
+
+  if (finiteCount === data.length) return { values: data, sourceIndices: null };
+
+  const values = new Float64Array(finiteCount);
+  const sourceIndices = new Uint32Array(finiteCount);
+  let target = 0;
+  for (let source = 0; source < data.length; source++) {
+    if (!Number.isFinite(data[source])) continue;
+    values[target] = data[source];
+    sourceIndices[target] = source;
+    target++;
+  }
+  return { values, sourceIndices };
+}
+
+function finitePairs(x: Float64Array, y: Float64Array): { x: Float64Array; y: Float64Array } {
+  const length = Math.min(x.length, y.length);
+  let finiteCount = 0;
+  for (let i = 0; i < length; i++) {
+    if (Number.isFinite(x[i]) && Number.isFinite(y[i])) finiteCount++;
+  }
+
+  if (finiteCount === length && x.length === y.length) return { x, y };
+
+  const finiteX = new Float64Array(finiteCount);
+  const finiteY = new Float64Array(finiteCount);
+  let target = 0;
+  for (let source = 0; source < length; source++) {
+    if (!Number.isFinite(x[source]) || !Number.isFinite(y[source])) continue;
+    finiteX[target] = x[source];
+    finiteY[target] = y[source];
+    target++;
+  }
+  return { x: finiteX, y: finiteY };
+}
+
+function sourceIndex(series: FiniteSeries, compactedIndex: number): number {
+  return series.sourceIndices?.[compactedIndex] ?? compactedIndex;
+}
+
 // ─── Anomaly Detection ───
 
 export interface Anomaly {
@@ -128,10 +182,12 @@ function mad(arr: Float64Array): number {
 }
 
 export function detectAnomalies(data: Float64Array, sensitivity: number = 3): Anomaly[] {
-  if (data.length < 5) return [];
+  const finite = finiteSeries(data);
+  const values = finite.values;
+  if (values.length < 5) return [];
 
-  const med = median(data);
-  let madVal = mad(data);
+  const med = median(values);
+  let madVal = mad(values);
   // MAD-based modified Z-score (0.6745 is the 0.75th quantile of the standard normal)
   const k = 0.6745;
   const threshold = sensitivity;
@@ -139,17 +195,17 @@ export function detectAnomalies(data: Float64Array, sensitivity: number = 3): An
   // If MAD is 0 (e.g. constant data with a few outliers), fall back to mean absolute deviation
   if (madVal === 0) {
     let sum = 0;
-    for (let i = 0; i < data.length; i++) sum += Math.abs(data[i] - med);
-    madVal = sum / data.length;
+    for (let i = 0; i < values.length; i++) sum += Math.abs(values[i] - med);
+    madVal = sum / values.length;
   }
 
   const anomalies: Anomaly[] = [];
 
   // For shift detection, compute a running mean over a window
-  const windowSize = Math.max(5, Math.floor(data.length / 20));
+  const windowSize = Math.max(5, Math.floor(values.length / 20));
 
-  for (let i = 0; i < data.length; i++) {
-    const modifiedZ = madVal === 0 ? 0 : ((data[i] - med) * k) / madVal;
+  for (let i = 0; i < values.length; i++) {
+    const modifiedZ = madVal === 0 ? 0 : ((values[i] - med) * k) / madVal;
 
     if (Math.abs(modifiedZ) > threshold) {
       // Classify: check if it's a sustained shift or a point anomaly
@@ -158,9 +214,9 @@ export function detectAnomalies(data: Float64Array, sensitivity: number = 3): An
         // Check if the surrounding window also deviates
         let shiftCount = 0;
         const start = Math.max(0, i - windowSize);
-        const end = Math.min(data.length, i + windowSize);
+        const end = Math.min(values.length, i + windowSize);
         for (let j = start; j < end; j++) {
-          const jz = madVal === 0 ? 0 : ((data[j] - med) * k) / madVal;
+          const jz = madVal === 0 ? 0 : ((values[j] - med) * k) / madVal;
           if (Math.abs(jz) > threshold * 0.5) shiftCount++;
         }
         isShift = shiftCount > windowSize;
@@ -176,8 +232,8 @@ export function detectAnomalies(data: Float64Array, sensitivity: number = 3): An
       }
 
       anomalies.push({
-        index: i,
-        value: data[i],
+        index: sourceIndex(finite, i),
+        value: values[i],
         zScore: Math.round(modifiedZ * 1000) / 1000,
         type,
       });
@@ -188,12 +244,14 @@ export function detectAnomalies(data: Float64Array, sensitivity: number = 3): An
 }
 
 export function detectChangepoints(data: Float64Array, minSegment: number = 10): number[] {
-  if (data.length < minSegment * 2) return [];
+  const finite = finiteSeries(data);
+  const values = finite.values;
+  if (values.length < minSegment * 2) return [];
 
   // CUSUM-based changepoint detection
   let mean = 0;
-  for (let i = 0; i < data.length; i++) mean += data[i];
-  mean /= data.length;
+  for (let i = 0; i < values.length; i++) mean += values[i];
+  mean /= values.length;
 
   const changepoints: number[] = [];
   let cumSum = 0;
@@ -203,23 +261,23 @@ export function detectChangepoints(data: Float64Array, minSegment: number = 10):
 
   // Estimate std for threshold
   let variance = 0;
-  for (let i = 0; i < data.length; i++) {
-    variance += (data[i] - mean) ** 2;
+  for (let i = 0; i < values.length; i++) {
+    variance += (values[i] - mean) ** 2;
   }
-  const std = Math.sqrt(variance / data.length);
+  const std = Math.sqrt(variance / values.length);
   const threshold = std * 1.5;
 
-  for (let i = 0; i < data.length; i++) {
-    cumSum += data[i] - mean;
+  for (let i = 0; i < values.length; i++) {
+    cumSum += values[i] - mean;
 
     if (cumSum - cumSumMin > threshold && i - lastCp >= minSegment) {
-      changepoints.push(i);
+      changepoints.push(sourceIndex(finite, i));
       lastCp = i;
       cumSum = 0;
       cumSumMin = 0;
       cumSumMax = 0;
     } else if (cumSumMax - cumSum > threshold && i - lastCp >= minSegment) {
-      changepoints.push(i);
+      changepoints.push(sourceIndex(finite, i));
       lastCp = i;
       cumSum = 0;
       cumSumMin = 0;
@@ -250,6 +308,7 @@ export function autoOptimize(
   y: Float64Array,
   screenWidth: number = 1920,
 ): AutoConfig {
+  ({ x, y } = finitePairs(x, y));
   const n = x.length;
   const targetPoints = Math.min(n, screenWidth * 2);
 
@@ -332,6 +391,7 @@ export interface DataSummary {
 }
 
 export function summarize(x: Float64Array, y: Float64Array): DataSummary {
+  ({ x, y } = finitePairs(x, y));
   const n = y.length;
   if (n === 0) {
     return {
@@ -444,6 +504,7 @@ export function summarize(x: Float64Array, y: Float64Array): DataSummary {
 }
 
 export function summarizeForLLM(x: Float64Array, y: Float64Array): string {
+  ({ x, y } = finitePairs(x, y));
   const s = summarize(x, y);
   const n = y.length;
 
@@ -479,6 +540,7 @@ export function summarizeForLLM(x: Float64Array, y: Float64Array): string {
 // ─── Shape Embeddings ───
 
 export function computeShapeVector(data: Float64Array, dimensions: number = 16): Float64Array {
+  data = finiteSeries(data).values;
   const vec = new Float64Array(dimensions);
   const n = data.length;
   if (n === 0) return vec;
@@ -576,6 +638,7 @@ export function shapeSimilarity(a: Float64Array, b: Float64Array): number {
   let normA = 0;
   let normB = 0;
   for (let i = 0; i < a.length; i++) {
+    if (!Number.isFinite(a[i]) || !Number.isFinite(b[i])) continue;
     dotProduct += a[i] * b[i];
     normA += a[i] * a[i];
     normB += b[i] * b[i];

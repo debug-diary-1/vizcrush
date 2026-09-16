@@ -67,7 +67,7 @@ async function main() {
 
     // Update info
     document.getElementById("info")!.innerHTML = `
-      <span>Backend: <span class="value">${gpu.backend}</span></span>
+      <span>Preferred backend: <span class="value">${gpu.preferredBackend}</span></span>
       <span>Index build: <span class="value">${buildMs.toFixed(1)}ms</span></span>
       <span>Query: <span class="value">${queryMs.toFixed(2)}ms</span></span>
       <span>Visible: <span class="value">${visible.length.toLocaleString()}</span></span>

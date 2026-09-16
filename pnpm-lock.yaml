@@ -1172,10 +1172,6 @@ importers:
         version: 7.0.2
 
   packages/ai:
-    dependencies:
-      '@vizcrush/core':
-        specifier: workspace:*
-        version: link:../core
     devDependencies:
       typescript:
         specifier: 'catalog:'

@@ -75,7 +75,7 @@ Good bug reports include:
 
 - vizcrush version (commit SHA if building from source)
 - Browser / Node version
-- Backend (`ctx.backend` from `await init()`)
+- Preferred backend (`ctx.preferredBackend` from `await init()`)
 - A minimal repro (CodeSandbox link or short script)
 
 For performance issues, include:

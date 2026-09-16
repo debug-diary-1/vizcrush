@@ -83,8 +83,8 @@ function generatePoints(count: number): { x: Float64Array; y: Float64Array; z: F
 
 // ---- Main pipeline ----
 async function run() {
-  const backend = await init();
-  statBackend.textContent = backend ?? "js";
+  const context = await init();
+  statBackend.textContent = context.preferredBackend;
 
   const pointCount = parseInt(ctrlPoints.value, 10);
   const bins = parseInt(ctrlGrid.value, 10);

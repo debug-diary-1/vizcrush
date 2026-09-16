@@ -270,7 +270,7 @@ async function runBenchmark() {
 
 // Init
 init().then((gpu) => {
-  status(`Backend: ${gpu.backend}. Click "Run Benchmark" to start.`);
+  status(`Preferred backend: ${gpu.preferredBackend}. Click "Run Benchmark" to start.`);
 });
 
 runBtn.addEventListener("click", () => runBenchmark());

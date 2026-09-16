@@ -40,7 +40,7 @@ const camera: CameraState = {
 /* ------------------------------------------------------------------ */
 async function bootstrap() {
   const gpu = await init();
-  statBackend.textContent = gpu.backend;
+  statBackend.textContent = gpu.preferredBackend;
   await rebuild(pointCount);
 }
 

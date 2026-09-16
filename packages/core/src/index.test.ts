@@ -53,11 +53,13 @@ describe("selectBackend", () => {
 });
 
 describe("init", () => {
-  test("returns context with backend and capabilities", async () => {
+  test("returns the preferred backend with a deprecated backend alias", async () => {
     const { init } = await import("./index.js");
     const ctx = await init();
+    expect(ctx).toHaveProperty("preferredBackend");
     expect(ctx).toHaveProperty("backend");
     expect(ctx).toHaveProperty("capabilities");
-    expect(["wasm", "js"]).toContain(ctx.backend);
+    expect(["wasm", "js"]).toContain(ctx.preferredBackend);
+    expect(ctx.backend).toBe(ctx.preferredBackend);
   });
 });

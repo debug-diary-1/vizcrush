@@ -55,8 +55,8 @@ async function main() {
   // ── Display stats ──
   document.getElementById("stats")!.innerHTML = `
     <div class="stat">
-      <div class="stat-label">Backend</div>
-      <div class="stat-value">${gpu.backend}</div>
+      <div class="stat-label">Preferred backend</div>
+      <div class="stat-value">${gpu.preferredBackend}</div>
     </div>
     <div class="stat">
       <div class="stat-label">LTTB (1M → 2K)</div>

@@ -29,7 +29,7 @@ There are also **two integration packages** (covered in the User Guide):
 
 **Paired results use separate arrays.** Downsampling and range-filter APIs return `{ x: Float64Array, y: Float64Array }`. Adapt those arrays to the input shape expected by your renderer.
 
-**Backend can be overridden per call.** Most functions accept an `options.backend` of `"auto" | "wasm" | "js"`. The default is `"auto"` (use whatever `init()` selected).
+**Backend can be overridden per call.** Most functions accept an `options.backend` of `"auto" | "wasm" | "js"`. The default is `"auto"` (use the capability preference from `init()`, subject to per-call thresholds and availability).
 
 ## What's a "package" in the source
 

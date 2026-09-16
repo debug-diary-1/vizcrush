@@ -17,8 +17,10 @@ npm install @vizcrush/core
 import { init } from "@vizcrush/core";
 
 const vc = await init();
-console.log(vc.backend); // 'wasm' | 'js'
+console.log(vc.preferredBackend); // 'wasm' | 'js'
 ```
+
+The deprecated `vc.backend` alias remains available throughout the 2.x release line.
 
 ## Documentation
 

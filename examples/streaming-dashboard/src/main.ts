@@ -28,7 +28,7 @@ async function main() {
       <div class="pill"><div class="pill-label">Min</div><div class="pill-value">${acc.length > 0 ? acc.min.toFixed(1) : "-"}</div></div>
       <div class="pill"><div class="pill-label">Max</div><div class="pill-value">${acc.length > 0 ? acc.max.toFixed(1) : "-"}</div></div>
       <div class="pill"><div class="pill-label">Std Dev</div><div class="pill-value">${acc.length > 0 ? acc.stdDev.toFixed(2) : "-"}</div></div>
-      <div class="pill"><div class="pill-label">Backend</div><div class="pill-value">${gpu.backend}</div></div>
+      <div class="pill"><div class="pill-label">Preferred backend</div><div class="pill-value">${gpu.preferredBackend}</div></div>
     `;
   }
 

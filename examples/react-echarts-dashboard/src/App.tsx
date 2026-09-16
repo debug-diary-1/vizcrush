@@ -108,7 +108,7 @@ function Dashboard({ series }: { series: Series }) {
       <section className="metrics" aria-live="polite">
         <article>
           <span>Preferred backend</span>
-          <strong>{context?.backend ?? "initializing"}</strong>
+          <strong>{context?.preferredBackend ?? "initializing"}</strong>
         </article>
         <article>
           <span>Input</span>

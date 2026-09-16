@@ -15,7 +15,8 @@ import { init, detectCapabilities, selectBackend } from "@vizcrush/core";
 ```typescript
 const ctx = await init();
 // {
-//   backend: "wasm" | "js",   // preferred from runtime capability
+//   preferredBackend: "wasm" | "js", // preferred from runtime capability
+//   backend: "wasm" | "js",          // deprecated compatibility alias
 //   capabilities: {
 //     webgpu: boolean,        // raw probes, for reporting only
 //     wasmSimd: boolean,
@@ -25,7 +26,9 @@ const ctx = await init();
 // }
 ```
 
-`backend` is `"wasm"` when WebAssembly is available and `"js"` otherwise. It is a capability-based preference, not proof that a particular operation used that path: automatic size thresholds, per-call overrides, and package WASM loading still participate in dispatch. Use a kernel's `withBackend()` result when you need the requested mode, actual backend, and decision reason for a completed call.
+`preferredBackend` is `"wasm"` when WebAssembly is available and `"js"` otherwise. It is a capability-based preference, not proof that a particular operation used that path: automatic size thresholds, per-call overrides, and package WASM loading still participate in dispatch. Use a kernel's `withBackend()` result when you need the requested mode, actual backend, and decision reason for a completed call.
+
+`backend` remains as a deprecated alias for compatibility with 2.x callers. New code should use `preferredBackend`; the alias is scheduled for removal in the next major release.
 
 The `capabilities` object reports the raw WebGPU/SIMD/SharedArrayBuffer probes, but those probes do not name distinct selectable default backends. The opt-in WebGPU path on `@vizcrush/bin`’s bin2d is requested per call, not selected here (ADR 0004).
 

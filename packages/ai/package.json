@@ -37,9 +37,6 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@vizcrush/core": "workspace:*"
-  },
   "devDependencies": {
     "typescript": "catalog:"
   }

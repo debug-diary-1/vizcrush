@@ -56,6 +56,21 @@ describe("detectAnomalies", () => {
     const anomalies = detectAnomalies(data);
     expect(anomalies.length).toBe(0);
   });
+
+  it("omits non-finite values and preserves original anomaly indices", () => {
+    const data = new Float64Array(102).fill(10);
+    data[0] = NaN;
+    data[51] = 1000;
+    data[80] = Infinity;
+
+    const anomalies = detectAnomalies(data);
+    expect(anomalies.some((anomaly) => anomaly.index === 51)).toBe(true);
+    expect(anomalies.every((anomaly) => Number.isFinite(anomaly.value))).toBe(true);
+  });
+
+  it("treats all-non-finite input as empty", () => {
+    expect(detectAnomalies(new Float64Array([NaN, Infinity, -Infinity]))).toEqual([]);
+  });
 });
 
 // ─── detectChangepoints ───
@@ -71,6 +86,26 @@ describe("detectChangepoints", () => {
     // The detected changepoint should be near index 100
     const nearShift = cps.some((cp) => Math.abs(cp - 100) < 30);
     expect(nearShift).toBe(true);
+  });
+
+  it("maps changepoints back to original indices after omitting gaps", () => {
+    const clean = new Float64Array(200);
+    const withGaps = new Float64Array(202);
+    withGaps[0] = NaN;
+    for (let i = 0; i < 100; i++) {
+      clean[i] = 10;
+      withGaps[i + 1] = 10;
+    }
+    withGaps[101] = Infinity;
+    for (let i = 100; i < 200; i++) {
+      clean[i] = 50;
+      withGaps[i + 2] = 50;
+    }
+
+    const expected = detectChangepoints(clean, 10).map((index) =>
+      index < 100 ? index + 1 : index + 2,
+    );
+    expect(detectChangepoints(withGaps, 10)).toEqual(expected);
   });
 });
 
@@ -108,6 +143,16 @@ describe("autoOptimize", () => {
     const config = autoOptimize(x, y);
     expect(config.algorithm).toBe("minmax_lttb");
   });
+
+  it("omits non-finite coordinate pairs from its dataset size", () => {
+    const config = autoOptimize(
+      new Float64Array([0, 1, NaN, 3, 4]),
+      new Float64Array([1, NaN, 100, 3, 5]),
+      100,
+    );
+    expect(config.targetPoints).toBe(3);
+    expect(config.reasoning).toContain("3 points");
+  });
 });
 
 // ─── summarize ───
@@ -125,6 +170,31 @@ describe("summarize", () => {
     const result = summarize(x, y);
     expect(result.trend).toBe("increasing");
     expect(result.trendSlope).toBeGreaterThan(0);
+  });
+
+  it("uses population variance for the supplied window", () => {
+    const result = summarize(new Float64Array([0, 1]), new Float64Array([0, 2]));
+    expect(result.distribution.mean).toBe(1);
+    expect(result.distribution.stddev).toBe(1);
+  });
+
+  it("omits non-finite x/y pairs", () => {
+    const result = summarize(
+      new Float64Array([0, 1, NaN, 3, 4]),
+      new Float64Array([1, NaN, 100, 3, 5]),
+    );
+
+    expect(result.distribution.mean).toBe(3);
+    expect(result.distribution.stddev).toBe(1.633);
+    expect(result.summary).toContain("3 points");
+  });
+
+  it("treats all-non-finite pairs as empty and handles singleton input", () => {
+    const empty = summarize(new Float64Array([NaN, Infinity]), new Float64Array([1, 2]));
+    expect(empty.summary).toBe("Empty dataset.");
+
+    const singleton = summarize(new Float64Array([7]), new Float64Array([42]));
+    expect(singleton.distribution).toMatchObject({ mean: 42, median: 42, stddev: 0 });
   });
 });
 
@@ -144,6 +214,14 @@ describe("summarizeForLLM", () => {
     expect(text.length).toBeGreaterThan(50);
     expect(text).toContain("100");
     expect(text).toMatch(/mean|Mean/i);
+  });
+
+  it("reports the finite paired observation count", () => {
+    const text = summarizeForLLM(
+      new Float64Array([0, 1, NaN, 3]),
+      new Float64Array([1, NaN, 100, 3]),
+    );
+    expect(text).toContain("2 time-series points");
   });
 });
 
@@ -165,6 +243,13 @@ describe("computeShapeVector", () => {
 
     const vec = computeShapeVector(data, 8);
     expect(vec.length).toBe(8);
+  });
+
+  it("omits non-finite values and treats all-non-finite input as empty", () => {
+    const clean = computeShapeVector(new Float64Array([1, 2, 3, 4]));
+    const withGaps = computeShapeVector(new Float64Array([NaN, 1, 2, Infinity, 3, -Infinity, 4]));
+    expect(withGaps).toEqual(clean);
+    expect(computeShapeVector(new Float64Array([NaN, Infinity]))).toEqual(new Float64Array(16));
   });
 });
 
@@ -199,5 +284,11 @@ describe("shapeSimilarity", () => {
     const vecConst = computeShapeVector(constData);
     const sim = shapeSimilarity(vecSine, vecConst);
     expect(sim).toBeLessThan(0.5);
+  });
+
+  it("omits non-finite feature pairs", () => {
+    const a = new Float64Array([1, NaN, 2, Infinity]);
+    const b = new Float64Array([1, 10, 2, 20]);
+    expect(shapeSimilarity(a, b)).toBeCloseTo(1);
   });
 });

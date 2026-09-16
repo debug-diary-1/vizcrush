@@ -20,6 +20,11 @@ const anomalies = detectAnomalies(sensorData, 3.0);
 const paragraph = summarizeForLLM(x, y); // fits in an LLM context window
 ```
 
+AI analysis treats the supplied series as the complete analysis window: variance and standard
+deviation use the population definition (`n` denominator). Non-finite observations are omitted;
+for paired `x`/`y` inputs, the whole pair is omitted. Reported anomaly and changepoint indices
+always refer to the original input.
+
 ## Documentation
 
 Full guides and API reference: [debug-diary-1.github.io/vizcrush](https://debug-diary-1.github.io/vizcrush/) ·

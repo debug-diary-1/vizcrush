@@ -27,7 +27,7 @@ const result = await bin2d(x, y, { xBins: 256, yBins: 256 }, { backend: "webgpu"
 import { init } from "@vizcrush/core";
 
 const ctx = await init();
-console.log(ctx.backend);
+console.log(ctx.preferredBackend);
 // "wasm" | "js"
 ```
 
@@ -35,7 +35,7 @@ Internally, `init()`:
 
 1. Calls `detectCapabilities()` to probe the runtime
 2. Calls `selectBackend(capabilities)` — `"wasm"` if WebAssembly is available, else `"js"`
-3. Returns `{ backend, capabilities }`
+3. Returns `{ preferredBackend, capabilities }` plus the deprecated `backend` compatibility alias
 
 ## Inspecting capabilities directly
 

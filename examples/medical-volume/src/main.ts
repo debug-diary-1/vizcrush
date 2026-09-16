@@ -39,7 +39,7 @@ let _overviewAnimFrame = 0;
 /* ------------------------------------------------------------------ */
 async function bootstrap() {
   const gpu = await init();
-  statBackend.textContent = gpu.backend;
+  statBackend.textContent = gpu.preferredBackend;
 
   // Generate synthetic CT volume data
   const volume = generateCTVolume(NUM_POINTS);
