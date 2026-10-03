@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/bin",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "1D/2D histogram binning and hexagonal binning",
   "keywords": [
     "2d",
@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vizcrush/core": "workspace:*"
+    "@vizcrush/core": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

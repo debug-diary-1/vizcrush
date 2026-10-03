@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React hooks for vizcrush — useDownsample, useBin2d, useStats",
   "keywords": [
     "data",
@@ -37,12 +37,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vizcrush/aggregate": "workspace:*",
-    "@vizcrush/bin": "workspace:*",
-    "@vizcrush/core": "workspace:*",
-    "@vizcrush/downsample": "workspace:*",
-    "@vizcrush/spatial": "workspace:*",
-    "@vizcrush/transform": "workspace:*"
+    "@vizcrush/aggregate": "workspace:^",
+    "@vizcrush/bin": "workspace:^",
+    "@vizcrush/core": "workspace:^",
+    "@vizcrush/downsample": "workspace:^",
+    "@vizcrush/spatial": "workspace:^",
+    "@vizcrush/transform": "workspace:^"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.3",
