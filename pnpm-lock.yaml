@@ -1164,7 +1164,7 @@ importers:
   packages/aggregate:
     dependencies:
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -1180,7 +1180,7 @@ importers:
   packages/bin:
     dependencies:
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@types/node':
@@ -1193,7 +1193,7 @@ importers:
   packages/bin3d:
     dependencies:
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -1212,7 +1212,7 @@ importers:
   packages/downsample:
     dependencies:
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -1225,31 +1225,31 @@ importers:
         specifier: 'catalog:'
         version: 1.30.0(zod@4.5.4)
       '@vizcrush/aggregate':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../aggregate
       '@vizcrush/ai':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../ai
       '@vizcrush/bin':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../bin
       '@vizcrush/bin3d':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../bin3d
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@vizcrush/downsample':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../downsample
       '@vizcrush/spatial':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../spatial
       '@vizcrush/spatial3d':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../spatial3d
       '@vizcrush/transform':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../transform
       zod:
         specifier: 'catalog:'
@@ -1265,22 +1265,22 @@ importers:
   packages/react:
     dependencies:
       '@vizcrush/aggregate':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../aggregate
       '@vizcrush/bin':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../bin
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@vizcrush/downsample':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../downsample
       '@vizcrush/spatial':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../spatial
       '@vizcrush/transform':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../transform
     devDependencies:
       '@testing-library/react':
@@ -1308,7 +1308,7 @@ importers:
   packages/spatial:
     dependencies:
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -1318,7 +1318,7 @@ importers:
   packages/spatial3d:
     dependencies:
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -1328,7 +1328,7 @@ importers:
   packages/transform:
     dependencies:
       '@vizcrush/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:

@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/mcp-server",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP server for vizcrush — AI-agent access to high-performance data primitives",
   "keywords": [
     "agent",
@@ -42,15 +42,15 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "catalog:",
-    "@vizcrush/aggregate": "workspace:*",
-    "@vizcrush/ai": "workspace:*",
-    "@vizcrush/bin": "workspace:*",
-    "@vizcrush/bin3d": "workspace:*",
-    "@vizcrush/core": "workspace:*",
-    "@vizcrush/downsample": "workspace:*",
-    "@vizcrush/spatial": "workspace:*",
-    "@vizcrush/spatial3d": "workspace:*",
-    "@vizcrush/transform": "workspace:*",
+    "@vizcrush/aggregate": "workspace:^",
+    "@vizcrush/ai": "workspace:^",
+    "@vizcrush/bin": "workspace:^",
+    "@vizcrush/bin3d": "workspace:^",
+    "@vizcrush/core": "workspace:^",
+    "@vizcrush/downsample": "workspace:^",
+    "@vizcrush/spatial": "workspace:^",
+    "@vizcrush/spatial3d": "workspace:^",
+    "@vizcrush/transform": "workspace:^",
     "zod": "catalog:"
   },
   "devDependencies": {
