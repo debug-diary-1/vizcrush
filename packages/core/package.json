@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/core",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Shared WASM/JS dispatch kernel and capability detection for vizcrush packages",
   "keywords": [
     "data",
