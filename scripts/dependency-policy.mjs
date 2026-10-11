@@ -44,10 +44,13 @@ export function findUnpinnedCargoInstalls(source) {
  * than intended: `workspace:*` emits an exact version, and a hand-written
  * `2.1.0` is already one. An exact pin forbids upgrading the dependency and
  * resolves a second copy of it whenever two siblings disagree.
+ *
+ * devDependencies are exempt: a consumer never installs them, so the range a
+ * published manifest carries there reaches nobody.
  */
 export function findWorkspaceWildcardDependencies(manifest) {
   const violations = [];
-  for (const field of ["dependencies", "peerDependencies"]) {
+  for (const field of ["dependencies", "peerDependencies", "optionalDependencies"]) {
     const dependencies = manifest[field];
     if (!dependencies) continue;
     for (const [name, versionRange] of Object.entries(dependencies)) {
