@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   dependabotUsesNpm,
   findNonFrozenPnpmInstalls,
+  findToolchainPinMismatch,
+  findUnpinnedActionUses,
   findUnpinnedCargoInstalls,
 } from "./dependency-policy.mjs";
 
@@ -57,5 +59,74 @@ describe("dependency policy", () => {
     ].join("\n");
 
     expect(findUnpinnedCargoInstalls(source)).toEqual([1, 2]);
+  });
+
+  test.each([
+    "uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1",
+    "- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1",
+    "uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable",
+    "uses: owner/repo/path/to/action@6bed0761d98439e5a578e2877258200ad565ba87 # v1.0.0",
+    "uses: ./local/path",
+    "uses: docker://alpine@sha256:9d36088643581e728c969f35141f88139fec77280b2be23c1f66f8e40e1025e7",
+  ])("accepts pinned and allowed action uses forms: %s", (source) => {
+    expect(findUnpinnedActionUses(source)).toEqual([]);
+  });
+
+  test.each([
+    "uses: actions/checkout@v7",
+    "uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+    "uses: actions/checkout@3d3c42 # v7.0.1",
+    "uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 #",
+    "uses: docker://alpine:latest",
+    "uses: docker://alpine@sha256:9d36088",
+  ])("flags unpinned or uncommented action uses forms: %s", (source) => {
+    expect(findUnpinnedActionUses(source)).toEqual([1]);
+  });
+
+  test("finds unpinned action uses by line number across a workflow", () => {
+    const source = [
+      "jobs:",
+      "  build:",
+      "    steps:",
+      "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1",
+      "      - uses: actions/setup-node@v4",
+    ].join("\n");
+
+    expect(findUnpinnedActionUses(source)).toEqual([5]);
+  });
+
+  test.each([
+    ["double-quoted, no comment", '[tools]\npnpm = "12.3.4"\n'],
+    ["double-quoted with trailing comment", '[tools]\npnpm = "12.3.4" # keep in sync\n'],
+    ["single-quoted", "[tools]\npnpm = '12.3.4'\n"],
+  ])("accepts matching pnpm pins in mise.toml and package.json (%s)", (_label, miseToml) => {
+    expect(findToolchainPinMismatch(miseToml, '{"packageManager": "pnpm@12.3.4"}')).toBeNull();
+  });
+
+  test("reports mismatched pnpm pins between mise.toml and package.json", () => {
+    expect(
+      findToolchainPinMismatch('[tools]\npnpm = "12.3.4"\n', '{"packageManager": "pnpm@12.3.0"}'),
+    ).toBe("mise.toml pins pnpm 12.3.4 but package.json's packageManager pins pnpm 12.3.0");
+  });
+
+  test("reports a mismatch even when the mise.toml pin has a trailing comment", () => {
+    expect(
+      findToolchainPinMismatch(
+        '[tools]\npnpm = "12.3.4" # keep in sync\n',
+        '{"packageManager": "pnpm@11.0.0"}',
+      ),
+    ).toBe("mise.toml pins pnpm 12.3.4 but package.json's packageManager pins pnpm 11.0.0");
+  });
+
+  test("fails closed when mise.toml has no parseable pnpm pin", () => {
+    expect(
+      findToolchainPinMismatch('[tools]\nnode = "24.21.0"\n', '{"packageManager": "pnpm@12.3.4"}'),
+    ).toBe("mise.toml does not pin a parseable pnpm version");
+  });
+
+  test("fails closed when package.json has no parseable packageManager pin", () => {
+    expect(findToolchainPinMismatch('[tools]\npnpm = "12.3.4"\n', '{"name": "vizcrush"}')).toBe(
+      "package.json does not pin a parseable pnpm packageManager version",
+    );
   });
 });

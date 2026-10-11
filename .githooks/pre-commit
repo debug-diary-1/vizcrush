@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+# Fast local guardrails, run on every commit. Keep this list restricted to
+# checks that finish in well under a second each; move anything slower to CI.
+mise exec -- pnpm format:check
+mise exec -- pnpm lint
+mise exec -- pnpm check:dependency-policy
+mise exec -- pnpm docs:inventory:check
