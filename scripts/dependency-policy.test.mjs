@@ -73,6 +73,26 @@ describe("dependency policy", () => {
     ]);
   });
 
+  test("flags an optionalDependency, which a consumer does install", () => {
+    const manifest = {
+      name: "@vizcrush/react",
+      optionalDependencies: { "@vizcrush/spatial": "workspace:*" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([
+      { field: "optionalDependencies", name: "@vizcrush/spatial", versionRange: "workspace:*" },
+    ]);
+  });
+
+  test("exempts devDependencies, which a consumer never installs", () => {
+    const manifest = {
+      name: "@vizcrush/react",
+      devDependencies: { "@vizcrush/core": "workspace:*" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([]);
+  });
+
   test("flags a hand-written exact version, the pin workspace:* produced", () => {
     const manifest = {
       name: "@vizcrush/downsample",
