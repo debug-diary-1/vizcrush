@@ -3,6 +3,7 @@ import {
   dependabotUsesNpm,
   findNonFrozenPnpmInstalls,
   findUnpinnedCargoInstalls,
+  findWorkspaceWildcardDependencies,
 } from "./dependency-policy.mjs";
 
 describe("dependency policy", () => {
@@ -57,5 +58,39 @@ describe("dependency policy", () => {
     ].join("\n");
 
     expect(findUnpinnedCargoInstalls(source)).toEqual([1, 2]);
+  });
+
+  test("flags workspace:* in dependencies and peerDependencies", () => {
+    const manifest = {
+      name: "@vizcrush/downsample",
+      dependencies: { "@vizcrush/core": "workspace:*" },
+      peerDependencies: { "@vizcrush/transform": "workspace:*" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([
+      { field: "dependencies", name: "@vizcrush/core", versionRange: "workspace:*" },
+      { field: "peerDependencies", name: "@vizcrush/transform", versionRange: "workspace:*" },
+    ]);
+  });
+
+  test("flags a hand-written exact version, the pin workspace:* produced", () => {
+    const manifest = {
+      name: "@vizcrush/downsample",
+      dependencies: { "@vizcrush/core": "2.1.0" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([
+      { field: "dependencies", name: "@vizcrush/core", versionRange: "2.1.0" },
+    ]);
+  });
+
+  test("accepts workspace:^ ranges and non-workspace dependencies", () => {
+    const manifest = {
+      name: "@vizcrush/downsample",
+      dependencies: { "@vizcrush/core": "workspace:^", chalk: "^5.0.0" },
+      peerDependencies: { "@vizcrush/transform": "workspace:^" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([]);
   });
 });
