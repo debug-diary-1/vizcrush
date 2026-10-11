@@ -17,7 +17,6 @@ We welcome contributions! See the repo's **[CONTRIBUTING.md](https://github.com/
    pnpm format
    pnpm typecheck
    pnpm test
-   pnpm test:rust
    ```
 4. **Commit** — clear message, conventional prefixes (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`)
 5. **Push and open a PR** — fill in the PR template, link the issue if any
