@@ -38,6 +38,27 @@ export function findUnpinnedCargoInstalls(source) {
   return violations;
 }
 
+/**
+ * Inter-package dependencies must be declared `workspace:^`. pnpm rewrites the
+ * specifier to a real range at pack time, and every other spelling pins harder
+ * than intended: `workspace:*` emits an exact version, and a hand-written
+ * `2.1.0` is already one. An exact pin forbids upgrading the dependency and
+ * resolves a second copy of it whenever two siblings disagree.
+ */
+export function findWorkspaceWildcardDependencies(manifest) {
+  const violations = [];
+  for (const field of ["dependencies", "peerDependencies"]) {
+    const dependencies = manifest[field];
+    if (!dependencies) continue;
+    for (const [name, versionRange] of Object.entries(dependencies)) {
+      if (name.startsWith("@vizcrush/") && versionRange !== "workspace:^") {
+        violations.push({ field, name, versionRange });
+      }
+    }
+  }
+  return violations;
+}
+
 function splitShellCommandSegments(line) {
   return line.split("#", 1)[0].split(/\s*(?:&&|&|\|\||;|\|)\s*/u);
 }

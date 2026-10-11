@@ -5,6 +5,7 @@ import {
   findToolchainPinMismatch,
   findUnpinnedActionUses,
   findUnpinnedCargoInstalls,
+  findWorkspaceWildcardDependencies,
 } from "./dependency-policy.mjs";
 
 describe("dependency policy", () => {
@@ -128,5 +129,39 @@ describe("dependency policy", () => {
     expect(findToolchainPinMismatch('[tools]\npnpm = "12.3.4"\n', '{"name": "vizcrush"}')).toBe(
       "package.json does not pin a parseable pnpm packageManager version",
     );
+  });
+
+  test("flags workspace:* in dependencies and peerDependencies", () => {
+    const manifest = {
+      name: "@vizcrush/downsample",
+      dependencies: { "@vizcrush/core": "workspace:*" },
+      peerDependencies: { "@vizcrush/transform": "workspace:*" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([
+      { field: "dependencies", name: "@vizcrush/core", versionRange: "workspace:*" },
+      { field: "peerDependencies", name: "@vizcrush/transform", versionRange: "workspace:*" },
+    ]);
+  });
+
+  test("flags a hand-written exact version, the pin workspace:* produced", () => {
+    const manifest = {
+      name: "@vizcrush/downsample",
+      dependencies: { "@vizcrush/core": "2.1.0" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([
+      { field: "dependencies", name: "@vizcrush/core", versionRange: "2.1.0" },
+    ]);
+  });
+
+  test("accepts workspace:^ ranges and non-workspace dependencies", () => {
+    const manifest = {
+      name: "@vizcrush/downsample",
+      dependencies: { "@vizcrush/core": "workspace:^", chalk: "^5.0.0" },
+      peerDependencies: { "@vizcrush/transform": "workspace:^" },
+    };
+
+    expect(findWorkspaceWildcardDependencies(manifest)).toEqual([]);
   });
 });

@@ -7,6 +7,7 @@ import {
   findToolchainPinMismatch,
   findUnpinnedActionUses,
   findUnpinnedCargoInstalls,
+  findWorkspaceWildcardDependencies,
 } from "./dependency-policy.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -56,6 +57,27 @@ if (actionPinViolations.length > 0) {
   );
 }
 
+// benchmarks/* and examples/* are private, never published, and legitimately keep
+// workspace:* — only packages/* manifests reach a registry, where pnpm rewrites
+// workspace:* into an exact version at pack time.
+const workspaceWildcardViolations = [];
+const packagesDirectory = join(root, "packages");
+for (const entry of await readdir(packagesDirectory, { withFileTypes: true })) {
+  if (!entry.isDirectory()) continue;
+  const manifest = JSON.parse(
+    await readFile(join(packagesDirectory, entry.name, "package.json"), "utf8"),
+  );
+  for (const { field, name, versionRange } of findWorkspaceWildcardDependencies(manifest)) {
+    workspaceWildcardViolations.push(`${manifest.name} ${field}.${name} is "${versionRange}"`);
+  }
+}
+
+if (workspaceWildcardViolations.length > 0) {
+  throw new Error(
+    `Inter-package dependencies must be declared "workspace:^", which packs as a caret range; every other spelling packs as an exact pin: ${workspaceWildcardViolations.join(", ")}`,
+  );
+}
+
 console.log(
-  "verified pnpm catalog policy, reproducible CI dependency installs, pinned Actions, and toolchain pin agreement",
+  "verified pnpm catalog policy, reproducible CI dependency installs, pinned Actions, toolchain pin agreement, and workspace range policy",
 );
