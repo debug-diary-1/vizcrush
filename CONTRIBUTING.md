@@ -62,6 +62,14 @@ npx vitest run
 node --experimental-vm-modules benchmarks/dist/runner.js
 ```
 
+### Git hooks
+
+`pnpm install` runs the root `prepare` script, which points git at the
+repo-managed hooks in `.githooks/` (`git config core.hooksPath .githooks`).
+The pre-commit hook runs the fast checks — `format:check`, `lint`,
+`check:dependency-policy`, and `docs:inventory:check` — so formatting and
+lint issues are caught before you push.
+
 ## Adding a New Algorithm
 
 1. **Rust implementation** in the appropriate crate under `crates/`
@@ -90,6 +98,11 @@ pnpm install --frozen-lockfile
 pnpm check:dependency-policy
 ```
 
+CI also runs `actionlint` in the Lint job and extends `check:dependency-policy`
+to require that every workflow `uses:` is pinned to a 40-character commit SHA
+with a version comment, and that `mise.toml`'s pinned pnpm version matches
+`packageManager` in `package.json`.
+
 ### Running specific tests
 
 ```bash
@@ -111,6 +124,11 @@ node --experimental-vm-modules benchmarks/dist/runner.js
 # Save new baseline (after intentional changes)
 node --experimental-vm-modules benchmarks/dist/runner.js --save-baseline
 ```
+
+Benchmark cells whose baseline median is under 1 ms sit below the noise
+floor — the Performance Regression job still reports them, but they cannot
+fail the job on their own. The threshold is configurable via the
+`BENCH_NOISE_FLOOR_MS` environment variable.
 
 ## Code Style
 

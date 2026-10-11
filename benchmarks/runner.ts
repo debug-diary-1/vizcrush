@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   compareWithBaseline,
+  formatBelowNoiseFloorLine,
+  parseBenchmarkNoiseFloor,
   parseBenchmarkSeed,
   parseBenchmarkThreshold,
   persistBenchmarkArtifacts,
@@ -15,6 +17,7 @@ const canonicalBaselinePath = resolve(`${benchmarkDirectory}/benchmark-baseline.
 const saveBaseline = process.argv.includes("--save-baseline");
 const quick = process.argv.includes("--quick");
 const threshold = parseBenchmarkThreshold(process.env.BENCH_THRESHOLD ?? "0.25");
+const noiseFloorMs = parseBenchmarkNoiseFloor(process.env.BENCH_NOISE_FLOOR_MS ?? "1");
 const seed = parseBenchmarkSeed(process.env.BENCH_SEED ?? "42");
 const resultsPath = resolve(
   process.env.BENCH_RESULTS_PATH ?? `${benchmarkDirectory}/results/latest.json`,
@@ -53,14 +56,17 @@ if (saveBaseline) {
     );
     process.exitCode = 1;
   } else {
-    const regressions = compareWithBaseline(output, baselinePath, threshold);
-    if (regressions.length === 0) {
+    const comparison = compareWithBaseline(output, baselinePath, threshold, noiseFloorMs);
+    for (const entry of comparison.belowNoiseFloor) {
+      console.log(formatBelowNoiseFloorLine(entry, noiseFloorMs));
+    }
+    if (comparison.regressions.length === 0) {
       console.log(`No regressions exceeded the ${(threshold * 100).toFixed(0)}% threshold.`);
     }
-    for (const regression of regressions) console.error(`REGRESSION: ${regression}`);
-    if (regressions.length > 0) {
+    for (const regression of comparison.regressions) console.error(`REGRESSION: ${regression}`);
+    if (comparison.regressions.length > 0) {
       console.error(
-        `${regressions.length} regression(s) exceeded the ${(threshold * 100).toFixed(0)}% threshold.`,
+        `${comparison.regressions.length} regression(s) exceeded the ${(threshold * 100).toFixed(0)}% threshold.`,
       );
       process.exitCode = 1;
     }

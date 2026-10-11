@@ -5,7 +5,9 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   benchmarkOperations,
   compareWithBaseline,
+  formatBelowNoiseFloorLine,
   generateTimeSeries,
+  parseBenchmarkNoiseFloor,
   parseBenchmarkSeed,
   parseBenchmarkThreshold,
   persistBenchmarkArtifacts,
@@ -32,6 +34,16 @@ describe("benchmark suite", () => {
   test("accepts finite thresholds and integer seeds", () => {
     expect(parseBenchmarkThreshold("0.75")).toBe(0.75);
     expect(parseBenchmarkSeed("42")).toBe(42);
+  });
+
+  test("rejects invalid noise floor values", () => {
+    expect(() => parseBenchmarkNoiseFloor("NaN")).toThrow(/noise_floor/i);
+    expect(() => parseBenchmarkNoiseFloor("-1")).toThrow(/noise_floor/i);
+  });
+
+  test("accepts a finite non-negative noise floor, including zero", () => {
+    expect(parseBenchmarkNoiseFloor("1")).toBe(1);
+    expect(parseBenchmarkNoiseFloor("0")).toBe(0);
   });
 
   test("quick mode skips baseline comparison", () => {
@@ -200,5 +212,95 @@ describe("benchmark suite", () => {
     );
 
     expect(() => compareWithBaseline(output, baselinePath, 0.75)).toThrow(/invalid.*median/i);
+  });
+
+  test("a baseline below the noise floor cannot be flagged as a regression", () => {
+    const directory = mkdtempSync(join(tmpdir(), "vizcrush-benchmark-"));
+    temporaryDirectories.push(directory);
+    const baselinePath = join(directory, "baseline.json");
+    const baselineResult = {
+      name: "lttb",
+      dataSize: 100_000,
+      medianMs: 0.33,
+      p95Ms: 0.4,
+      minMs: 0.3,
+      backend: "js" as const,
+    };
+    const output: BenchmarkOutput = {
+      timestamp: "new",
+      platform: "test",
+      nodeVersion: "test",
+      seed: 42,
+      results: [{ ...baselineResult, medianMs: 0.66 }],
+    };
+    writeFileSync(baselinePath, JSON.stringify({ ...output, results: [baselineResult] }));
+
+    const comparison = compareWithBaseline(output, baselinePath, 0.25);
+
+    expect(comparison.regressions).toEqual([]);
+    expect(comparison.belowNoiseFloor).toEqual([
+      { name: "lttb", dataSize: 100_000, baselineMedianMs: 0.33 },
+    ]);
+  });
+
+  test("a baseline at or above the noise floor still regresses when it doubles", () => {
+    const directory = mkdtempSync(join(tmpdir(), "vizcrush-benchmark-"));
+    temporaryDirectories.push(directory);
+    const baselinePath = join(directory, "baseline.json");
+    const baselineResult = {
+      name: "lttb",
+      dataSize: 100_000,
+      medianMs: 2,
+      p95Ms: 2.2,
+      minMs: 1.8,
+      backend: "js" as const,
+    };
+    const output: BenchmarkOutput = {
+      timestamp: "new",
+      platform: "test",
+      nodeVersion: "test",
+      seed: 42,
+      results: [{ ...baselineResult, medianMs: 4 }],
+    };
+    writeFileSync(baselinePath, JSON.stringify({ ...output, results: [baselineResult] }));
+
+    const comparison = compareWithBaseline(output, baselinePath, 0.25);
+
+    expect(comparison.belowNoiseFloor).toEqual([]);
+    expect(comparison.regressions).toHaveLength(1);
+    expect(comparison.regressions[0]).toMatch(/lttb 100000/);
+  });
+
+  test("formats the below-noise-floor line exactly as the runner prints it", () => {
+    expect(formatBelowNoiseFloorLine({ name: "lttb", dataSize: 100_000 }, 1)).toBe(
+      "lttb 100,000: BELOW NOISE FLOOR (1 ms baseline)",
+    );
+  });
+
+  test("a noise floor of zero restores the pre-guardrail behavior", () => {
+    const directory = mkdtempSync(join(tmpdir(), "vizcrush-benchmark-"));
+    temporaryDirectories.push(directory);
+    const baselinePath = join(directory, "baseline.json");
+    const baselineResult = {
+      name: "lttb",
+      dataSize: 100_000,
+      medianMs: 0.33,
+      p95Ms: 0.4,
+      minMs: 0.3,
+      backend: "js" as const,
+    };
+    const output: BenchmarkOutput = {
+      timestamp: "new",
+      platform: "test",
+      nodeVersion: "test",
+      seed: 42,
+      results: [{ ...baselineResult, medianMs: 0.66 }],
+    };
+    writeFileSync(baselinePath, JSON.stringify({ ...output, results: [baselineResult] }));
+
+    const comparison = compareWithBaseline(output, baselinePath, 0.25, 0);
+
+    expect(comparison.belowNoiseFloor).toEqual([]);
+    expect(comparison.regressions).toHaveLength(1);
   });
 });

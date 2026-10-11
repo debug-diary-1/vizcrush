@@ -2,6 +2,7 @@
   "name": "vizcrush-monorepo",
   "private": true,
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "build:wasm": "bash scripts/build-wasm.sh",
     "build": "pnpm build:wasm && pnpm turbo build",
     "test": "pnpm turbo test",

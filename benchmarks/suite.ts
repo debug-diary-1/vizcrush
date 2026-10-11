@@ -27,12 +27,25 @@ export interface BenchmarkArtifactOptions {
   saveBaseline: boolean;
 }
 
+export interface BaselineComparison {
+  regressions: string[];
+  belowNoiseFloor: Array<{ name: string; dataSize: number; baselineMedianMs: number }>;
+}
+
 export function parseBenchmarkThreshold(value: string): number {
   const threshold = Number(value);
   if (value.trim() === "" || !Number.isFinite(threshold) || threshold < 0) {
     throw new Error(`BENCH_THRESHOLD must be a finite non-negative number; received ${value}`);
   }
   return threshold;
+}
+
+export function parseBenchmarkNoiseFloor(value: string): number {
+  const noiseFloorMs = Number(value);
+  if (value.trim() === "" || !Number.isFinite(noiseFloorMs) || noiseFloorMs < 0) {
+    throw new Error(`BENCH_NOISE_FLOOR_MS must be a finite non-negative number; received ${value}`);
+  }
+  return noiseFloorMs;
 }
 
 export function parseBenchmarkSeed(value: string): number {
@@ -176,11 +189,19 @@ export function persistBenchmarkArtifacts(
   }
 }
 
+export function formatBelowNoiseFloorLine(
+  cell: { name: string; dataSize: number },
+  floorMs: number,
+): string {
+  return `${cell.name} ${cell.dataSize.toLocaleString()}: BELOW NOISE FLOOR (${floorMs} ms baseline)`;
+}
+
 export function compareWithBaseline(
   output: BenchmarkOutput,
   baselinePath: string,
   threshold: number,
-): string[] {
+  noiseFloorMs = 1,
+): BaselineComparison {
   if (!existsSync(baselinePath)) {
     throw new Error(`Benchmark baseline not found at ${baselinePath}`);
   }
@@ -194,6 +215,7 @@ export function compareWithBaseline(
     );
   }
   const regressions: string[] = [];
+  const belowNoiseFloor: BaselineComparison["belowNoiseFloor"] = [];
   for (const result of output.results) {
     const previous = baseline.results.find(
       (entry) =>
@@ -212,6 +234,14 @@ export function compareWithBaseline(
         `Benchmark baseline has an invalid median for ${result.name} ${result.dataSize}`,
       );
     }
+    if (previousMedian < noiseFloorMs) {
+      belowNoiseFloor.push({
+        name: result.name,
+        dataSize: result.dataSize,
+        baselineMedianMs: previousMedian,
+      });
+      continue;
+    }
     const ratio = result.medianMs / previousMedian;
     if (ratio > 1 + threshold) {
       regressions.push(
@@ -220,7 +250,7 @@ export function compareWithBaseline(
       );
     }
   }
-  return regressions;
+  return { regressions, belowNoiseFloor };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
