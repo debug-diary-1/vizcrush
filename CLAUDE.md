@@ -15,7 +15,3 @@ the workflow. Checks run as `pnpm lint`, `pnpm typecheck`, `pnpm test`.
   publish rights through OIDC, so there is no token to withhold and no dry run.
   Never run `npm publish` by hand.
 - **`origin` is public.** Anything pushed is published.
-
-## Conventions
-
-Commits and pull requests carry no AI attribution.
