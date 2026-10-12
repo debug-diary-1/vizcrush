@@ -50,7 +50,7 @@ pnpm format:check        # oxfmt --check
 pnpm typecheck           # tsc --noEmit per package
 
 # Tests
-pnpm test                # turbo test (vitest + cargo via per-package scripts)
+pnpm test                # alias for test:all (cargo test + vitest)
 pnpm test:rust           # cargo test --workspace
 pnpm test:vitest         # vitest run
 pnpm test:all            # Rust + JS together
