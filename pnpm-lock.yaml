@@ -195,8 +195,8 @@ catalogs:
       specifier: 7.0.2
       version: 7.0.2
     vite:
-      specifier: 8.2.2
-      version: 8.2.2
+      specifier: 8.2.4
+      version: 8.2.4
     vitepress:
       specifier: 1.6.4
       version: 1.6.4
@@ -204,8 +204,8 @@ catalogs:
       specifier: 5.0.0
       version: 5.0.0
     zod:
-      specifier: 4.5.4
-      version: 4.5.4
+      specifier: 4.6.6
+      version: 4.6.6
 
 overrides:
   vitepress>vite: 6.4.3
@@ -265,13 +265,13 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
       vitepress:
         specifier: 'catalog:'
         version: 1.6.4(@algolia/client-search@5.50.2)(@types/node@25.9.5)(@types/react@18.3.28)(lightningcss@1.33.0)(postcss@8.5.23)(search-insights@2.17.3)(typescript@7.0.2)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.0(@types/node@25.9.5)(jsdom@30.0.1)(vite@8.2.2(@types/node@25.9.5))
+        version: 5.0.0(@types/node@25.9.5)(jsdom@30.0.1)(vite@8.2.4(@types/node@25.9.5))
 
   benchmarks:
     dependencies:
@@ -342,7 +342,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/arrow-data-pipeline:
     dependencies:
@@ -361,7 +361,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/backend-lab:
     dependencies:
@@ -377,7 +377,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/benchmark-3d:
     dependencies:
@@ -396,7 +396,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/chartgpu-integration:
     dependencies:
@@ -418,7 +418,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/countmin-sketch:
     dependencies:
@@ -434,7 +434,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/d3-large-scatter:
     dependencies:
@@ -456,7 +456,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/data-transforms:
     dependencies:
@@ -472,7 +472,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/ddsketch:
     dependencies:
@@ -488,7 +488,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/deckgl-density-lod:
     dependencies:
@@ -507,7 +507,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/financial-timeseries:
     dependencies:
@@ -523,7 +523,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/flow-field:
     dependencies:
@@ -551,7 +551,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/globe-3d:
     dependencies:
@@ -570,7 +570,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/gpu-particles:
     dependencies:
@@ -592,7 +592,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/gpu-voronoi:
     dependencies:
@@ -620,7 +620,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/gpu-vs-canvas:
     dependencies:
@@ -642,7 +642,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/hyperloglog:
     dependencies:
@@ -658,7 +658,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/iot-heatmap:
     dependencies:
@@ -677,7 +677,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/kll-sketch:
     dependencies:
@@ -693,7 +693,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/latency-percentiles:
     dependencies:
@@ -709,7 +709,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/lidar-terrain:
     dependencies:
@@ -728,7 +728,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/log-transform:
     dependencies:
@@ -744,7 +744,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/medical-volume:
     dependencies:
@@ -760,7 +760,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/million-galaxy:
     dependencies:
@@ -788,7 +788,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/morton-renderer:
     dependencies:
@@ -804,7 +804,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/neon-timeseries:
     dependencies:
@@ -832,7 +832,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/observable-plot-timeseries:
     dependencies:
@@ -848,7 +848,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/point-cloud-3d:
     dependencies:
@@ -864,7 +864,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/quantile-normalization:
     dependencies:
@@ -880,7 +880,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/react-echarts-dashboard:
     dependencies:
@@ -905,13 +905,13 @@ importers:
         version: 19.2.7(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: 'catalog:'
-        version: 6.1.1(vite@8.2.2(@types/node@25.9.5))
+        version: 6.1.1(vite@8.2.4(@types/node@25.9.5))
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/reservoir-sampling:
     dependencies:
@@ -927,7 +927,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/reservoir-scatter:
     dependencies:
@@ -943,7 +943,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/sketch-comparison:
     dependencies:
@@ -959,7 +959,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/spatial-hashgrid:
     dependencies:
@@ -975,7 +975,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/stream-analytics:
     dependencies:
@@ -991,7 +991,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/streaming-dashboard:
     dependencies:
@@ -1010,7 +1010,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/threejs-integration:
     dependencies:
@@ -1035,7 +1035,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/threejs-nature:
     dependencies:
@@ -1066,7 +1066,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/viewport-session:
     dependencies:
@@ -1082,7 +1082,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/volume-raymarcher:
     dependencies:
@@ -1110,7 +1110,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/voxel-heatmap-3d:
     dependencies:
@@ -1126,7 +1126,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/webgpu-heatmap:
     dependencies:
@@ -1148,7 +1148,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   examples/worker-pipeline:
     dependencies:
@@ -1164,7 +1164,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
   packages/aggregate:
     dependencies:
@@ -1228,7 +1228,7 @@ importers:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
-        version: 1.32.1(zod@4.5.4)
+        version: 1.32.1(zod@4.6.6)
       '@vizcrush/aggregate':
         specifier: workspace:*
         version: link:../aggregate
@@ -1258,7 +1258,7 @@ importers:
         version: link:../transform
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.6
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1348,7 +1348,7 @@ importers:
     devDependencies:
       vite:
         specifier: 'catalog:'
-        version: 8.2.2(@types/node@25.9.5)
+        version: 8.2.4(@types/node@25.9.5)
 
 packages:
 
@@ -3564,10 +3564,6 @@ packages:
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
-  picomatch@4.0.4:
-    resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
-    engines: {node: '>=12'}
-
   picomatch@4.0.7:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
@@ -3916,8 +3912,8 @@ packages:
       yaml:
         optional: true
 
-  vite@8.2.2:
-    resolution: {integrity: sha512-cFKLV/PRgAUlIRm5WjMjJ86jrftzpqcgH+Us+DS8mI3CDNiH30Whrz8uHL3+MOLPAgqbMBAqWdAHAphOAM+z/Q==}
+  vite@8.2.4:
+    resolution: {integrity: sha512-lfauXnrf2x0p+UoA+wXh0dgFWnUjCyG6Js95KBkgaCwUU9k0DAHI4W6Q0WCx+h+5g+Alce1y4Zi2QjjK0UvGBw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -4065,8 +4061,8 @@ packages:
     peerDependencies:
       zod: ^3.25.28 || ^4
 
-  zod@4.5.4:
-    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
   zrender@6.1.0:
     resolution: {integrity: sha512-oEGMDB6pOP2S6OwRR4PdVv610zrjnA3Bh+JnSG12fYJlBKjtNAoEb5fSUoCOOINlH96I2fU38/A2UpRKs67xYQ==}
@@ -4522,7 +4518,7 @@ snapshots:
     dependencies:
       '@math.gl/core': 4.1.0
 
-  '@modelcontextprotocol/sdk@1.32.1(zod@4.5.4)':
+  '@modelcontextprotocol/sdk@1.32.1(zod@4.6.6)':
     dependencies:
       '@hono/node-server': 2.0.12(hono@4.13.5)
       ajv: 8.18.0
@@ -4539,8 +4535,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 4.5.4
-      zod-to-json-schema: 3.25.2(zod@4.5.4)
+      zod: 4.6.6
+      zod-to-json-schema: 3.25.2(zod@4.6.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -5130,24 +5126,24 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@25.9.5))':
+  '@vitejs/plugin-react@6.1.1(vite@8.2.4(@types/node@25.9.5))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.2.2(@types/node@25.9.5)
+      vite: 8.2.4(@types/node@25.9.5)
 
   '@vitejs/plugin-vue@5.2.4(vite@6.4.3(@types/node@25.9.5)(lightningcss@1.33.0))(vue@3.5.43(typescript@7.0.2))':
     dependencies:
       vite: 6.4.3(@types/node@25.9.5)(lightningcss@1.33.0)
       vue: 3.5.43(typescript@7.0.2)
 
-  '@vitest/mocker@5.0.0(vite@8.2.2(@types/node@25.9.5))':
+  '@vitest/mocker@5.0.0(vite@8.2.4(@types/node@25.9.5))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.0
       estree-walker: 3.0.3
       magic-string: 1.2.3
     optionalDependencies:
-      vite: 8.2.2(@types/node@25.9.5)
+      vite: 8.2.4(@types/node@25.9.5)
 
   '@vitest/spy@5.0.0': {}
 
@@ -5695,10 +5691,6 @@ snapshots:
 
   fast-uri@3.1.7: {}
 
-  fdir@6.5.0(picomatch@4.0.4):
-    optionalDependencies:
-      picomatch: 4.0.4
-
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
@@ -6065,8 +6057,6 @@ snapshots:
 
   picocolors@1.1.1: {}
 
-  picomatch@4.0.4: {}
-
   picomatch@4.0.7: {}
 
   pkce-challenge@5.0.1: {}
@@ -6340,8 +6330,8 @@ snapshots:
 
   tinyglobby@0.2.17:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
+      fdir: 6.5.0(picomatch@4.0.7)
+      picomatch: 4.0.7
 
   tinypool@2.1.2: {}
 
@@ -6461,7 +6451,7 @@ snapshots:
       fsevents: 2.3.3
       lightningcss: 1.33.0
 
-  vite@8.2.2(@types/node@25.9.5):
+  vite@8.2.4(@types/node@25.9.5):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -6524,10 +6514,10 @@ snapshots:
       - universal-cookie
       - yaml
 
-  vitest@5.0.0(@types/node@25.9.5)(jsdom@30.0.1)(vite@8.2.2(@types/node@25.9.5)):
+  vitest@5.0.0(@types/node@25.9.5)(jsdom@30.0.1)(vite@8.2.4(@types/node@25.9.5)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.0(vite@8.2.2(@types/node@25.9.5))
+      '@vitest/mocker': 5.0.0(vite@8.2.4(@types/node@25.9.5))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -6538,7 +6528,7 @@ snapshots:
       tinybench: 6.1.4
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
-      vite: 8.2.2(@types/node@25.9.5)
+      vite: 8.2.4(@types/node@25.9.5)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.9.5
@@ -6595,11 +6585,11 @@ snapshots:
 
   xmlchars@2.2.0: {}
 
-  zod-to-json-schema@3.25.2(zod@4.5.4):
+  zod-to-json-schema@3.25.2(zod@4.6.6):
     dependencies:
-      zod: 4.5.4
+      zod: 4.6.6
 
-  zod@4.5.4: {}
+  zod@4.6.6: {}
 
   zrender@6.1.0:
     dependencies:

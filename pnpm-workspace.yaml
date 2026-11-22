@@ -23,7 +23,7 @@ catalog:
   simple-statistics: "7.12.0"
   sparse-octree: "7.2.0"
   three: "0.186.0"
-  zod: "4.5.4"
+  zod: "4.6.6"
 
   # ── Dev / build deps ─────────────────────────────────────────
   "@types/d3": "7.4.3"
@@ -38,7 +38,7 @@ catalog:
   playwright: "1.63.0"
   turbo: "2.10.12"
   typescript: "7.0.2"
-  vite: "8.2.2"
+  vite: "8.2.4"
   vitepress: "1.6.4"
   vitest: "5.0.0"
 
