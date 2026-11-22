@@ -5,7 +5,7 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "build:wasm": "bash scripts/build-wasm.sh",
     "build": "pnpm build:wasm && pnpm turbo build",
-    "test": "pnpm turbo test",
+    "test": "pnpm test:all",
     "test:rust": "cargo test --workspace",
     "lint": "oxlint --deny-warnings",
     "format": "oxfmt",
@@ -23,7 +23,9 @@
     "docs:inventory:write": "node scripts/check-doc-inventories.mjs --write",
     "check:dependency-policy": "node scripts/check-dependency-policy.mjs",
     "examples:build": "bash scripts/build-examples.sh",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "check:example-claims": "node scripts/check-example-claims.mjs",
+    "check:turbo-tasks": "node scripts/check-turbo-tasks.mjs"
   },
   "devDependencies": {
     "d3-array": "catalog:",

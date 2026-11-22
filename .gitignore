@@ -42,3 +42,6 @@ credentials.json
 # Version manager (per-developer overrides)
 mise.local.toml
 .mise.local.toml
+
+# pnpm's local content-addressable store
+.pnpm-store/
