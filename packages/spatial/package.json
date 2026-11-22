@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/spatial",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Quadtree, hash grid, and Morton-order spatial indexing",
   "keywords": [
     "2d",
@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vizcrush/core": "workspace:*"
+    "@vizcrush/core": "workspace:^"
   },
   "devDependencies": {
     "typescript": "catalog:"

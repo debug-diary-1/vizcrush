@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/bin3d",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "3D voxel binning for volumetric data",
   "keywords": [
     "3d",
@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vizcrush/core": "workspace:*"
+    "@vizcrush/core": "workspace:^"
   },
   "devDependencies": {
     "typescript": "catalog:"

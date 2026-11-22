@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/transform",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sort, filter, normalize on typed arrays",
   "keywords": [
     "data",
@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vizcrush/core": "workspace:*"
+    "@vizcrush/core": "workspace:^"
   },
   "devDependencies": {
     "typescript": "catalog:"
