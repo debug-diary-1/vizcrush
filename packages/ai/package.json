@@ -1,6 +1,6 @@
 {
   "name": "@vizcrush/ai",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-native data analysis: anomaly detection, auto-optimization, summarization, embeddings",
   "keywords": [
     "ai",
