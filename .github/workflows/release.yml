@@ -46,12 +46,14 @@ jobs:
       # long-lived npm token in this repo. `pnpm pack` builds the tarball
       # (rewriting `workspace:^` deps to real ranges) and the system
       # `npm publish` uploads it, exchanging this job's GitHub OIDC token
-      # (`id-token: write` above) for a short-lived npm token. Every
-      # @vizcrush/* package on npmjs.com lists this exact publisher:
+      # (`id-token: write` above) for a short-lived npm token. Each
+      # @vizcrush/* package must list this exact publisher on npmjs.com:
       # GitHub Actions, owner debug-diary-1, repo vizcrush, workflow release.yml.
+      # Nothing here can verify that; a package whose entry is missing or does
+      # not permit publishing fails with a 404 on the token exchange.
       # The `registry-url` above writes a placeholder `_authToken` to .npmrc;
       # npm >= 11.5.1 overrides it once the OIDC exchange succeeds.
-      - name: Assert npm supports trusted publishing (>= 11.5.1)
+      - name: Assert npm can do trusted publishing (>= 11.5.1, OIDC, no token)
         run: |
           v="$(npm --version)"
           # shellcheck disable=SC2016
@@ -64,6 +66,23 @@ jobs:
             }
             console.log(`npm ${process.argv[1]} supports trusted publishing`);
           ' "$v"
+          # An auth misconfiguration here is otherwise silent: npm answers a
+          # bare 404 and nothing says the word "auth". Fail loudly instead.
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "no OIDC token endpoint; this job needs \`id-token: write\`"
+            exit 1
+          fi
+          # A real token would be used in place of the OIDC exchange.
+          # setup-node's placeholder NODE_AUTH_TOKEN is not one and is fine.
+          for var in NODE_AUTH_TOKEN NPM_TOKEN NPM_CONFIG__AUTHTOKEN; do
+            case "${!var:-}" in
+              npm_*)
+                echo "$var holds a long-lived npm token; this job publishes with OIDC only"
+                exit 1
+                ;;
+            esac
+          done
+          echo "OIDC endpoint present and no long-lived npm token in the environment"
       # Publishes only versions the registry does not already have. The
       # packages version independently, so most tags change one or two of them
       # and the rest are already on npm at the same version. Without the skip,
