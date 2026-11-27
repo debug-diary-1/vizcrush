@@ -43,9 +43,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo build
       # Publishing authenticates with npm Trusted Publishing (OIDC); there is no
-      # long-lived npm token in this repo. `pnpm publish` packs the package
-      # (rewriting `workspace:*` deps to real versions) and shells out to the
-      # system `npm publish`, which exchanges this job's GitHub OIDC token
+      # long-lived npm token in this repo. `pnpm pack` builds the tarball
+      # (rewriting `workspace:^` deps to real ranges) and the system
+      # `npm publish` uploads it, exchanging this job's GitHub OIDC token
       # (`id-token: write` above) for a short-lived npm token. Every
       # @vizcrush/* package on npmjs.com lists this exact publisher:
       # GitHub Actions, owner debug-diary-1, repo vizcrush, workflow release.yml.
@@ -83,7 +83,13 @@ jobs:
               skipped=$((skipped + 1))
             else
               echo "publish $name@$version"
-              pnpm publish --access public --no-git-checks --provenance
+              # pnpm packs (rewriting workspace:^ and catalog: specifiers);
+              # npm uploads. pnpm 12 performs the OIDC token exchange itself
+              # and got a 404 from npm for v2.3.0, so the upload goes through
+              # the npm CLI, the client every earlier OIDC release used.
+              rm -rf "$RUNNER_TEMP/pack"
+              pnpm pack --pack-destination "$RUNNER_TEMP/pack"
+              npm publish "$RUNNER_TEMP"/pack/*.tgz --access public --provenance
               published=$((published + 1))
             fi
             cd ../..
