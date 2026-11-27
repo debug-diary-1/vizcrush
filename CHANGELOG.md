@@ -1,5 +1,43 @@
 # Changelog
 
+## Caret ranges and backend contracts (2026-11-26)
+
+Every package republishes in this release. Tarballs already on npm keep their exact sibling pins, so the range fix only reaches consumers through new versions.
+
+### Inter-package dependencies are caret ranges
+
+- Published packages now depend on their `@vizcrush/*` siblings with `^` ranges instead of exact versions, so mixed installs deduplicate onto one compatible `@vizcrush/core`.
+- **Fixes `@vizcrush/downsample` 1.1.0**, which was published pinned to `@vizcrush/core` 2.0.0. That core lacks the `requestedBackend`/`reason` fields and the `KernelBackendReason` type the session and worker subpaths rely on, so those fields were `undefined` and `dist/session.d.ts` failed to type-check. Use 1.1.1.
+
+### `@vizcrush/core` v2.1.0
+
+- `withBackend` results report `requestedBackend` and `reason`; exports `KernelBackendReason`.
+- `init()` returns `preferredBackend`. `backend` remains as a deprecated 2.x alias.
+
+### `@vizcrush/ai` v1.0.1
+
+- Anomaly and changepoint detection ignore non-finite values and report indices into the original input.
+- Variance is documented as population variance; `@vizcrush/aggregate` keeps sample variance.
+- Drops the unused `@vizcrush/core` dependency.
+
+### `@vizcrush/downsample` v1.1.1
+
+- Worker client and host share one request/response envelope.
+
+### `@vizcrush/aggregate` v1.1.2, `@vizcrush/spatial` v1.0.1, `@vizcrush/spatial3d` v1.0.1
+
+- Sketches and spatial handles select their JS or WASM adapter once. Fixes the `spatial3d` WASM parity gate.
+
+### `@vizcrush/mcp-server` v1.1.1
+
+- Spatial indexes live in a per-server 2D/3D registry.
+- Downsample tool results report the backend that actually ran and why.
+- `zod` 4.6.
+
+### `@vizcrush/bin` v1.1.1, `@vizcrush/bin3d` v1.0.1, `@vizcrush/transform` v1.0.1, `@vizcrush/react` v1.0.2
+
+- Republished for the caret ranges; no behavior change.
+
 ## Dependency and toolchain refresh (2026-09-09)
 
 - Updates every direct npm and Rust dependency to its latest stable compatible release, including Vite 8, Vitest 5, TypeScript 7, Zod 4, deck.gl 9.4, Three.js r186, and wasm-bindgen 0.2.128.
