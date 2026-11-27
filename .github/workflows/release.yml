@@ -33,7 +33,10 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-          registry-url: "https://registry.npmjs.org"
+          # No `registry-url`: it writes a placeholder `_authToken` into a
+          # generated .npmrc, and pnpm sends that placeholder instead of the
+          # OIDC token, which npm answers with 404. Publishing needs no
+          # registry-url -- the default registry is already npmjs.org.
       - name: Install wasm-bindgen-cli
         run: cargo install wasm-bindgen-cli --version 0.2.128 --locked # must match wasm-bindgen pin in Cargo.toml
       - name: Install binaryen (wasm-opt)
@@ -44,26 +47,36 @@ jobs:
       - run: pnpm turbo build
       # Publishing authenticates with npm Trusted Publishing (OIDC); there is no
       # long-lived npm token in this repo. `pnpm publish` packs the package
-      # (rewriting `workspace:*` deps to real versions) and shells out to the
-      # system `npm publish`, which exchanges this job's GitHub OIDC token
-      # (`id-token: write` above) for a short-lived npm token. Every
-      # @vizcrush/* package on npmjs.com lists this exact publisher:
-      # GitHub Actions, owner debug-diary-1, repo vizcrush, workflow release.yml.
-      # The `registry-url` above writes a placeholder `_authToken` to .npmrc;
-      # npm >= 11.5.1 overrides it once the OIDC exchange succeeds.
-      - name: Assert npm supports trusted publishing (>= 11.5.1)
+      # (rewriting `workspace:^` deps to real ranges) and, since pnpm 12,
+      # exchanges this job's GitHub OIDC token (`id-token: write` above) for a
+      # short-lived npm token ITSELF. pnpm 11 shelled out to the system `npm
+      # publish` and let npm do the exchange, which is why the v2.3.0 tag broke
+      # on the pnpm 11 -> 12 upgrade: npm used to overwrite setup-node's
+      # placeholder `_authToken`, pnpm does not, so it sent the placeholder and
+      # npm answered `ERR_PNPM_AUTH_TOKEN_EXCHANGE ... 404`. Every @vizcrush/*
+      # package on npmjs.com lists this exact publisher: GitHub Actions, owner
+      # debug-diary-1, repo vizcrush, workflow release.yml.
+      - name: Assert the publisher can do trusted publishing
         run: |
-          v="$(npm --version)"
-          # shellcheck disable=SC2016
+          v="$(pnpm --version)"
           node -e '
             const [maj, min, pat] = process.argv[1].split(".").map(Number);
-            const ok = maj > 11 || (maj === 11 && (min > 5 || (min === 5 && pat >= 1)));
+            const ok = maj > 11 || (maj === 11 && (min > 1 || (min === 1 && pat >= 3)));
             if (!ok) {
-              console.error(`npm ${process.argv[1]} is older than 11.5.1; trusted publishing (OIDC) needs 11.5.1+`);
+              console.error(`pnpm ${process.argv[1]} is older than 11.1.3; it cannot exchange the OIDC token`);
               process.exit(1);
             }
-            console.log(`npm ${process.argv[1]} supports trusted publishing`);
+            console.log(`pnpm ${process.argv[1]} supports trusted publishing`);
           ' "$v"
+          # The failure this guards is silent: a placeholder token is sent, npm
+          # answers 404, and nothing says the word "auth". Fail loudly instead.
+          for f in "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}" ./.npmrc; do
+            if [ -f "$f" ] && grep -q "_authToken" "$f"; then
+              echo "$f carries an _authToken; pnpm would send it instead of the OIDC token"
+              exit 1
+            fi
+          done
+          echo "no _authToken in any .npmrc; the OIDC exchange is unobstructed"
       # Publishes only versions the registry does not already have. The
       # packages version independently, so most tags change one or two of them
       # and the rest are already on npm at the same version. Without the skip,
